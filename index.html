@@ -32,11 +32,7 @@ img{max-width:100%;display:block}
  justify-content:space-between;gap:16px;
 }
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.brand img{
- width:190px;height:78px;
- object-fit:contain;object-position:left center;
- display:block;
-}
+.brand img{width:190px;height:78px;object-fit:contain;object-position:left center;display:block}
 .menu-btn{width:44px;height:44px;border:0;background:transparent;color:#243746;font-size:30px}
 .desktop-nav{display:flex;align-items:center;gap:20px;font-size:13px;font-weight:800;color:#33495B}
 .desktop-nav a:hover{color:#08A982}
@@ -53,33 +49,25 @@ section{padding:30px 0}
 
 /* BANNER */
 .hero{padding:40px 0 70px}
-.banner{position:relative;overflow:hidden;border-radius:24px;background:#123E50;box-shadow:0 18px 45px #0003}
+.banner{
+ position:relative;overflow:hidden;border-radius:24px;
+ background:#123E50;box-shadow:0 18px 45px #0003;
+ aspect-ratio:16/8;
+}
 .banner-slide{
-  display:block;
-  position:absolute;
-  inset:0;
-  width:100%;
-  opacity:0;
-  transform:translateX(40px);
-  transition:transform .7s ease, opacity .7s ease;
-  pointer-events:none;
+ display:block;position:absolute;inset:0;width:100%;height:100%;
+ opacity:0;transform:translateX(100%);
+ transition:transform .65s ease,opacity .65s ease;
+ pointer-events:none;
 }
-
-.banner-slide.active{
-  opacity:1;
-  transform:translateX(0);
-  pointer-events:auto;
-  z-index:2;
+.banner-slide.active{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
+.banner-slide img{width:100%;height:100%;object-fit:cover}
+.banner-arrow{
+ position:absolute;bottom:16px;z-index:5;
+ width:43px;height:43px;border:1px solid #ffffff55;
+ border-radius:50%;background:#031924a6;color:white;font-size:23px;
 }
-
-.banner-slide img{
-  width:100%;
-  aspect-ratio:16/8;
-  object-fit:cover;
-}
-@keyframes fadeIn{from{opacity:.4}to{opacity:1}}
-.banner-arrow{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid #ffffff55;border-radius:50%;background:#031924a6;color:white;font-size:25px}
-.banner-prev{left:18px}.banner-next{right:18px}
+.banner-prev{left:16px}.banner-next{right:16px}
 .banner-dots{display:flex;justify-content:center;gap:9px;padding-top:18px}
 .banner-dot{width:8px;height:8px;border:0;border-radius:20px;background:#78949D}
 .banner-dot.active{width:26px;background:var(--green)}
@@ -164,7 +152,61 @@ section{padding:30px 0}
 .empty-note{padding:25px;border:1px dashed #4c7880;border-radius:15px;color:var(--muted);text-align:center}
 .channel-link{display:inline-block;margin-top:16px;padding:12px 18px;background:var(--green);color:#063C36;border-radius:12px;font-weight:900}
 
-/* FOOTER */
+/* NEW FEATURE CONTENT */
+.review-track{
+ display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;
+ padding:3px 2px 16px;scrollbar-width:none;
+}
+.review-track::-webkit-scrollbar{display:none}
+.review-card{
+ flex:0 0 290px;scroll-snap-align:start;
+ background:var(--card);border:1px solid var(--border);
+ border-radius:18px;padding:22px;
+}
+.review-stars{color:var(--mint);letter-spacing:3px;font-size:17px;margin-bottom:10px}
+.review-card p{color:#D3E2E9;font-size:14px}
+.review-card h3{font-size:16px;margin-top:15px}
+.review-card small{color:var(--muted)}
+.sample-note{color:var(--muted);font-size:12px;margin-top:10px}
+.brand-intro{
+ display:flex;align-items:center;gap:28px;
+ background:var(--card);border:1px solid var(--border);
+ border-radius:20px;padding:28px;
+}
+.brand-intro img{width:170px;height:130px;object-fit:contain;flex-shrink:0}
+.brand-intro h2{font-size:25px;margin-bottom:8px}
+.brand-intro p{color:var(--muted);font-size:14px}
+.social-links{display:flex;gap:12px;margin-top:17px;flex-wrap:wrap}
+.social-links a{
+ width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+ background:#fff;color:#073746;font-weight:900;font-size:15px;
+}
+.social-links span{
+ width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+ background:#fff;color:#073746;font-weight:900;font-size:15px;
+}
+.company-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.company-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:19px}
+.company-item small{display:block;color:var(--mint);font-weight:800;margin-bottom:5px}
+.company-item p{color:#D5E4EA;font-size:14px;overflow-wrap:anywhere}
+.course-list{display:grid;gap:16px}
+.course-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:21px;transition:.2s}
+.course-card h3{font-size:19px}
+.course-card p{color:var(--muted);font-size:14px;margin:5px 0 12px}
+.course-price{color:var(--mint);font-weight:900;margin-bottom:12px}
+.action-link,.purchase-button{
+ display:inline-block;border:0;border-radius:11px;padding:11px 17px;
+ background:var(--green);color:#063C36;font-weight:900;
+}
+.detail-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px}
+.detail-box p{color:#D2E1E7;margin:10px 0}
+.detail-video{width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#001923}
+.detail-bottom{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.chapter-list{display:grid;gap:12px}
+.chapter-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:17px}
+.chapter-card h3{font-size:16px;margin-bottom:10px}
+.chapter-actions{display:flex;gap:10px;flex-wrap:wrap}
+.chapter-actions a{padding:9px 13px;border-radius:10px;background:#08C99A26;color:var(--mint);font-weight:800;font-size:13px}
 .footer{margin-top:45px;background:var(--deep);padding:45px 0 30px}
 .footer h2{font-size:22px;margin-bottom:5px}
 .footer p{color:var(--muted);font-size:13px}
@@ -174,15 +216,11 @@ section{padding:30px 0}
 
 @media(max-width:700px){
  .header-inner{min-height:68px;padding:5px 4%;gap:10px}
- .brand img{
-  width:135px;height:58px;
-  object-fit:contain;object-position:left center;
- }
+ .brand img{width:135px;height:58px;object-fit:contain;object-position:left center}
  .desktop-nav{display:none}
  .hero{padding:27px 0 50px}
- .banner{border-radius:17px}
- .banner-slide img{aspect-ratio:16/9}
- .banner-arrow{width:38px;height:38px;font-size:20px}
+ .banner{border-radius:17px;aspect-ratio:16/9}
+ .banner-arrow{width:38px;height:38px;font-size:20px;bottom:11px}
  .banner-prev{left:10px}.banner-next{right:10px}
  .batch-section{padding:24px 19px;border-radius:20px}
  .batch-card{padding:17px;gap:15px}
@@ -210,6 +248,11 @@ section{padding:30px 0}
  .choice-card small{font-size:10px}
  .video-list{grid-template-columns:1fr}
  .post-content{padding:16px}
+ .brand-intro{display:block;padding:21px}
+ .brand-intro img{width:140px;height:100px;margin-bottom:15px}
+ .brand-intro h2{font-size:22px}
+ .company-grid{grid-template-columns:1fr}
+ .review-card{flex-basis:270px}
 }
 @media(min-width:701px){.menu-btn{display:none}}
 </style>
@@ -218,32 +261,29 @@ section{padding:30px 0}
 <body>
 <header class="header">
  <div class="header-inner">
-  <a href="#" class="brand">
+  <a href="?" class="brand">
    <img src="change-maker-logo.png" alt="Change Maker Academy Logo">
   </a>
   <nav class="desktop-nav">
-   <a href="#">Home</a>
+   <a href="?">Home</a>
    <a href="#offline">Offline Batches</a>
    <a href="#batches">Online Batches</a>
-   <a href="#videos">Free Lessons</a>
+   <a href="#exam">Exam Preparation</a>
    <a href="#materials">Study Materials</a>
-   <a href="#learning">Courses</a>
-   <a href="#notices">Posts & Notices</a>
+   <a href="#reviews">Student Reviews</a>
    <a href="#contact">Contact</a>
   </nav>
   <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
  </div>
  <nav class="mobile-menu" id="mobileMenu">
-  <a href="#">Home</a>
+  <a href="?">Home</a>
   <a href="#offline">Offline Batches</a>
   <a href="#batches">Online Batches</a>
-  <a href="#videos">Free Lessons</a>
+  <a href="#exam">Exam Preparation</a>
   <a href="#materials">Study Materials</a>
-  <a href="#learning">Courses</a>
-  <a href="#notices">Posts & Notices</a>
-  <a href="#contact">About Us</a>
+  <a href="#reviews">Student Reviews</a>
+  <a href="#brandIntro">About Us</a>
   <a href="#contact">Contact</a>
-  <a href="#contact">Admin Panel</a>
  </nav>
 </header>
 
@@ -277,19 +317,19 @@ section{padding:30px 0}
    <h1 class="batch-title">Online Batches are ongoing!</h1>
    <p class="batch-subtitle">Book your seat now!</p>
    <div class="batch-list">
-    <a href="?page=video-ssc" class="batch-card"><div class="batch-icon">▤</div><div><h3>Class 9, 10</h3><p>SSC Preparation</p></div><span class="batch-arrow">›</span></a>
-    <a href="?page=video-hsc" class="batch-card"><div class="batch-icon">▣</div><div><h3>College</h3><p>HSC Preparation</p></div><span class="batch-arrow">›</span></a>
-    <a href="?page=video-admission" class="batch-card"><div class="batch-icon">♜</div><div><h3>Admission</h3><p>University Admission Preparation</p></div><span class="batch-arrow">›</span></a>
+    <a href="?page=online-ssc" class="batch-card"><div class="batch-icon">▤</div><div><h3>Class 9, 10</h3><p>SSC Preparation</p></div><span class="batch-arrow">›</span></a>
+    <a href="?page=online-hsc" class="batch-card"><div class="batch-icon">▣</div><div><h3>College</h3><p>HSC Preparation</p></div><span class="batch-arrow">›</span></a>
+    <a href="?page=online-admission" class="batch-card"><div class="batch-icon">♜</div><div><h3>Admission</h3><p>University Admission Preparation</p></div><span class="batch-arrow">›</span></a>
    </div>
   </section>
 
-  <!-- FREE LESSONS -->
-  <section id="videos">
-   <div class="section-heading"><h2>Free Lessons</h2><p>Watch and learn from our teachers.</p></div>
-   <a href="?page=video-ssc" class="video-card">
-    <div class="video-thumb"><img src="video1.jpg" alt="Free lesson"><span class="play-icon">▶</span></div>
-    <div class="video-info"><h3>Explore Our Video Lessons</h3><p>Choose your program and subject.</p></div>
-   </a>
+  <!-- EXAM PREPARATION -->
+  <section id="exam">
+   <div class="section-heading"><h2>Exam Preparation</h2><p>Prepare with subject-wise courses and guidance.</p></div>
+   <div class="offline-grid">
+    <a href="?page=exam-ssc" class="offline-card"><div class="offline-icon">▤</div><div><h3>SSC Preparation</h3><p>Class 9 & 10</p></div><span>›</span></a>
+    <a href="?page=exam-hsc" class="offline-card"><div class="offline-icon">▣</div><div><h3>HSC Preparation</h3><p>College</p></div><span>›</span></a>
+   </div>
   </section>
 
   <!-- STUDY MATERIALS -->
@@ -297,19 +337,15 @@ section{padding:30px 0}
    <div class="section-heading"><h2>Study Materials</h2><p>Access learning resources and practice materials.</p></div>
    <div class="offline-grid">
     <a href="?page=materials-pdf" class="offline-card">
-     <div class="offline-icon">▤</div>
-     <div><h3>PDF Notes</h3><p>Subject-wise study notes</p></div>
-     <span>›</span>
+     <div class="offline-icon">▤</div><div><h3>PDF Notes</h3><p>Subject-wise study notes</p></div><span>›</span>
     </a>
     <a href="?page=materials-practice" class="offline-card">
-     <div class="offline-icon">✎</div>
-     <div><h3>Practice</h3><p>Questions and practice sets</p></div>
-     <span>›</span>
+     <div class="offline-icon">✎</div><div><h3>Practice</h3><p>Questions and practice sets</p></div><span>›</span>
     </a>
    </div>
   </section>
 
-  <!-- ACHIEVEMENTS -->
+  <!-- ACHIEVEMENTS: ORIGINAL CONTENT -->
   <section>
    <div class="section-heading"><h2>Our Achievements</h2><p>Growing together, achieving more.</p></div>
    <div class="stats-grid">
@@ -319,29 +355,59 @@ section{padding:30px 0}
    </div>
   </section>
 
-  <!-- LEARNING PATH -->
-  <section id="learning">
-   <div class="section-heading">
-    <h2>Choose Your Learning Path</h2>
-    <p>Select your group to begin your learning journey.</p>
+  <!-- STUDENT REVIEWS -->
+  <section id="reviews">
+   <div class="section-heading"><h2>What Our Students Say</h2><p>Hear from our learning community.</p></div>
+   <div class="review-track">
+    <article class="review-card">
+     <div class="review-stars">★★★★★</div>
+     <p>“The lessons are well organized and easy to follow. I enjoy learning here.”</p>
+     <h3>Student Review 01</h3><small>Sample Review</small>
+    </article>
+    <article class="review-card">
+     <div class="review-stars">★★★★★</div>
+     <p>“The subject-wise learning system helps me stay focused on my studies.”</p>
+     <h3>Student Review 02</h3><small>Sample Review</small>
+    </article>
+    <article class="review-card">
+     <div class="review-stars">★★★★★</div>
+     <p>“A helpful platform for lessons, practice and exam preparation.”</p>
+     <h3>Student Review 03</h3><small>Sample Review</small>
+    </article>
+    <article class="review-card">
+     <div class="review-stars">★★★★★</div>
+     <p>“I like having learning resources and subject guidance in one place.”</p>
+     <h3>Student Review 04</h3><small>Sample Review</small>
+    </article>
    </div>
-   <div class="path-grid">
-    <a href="?page=path-science" class="path-card">
-     <div class="path-icon">⚗</div><h3>Science</h3><p>Explore Science subjects →</p>
-    </a>
-    <a href="?page=path-arts" class="path-card">
-     <div class="path-icon">📚</div><h3>Arts</h3><p>Explore Arts subjects →</p>
-    </a>
-    <a href="?page=path-commerce" class="path-card">
-     <div class="path-icon">▤</div><h3>Commerce</h3><p>Explore Commerce subjects →</p>
-    </a>
+   <p class="sample-note">Note: These are sample review texts. Replace them with genuine student feedback before publishing as testimonials.</p>
+  </section>
+
+  <!-- BRAND INTRODUCTION -->
+  <section id="brandIntro">
+   <div class="brand-intro">
+    <img src="change-maker-logo.png" alt="Change Maker Academy Logo">
+    <div>
+     <h2>CHANGE MAKER ACADEMY</h2>
+     <p>Change Maker Academy is an educational platform dedicated to making quality learning accessible to students. We aim to support learners through structured academic programs, engaging lessons, useful study materials, and exam preparation resources. Our goal is to help students build knowledge, develop confidence, and move towards a brighter future.</p>
+     <div class="social-links">
+      <a href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G" target="_blank" rel="noopener" aria-label="YouTube">YT</a>
+      <span aria-label="Facebook link to be added">f</span>
+      <span aria-label="Google link to be added">G</span>
+     </div>
+    </div>
    </div>
   </section>
 
-  <!-- STUDENT EXPERIENCES -->
-  <section>
-   <div class="section-heading"><h2>Student Experiences</h2><p>Hear from our learning community.</p></div>
-   <div class="notice-list"><div class="notice-item"><div class="notice-icon">❝</div><div><h3>Student Reviews</h3><p>Student feedback and success stories will appear here.</p></div></div></div>
+  <!-- COMPANY DETAILS -->
+  <section id="companyDetails">
+   <div class="section-heading"><h2>Company Details & Contact</h2><p>Get in touch with Change Maker Academy.</p></div>
+   <div class="company-grid">
+    <div class="company-item"><small>LICENSE NO.</small><p>To be added</p></div>
+    <div class="company-item"><small>ADDRESS</small><p>To be added</p></div>
+    <div class="company-item"><small>CONTACT PHONE</small><p>To be added</p></div>
+    <div class="company-item"><small>EMAIL</small><p>To be added</p></div>
+   </div>
   </section>
 
   <!-- LATEST NOTICES -->
@@ -375,19 +441,16 @@ section{padding:30px 0}
   <p>Helping learners build a brighter future.</p>
   <div class="footer-links">
    <a href="?">Home</a><a href="#offline">Offline Batches</a>
-   <a href="#batches">Online Batches</a><a href="#videos">Free Lessons</a>
-   <a href="#materials">Study Materials</a><a href="#notices">Notices</a>
-   <a href="YOUR_WHATSAPP_LINK">Contact</a>
+   <a href="#batches">Online Batches</a><a href="#exam">Exam Preparation</a>
+   <a href="#materials">Study Materials</a><a href="#reviews">Student Reviews</a>
+   <a href="#brandIntro">About Us</a><a href="#companyDetails">Company Details</a>
   </div>
   <div class="footer-bottom">© 2026 Change Maker Academy. All rights reserved.</div>
  </div>
 </footer>
 
 <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
-
-
 <script>
-
 // MOBILE MENU
 const menuBtn=document.getElementById("menuBtn");
 const mobileMenu=document.getElementById("mobileMenu");
@@ -431,8 +494,8 @@ function showSlide(index){
  });
 }
 
-function nextSlide(){showSlide(currentSlide+1);}
-function prevSlide(){showSlide(currentSlide-1);}
+function nextSlide(){showSlide(currentSlide+1)}
+function prevSlide(){showSlide(currentSlide-1)}
 
 function restartSlider(){
  clearInterval(sliderTimer);
@@ -440,13 +503,10 @@ function restartSlider(){
 }
 
 document.getElementById("nextBanner").addEventListener("click",()=>{
- nextSlide();
- restartSlider();
+ nextSlide();restartSlider();
 });
-
 document.getElementById("prevBanner").addEventListener("click",()=>{
- prevSlide();
- restartSlider();
+ prevSlide();restartSlider();
 });
 
 let touchStartX=0;
@@ -471,62 +531,37 @@ restartSlider();
 const learningSubjects={
  science:{
   ssc:[
-   ["Physics","physics"],
-   ["Chemistry","chemistry"],
-   ["Biology","biology"],
-   ["Higher Mathematics","higher-math"],
-   ["General Mathematics","general-math"]
+   ["Physics","physics"],["Chemistry","chemistry"],["Biology","biology"],
+   ["Higher Mathematics","higher-math"],["General Mathematics","general-math"]
   ],
   hsc:[
-   ["Physics","physics"],
-   ["Chemistry","chemistry"],
-   ["Biology","biology"],
-   ["Higher Mathematics","higher-math"],
-   ["ICT","ict"]
+   ["Physics","physics"],["Chemistry","chemistry"],["Biology","biology"],
+   ["Higher Mathematics","higher-math"],["ICT","ict"]
   ]
  },
-
  arts:{
   ssc:[
-   ["Bangla","bangla"],
-   ["English","english"],
-   ["General Mathematics","general-math"],
-   ["ICT","ict"],
-   ["Bangladesh and Global Studies","bangladesh-global-studies"],
+   ["Bangla","bangla"],["English","english"],["General Mathematics","general-math"],
+   ["ICT","ict"],["Bangladesh and Global Studies","bangladesh-global-studies"],
    ["History of Bangladesh and World Civilization","history"],
-   ["Geography and Environment","geography"],
-   ["Civics and Citizenship","civics"],
+   ["Geography and Environment","geography"],["Civics and Citizenship","civics"],
    ["Economics","economics"]
   ],
   hsc:[
-   ["Bangla","bangla"],
-   ["English","english"],
-   ["ICT","ict"],
-   ["Civics","civics"],
-   ["Economics","economics"],
-   ["Logic","logic"],
-   ["History","history"],
+   ["Bangla","bangla"],["English","english"],["ICT","ict"],["Civics","civics"],
+   ["Economics","economics"],["Logic","logic"],["History","history"],
    ["Islamic History and Culture","islamic-history"],
-   ["Geography","geography"],
-   ["Sociology","sociology"]
+   ["Geography","geography"],["Sociology","sociology"]
   ]
  },
-
  commerce:{
   ssc:[
-   ["Bangla","bangla"],
-   ["English","english"],
-   ["General Mathematics","general-math"],
-   ["ICT","ict"],
-   ["Accounting","accounting"],
-   ["Finance and Banking","finance-banking"],
+   ["Bangla","bangla"],["English","english"],["General Mathematics","general-math"],
+   ["ICT","ict"],["Accounting","accounting"],["Finance and Banking","finance-banking"],
    ["Business Entrepreneurship","business-entrepreneurship"]
   ],
   hsc:[
-   ["Bangla","bangla"],
-   ["English","english"],
-   ["ICT","ict"],
-   ["Accounting","accounting"],
+   ["Bangla","bangla"],["English","english"],["ICT","ict"],["Accounting","accounting"],
    ["Finance, Banking and Insurance","finance-banking"],
    ["Business Organization and Management","business-management"],
    ["Production Management and Marketing","production-marketing"]
@@ -534,7 +569,10 @@ const learningSubjects={
  }
 };
 
-// SUBJECT IMAGES
+const groupNames={
+ science:"Science",arts:"Arts",commerce:"Commerce"
+};
+
 const demoImages={
  science:"https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=85",
  arts:"https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
@@ -547,22 +585,17 @@ const demoImages={
 };
 
 // ADD YOUTUBE VIDEO IDs HERE LATER.
-// Example:
-// "science-ssc-physics":["YOUTUBE_VIDEO_ID_1","YOUTUBE_VIDEO_ID_2"]
+// Example: "ssc-science-physics":["VIDEO_ID_1","VIDEO_ID_2"]
 const youtubeVideos={};
 
-const offlineSubjects={
- ssc:[
-  "Biology","Physics","Chemistry",
-  "Higher Mathematics","General Mathematics",
-  "English 1st Paper","English 2nd Paper","ICT"
- ],
- hsc:[
-  "Physics","Chemistry","Biology",
-  "Higher Mathematics","English","ICT"
- ]
-};
+// DEMO COURSE DATA
+// Replace these sample courses with actual academy courses later.
+const examCourses=[
+ {id:"course-1",name:"Complete Subject Preparation",price:"To be announced",description:"A structured subject-wise preparation course with lessons and study guidance.",video:""},
+ {id:"course-2",name:"Exam Revision Course",price:"To be announced",description:"Revision-focused lessons and preparation support for upcoming examinations.",video:""}
+];
 
+// PAGE ELEMENTS
 const innerPage=document.getElementById("innerPage");
 const homePage=document.getElementById("homePage");
 const pageBanner=document.getElementById("pageBanner");
@@ -571,6 +604,20 @@ const pageLabel=document.getElementById("pageLabel");
 const pageDescription=document.getElementById("pageDescription");
 const pageContent=document.getElementById("pageContent");
 const backLink=document.getElementById("backLink");
+
+function setPage(title,label,description,image,back){
+ pageTitle.textContent=title;
+ pageLabel.textContent=label;
+ pageDescription.textContent=description;
+ pageBanner.src=image||demoImages.classroom;
+ pageBanner.alt=title+" banner";
+ backLink.href=back||"?";
+ document.title=title+" | Change Maker Academy";
+}
+
+function clearContent(){
+ pageContent.innerHTML="";
+}
 
 function makeCard(title,subtitle,url,icon="▤"){
  const a=document.createElement("a");
@@ -593,7 +640,35 @@ function makeCard(title,subtitle,url,icon="▤"){
  return a;
 }
 
-function makePost(subject,program){
+function makeGrid(){
+ const grid=document.createElement("div");
+ grid.className="choice-grid";
+ return grid;
+}
+
+function makeEmpty(text){
+ const note=document.createElement("div");
+ note.className="empty-note";
+ note.textContent=text;
+ return note;
+}
+
+function getSubjects(group,level){
+ if(!learningSubjects[group])return [];
+ const actualLevel=level==="admission"?"hsc":level;
+ return learningSubjects[group][actualLevel]||[];
+}
+
+function getSubject(group,level,key){
+ return getSubjects(group,level).find(item=>item[1]===key);
+}
+
+function showNotFound(){
+ setPage("Page Not Found","404","This page could not be found.",demoImages.classroom,"?");
+ pageContent.appendChild(makeEmpty("Please return to the homepage and choose a valid section."));
+}
+
+function makePost(subject,program,group){
  const article=document.createElement("article");
  article.className="offline-post";
 
@@ -606,10 +681,10 @@ function makePost(subject,program){
  content.className="post-content";
 
  const heading=document.createElement("h2");
- heading.textContent="Next Offline Class: "+subject;
+ heading.textContent=subject+" Offline Batch";
 
  const description=document.createElement("p");
- description.textContent="Join our upcoming "+subject+" offline class. More class details will be announced soon.";
+ description.textContent="Upcoming "+subject+" offline batch information. Actual class schedules and teacher details will be added by the academy.";
 
  const meta=document.createElement("div");
  meta.className="post-meta";
@@ -617,8 +692,10 @@ function makePost(subject,program){
  [
   ["◷","Date: To be announced"],
   ["◴","Time: To be announced"],
-  ["♙","Teacher: To be announced"],
-  ["⌖","Location: Academy classroom"]
+  ["♙","Teachers: To be announced"],
+  ["⌖","Place: To be announced"],
+  ["▤","Program: "+program.toUpperCase()],
+  ["▣","Group: "+groupNames[group]]
  ].forEach(item=>{
   const line=document.createElement("div");
   const symbol=document.createElement("span");
@@ -634,412 +711,512 @@ function makePost(subject,program){
  return article;
 }
 
-// PAGE SETTINGS
-function setPage(title,label,description,image,back){
- pageTitle.textContent=title;
- pageLabel.textContent=label;
- pageDescription.textContent=description;
- pageBanner.src=image||demoImages.classroom;
- pageBanner.alt=title+" banner";
- backLink.href=back||"?";
- document.title=title+" | Change Maker Academy";
-}
+function renderGroups(program,mode){
+ const title=mode==="offline"?"Offline Batches":
+             mode==="exam"?"Exam Preparation":"Online Batches";
 
-function showNotFound(){
  setPage(
-  "Page Not Found",
-  "404",
-  "This page could not be found.",
+  "Choose Your Group",
+  title+" | "+program.toUpperCase(),
+  "Select your group to continue.",
   demoImages.classroom,
-  "?"
+  mode==="offline"?"?#offline":mode==="exam"?"?#exam":"?#batches"
  );
- pageContent.innerHTML=
-  '<div class="empty-note">Please return to the homepage and choose a valid section.</div>';
+
+ const grid=makeGrid();
+ ["science","arts","commerce"].forEach(group=>{
+  const destination=mode==="offline"
+   ?"offline-group-"+program+"-"+group
+   :mode==="exam"
+   ?"exam-group-"+program+"-"+group
+   :"online-group-"+program+"-"+group;
+
+  grid.appendChild(makeCard(
+   groupNames[group],
+   "Continue with "+groupNames[group],
+   "?page="+destination,
+   group==="science"?"⚗":group==="arts"?"📚":"▤"
+  ));
+ });
+ pageContent.appendChild(grid);
 }
 
-// MAIN PAGE RENDERER
+function renderSubjectChoices(program,group,mode){
+ const subjects=getSubjects(group,program);
+ if(!subjects.length){showNotFound();return}
+
+ const modeTitle=mode==="offline"?"Offline Batch":
+                 mode==="exam"?"Exam Preparation":"Online Lessons";
+
+ setPage(
+  groupNames[group]+" | "+program.toUpperCase(),
+  modeTitle+" Subjects",
+  "Choose a subject to continue.",
+  demoImages[group],
+  "?page="+(mode==="offline"?"offline-"+program:
+           mode==="exam"?"exam-"+program:"online-"+program)
+ );
+
+ const grid=makeGrid();
+ subjects.forEach(subject=>{
+  let destination="";
+  if(mode==="offline")destination="offline-subject-"+program+"-"+group+"-"+subject[1];
+  if(mode==="exam")destination="exam-courses-"+program+"-"+group+"-"+subject[1];
+  if(mode==="online")destination="online-lessons-"+program+"-"+group+"-"+subject[1];
+
+  grid.appendChild(makeCard(
+   subject[0],
+   modeTitle+" | "+subject[0],
+   "?page="+destination,
+   mode==="online"?"▶":"▤"
+  ));
+ });
+ pageContent.appendChild(grid);
+}
+
+function renderOnlineLessons(program,group,subjectKey){
+ const subject=getSubject(group,program,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" Video Lessons",
+  (program==="admission"?"Admission":program.toUpperCase())+" | "+groupNames[group],
+  "Watch the available video lessons for "+subject[0]+".",
+  demoImages[group],
+  "?page=online-group-"+program+"-"+group
+ );
+
+ const videoKey=program+"-"+group+"-"+subjectKey;
+ const videos=youtubeVideos[videoKey]||[];
+
+ if(!videos.length){
+  pageContent.appendChild(makeEmpty("Video lessons for this subject will be added soon."));
+  const channel=document.createElement("a");
+  channel.className="channel-link";
+  channel.href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G";
+  channel.target="_blank";
+  channel.rel="noopener";
+  channel.textContent="Visit Our YouTube Channel ↗";
+  pageContent.appendChild(channel);
+  return;
+ }
+
+ const list=document.createElement("div");
+ list.className="video-list";
+
+ videos.forEach((videoId,index)=>{
+  const card=document.createElement("div");
+  card.className="video-lesson";
+
+  const iframe=document.createElement("iframe");
+  iframe.className="video-embed";
+  iframe.src="https://www.youtube.com/embed/"+encodeURIComponent(videoId);
+  iframe.title=subject[0]+" lesson "+(index+1);
+  iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+  iframe.allowFullscreen=true;
+  iframe.loading="lazy";
+
+  const heading=document.createElement("h3");
+  heading.textContent=subject[0]+" — Lesson "+(index+1);
+
+  card.append(iframe,heading);
+  list.appendChild(card);
+ });
+
+ pageContent.appendChild(list);
+}
+
+// OFFLINE: SUBJECT -> BATCH POSTS
+function renderOfflinePosts(program,group,subjectKey){
+ const subject=getSubject(group,program,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" Offline Batch Posts",
+  program.toUpperCase()+" | "+groupNames[group],
+  "Upcoming batch posts, class schedules and teacher information.",
+  demoImages.classroom,
+  "?page=offline-group-"+program+"-"+group
+ );
+
+ const posts=document.createElement("div");
+ posts.className="post-list";
+ posts.appendChild(makePost(subject[0],program,group));
+ pageContent.appendChild(posts);
+ pageContent.appendChild(makeEmpty("More batch posts will appear here when the academy publishes them."));
+}
+
+// EXAM PREPARATION: SUBJECT -> COURSES
+function renderExamCourses(program,group,subjectKey){
+ const subject=getSubject(group,program,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" Courses",
+  "Exam Preparation | "+program.toUpperCase()+" | "+groupNames[group],
+  "Choose a course to see its details.",
+  demoImages[group],
+  "?page=exam-group-"+program+"-"+group
+ );
+
+ const list=document.createElement("div");
+ list.className="course-list";
+
+ examCourses.forEach(course=>{
+  const card=document.createElement("article");
+  card.className="course-card";
+
+  const heading=document.createElement("h3");
+  heading.textContent=course.name;
+
+  const desc=document.createElement("p");
+  desc.textContent=course.description;
+
+  const price=document.createElement("div");
+  price.className="course-price";
+  price.textContent="Course Value: "+course.price;
+
+  const link=document.createElement("a");
+  link.className="action-link";
+  link.href="?page=exam-detail-"+program+"-"+group+"-"+subjectKey+"-"+course.id;
+  link.textContent="View Details →";
+
+  card.append(heading,desc,price,link);
+  list.appendChild(card);
+ });
+
+ pageContent.appendChild(list);
+}
+
+function renderExamDetails(program,group,subjectKey,courseId){
+ const subject=getSubject(group,program,subjectKey);
+ const course=examCourses.find(item=>item.id===courseId);
+
+ if(!subject||!course){showNotFound();return}
+
+ setPage(
+  course.name,
+  "Course Details | "+subject[0],
+  "Read the course information before making an enquiry.",
+  demoImages[group],
+  "?page=exam-courses-"+program+"-"+group+"-"+subjectKey
+ );
+
+ const box=document.createElement("div");
+ box.className="detail-box";
+
+ if(course.video){
+  const iframe=document.createElement("iframe");
+  iframe.className="detail-video";
+  iframe.src="https://www.youtube.com/embed/"+encodeURIComponent(course.video);
+  iframe.title=course.name+" introduction";
+  iframe.allowFullscreen=true;
+  box.appendChild(iframe);
+ }else{
+  box.appendChild(makeEmpty("Course introduction video will be added soon."));
+ }
+
+ const heading=document.createElement("h2");
+ heading.textContent=course.name;
+ heading.style.marginTop="18px";
+
+ const description=document.createElement("p");
+ description.textContent=course.description;
+
+ const subjectInfo=document.createElement("p");
+ subjectInfo.textContent="Subject: "+subject[0]+" | Group: "+groupNames[group]+" | Level: "+program.toUpperCase();
+
+ const value=document.createElement("p");
+ value.textContent="Course Value: "+course.price;
+
+ const bottom=document.createElement("div");
+ bottom.className="detail-bottom";
+
+ const purchase=document.createElement("button");
+ purchase.className="purchase-button";
+ purchase.type="button";
+ purchase.textContent="Purchase Now";
+ purchase.addEventListener("click",()=>{
+  alert("The course purchase process will be announced by Change Maker Academy. Please contact the academy for details.");
+ });
+
+ bottom.appendChild(purchase);
+ box.append(heading,description,subjectInfo,value,bottom);
+ pageContent.appendChild(box);
+}
+
+// STUDY MATERIALS
+function renderMaterialLevels(type){
+ setPage(
+  type==="pdf"?"PDF Notes":"Practice Materials",
+  "Study Materials",
+  "Select your academic level.",
+  demoImages.classroom,
+  "?#materials"
+ );
+
+ const grid=makeGrid();
+ ["ssc","hsc"].forEach(level=>{
+  grid.appendChild(makeCard(
+   level.toUpperCase(),
+   level==="ssc"?"Class 9 & 10":"College",
+   "?page=materials-level-"+type+"-"+level,
+   "▤"
+  ));
+ });
+ pageContent.appendChild(grid);
+}
+
+function renderMaterialGroups(type,level){
+ setPage(
+  level.toUpperCase()+" | Choose Group",
+  type==="pdf"?"PDF Notes":"Practice",
+  "Select Science, Arts or Commerce.",
+  demoImages.classroom,
+  "?page=materials-"+type
+ );
+
+ const grid=makeGrid();
+ ["science","arts","commerce"].forEach(group=>{
+  grid.appendChild(makeCard(
+   groupNames[group],
+   "Explore "+groupNames[group]+" materials",
+   "?page=materials-group-"+type+"-"+level+"-"+group,
+   "▤"
+  ));
+ });
+ pageContent.appendChild(grid);
+}
+
+function renderMaterialSubjects(type,level,group){
+ setPage(
+  groupNames[group]+" Subjects",
+  type==="pdf"?"PDF Notes":"Practice Materials",
+  "Choose a subject.",
+  demoImages[group],
+  "?page=materials-level-"+type+"-"+level
+ );
+
+ const grid=makeGrid();
+ getSubjects(group,level).forEach(subject=>{
+  grid.appendChild(makeCard(
+   subject[0],
+   "Open "+subject[0]+" chapters",
+   "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subject[1],
+   "▤"
+  ));
+ });
+ pageContent.appendChild(grid);
+}
+
+function renderMaterialChapters(type,level,group,subjectKey){
+ const subject=getSubject(group,level,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" Chapters",
+  type==="pdf"?"PDF Notes":"Practice Materials",
+  "Select a chapter to continue.",
+  demoImages[group],
+  "?page=materials-group-"+type+"-"+level+"-"+group
+ );
+
+ const list=document.createElement("div");
+ list.className="choice-grid";
+
+ ["Chapter 1","Chapter 2","Chapter 3"].forEach((chapter,index)=>{
+  const key="chapter-"+(index+1);
+  list.appendChild(makeCard(
+   chapter,
+   subject[0]+" | "+chapter,
+   "?page=materials-content-"+type+"-"+level+"-"+group+"-"+subjectKey+"-"+key,
+   "▤"
+  ));
+ });
+
+ pageContent.appendChild(list);
+}
+
+function renderMaterialContent(type,level,group,subjectKey,chapter){
+ const subject=getSubject(group,level,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" | "+chapter.replaceAll("-"," ").toUpperCase(),
+  type==="pdf"?"PDF Notes":"Practice Materials",
+  "Available learning content for this chapter.",
+  demoImages[group],
+  "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subjectKey
+ );
+
+ if(type==="pdf"){
+  pageContent.appendChild(makeEmpty("PDF notes for this chapter will be uploaded here."));
+  return;
+ }
+
+ const grid=makeGrid();
+ ["CQ","MCQ"].forEach(kind=>{
+  grid.appendChild(makeCard(
+   kind,
+   kind==="CQ"?"Creative Questions":"Multiple Choice Questions",
+   "?page=materials-practice-content-"+level+"-"+group+"-"+subjectKey+"-"+chapter+"-"+kind.toLowerCase(),
+   "✎"
+  ));
+ });
+ pageContent.appendChild(grid);
+}
+
+function renderPracticeContent(level,group,subjectKey,chapter,kind){
+ const subject=getSubject(group,level,subjectKey);
+ if(!subject){showNotFound();return}
+
+ setPage(
+  subject[0]+" "+kind.toUpperCase(),
+  "Practice | "+chapter.replaceAll("-"," "),
+  "Practice content for this chapter will be published here.",
+  demoImages[group],
+  "?page=materials-content-practice-"+level+"-"+group+"-"+subjectKey+"-"+chapter
+ );
+
+ pageContent.appendChild(makeEmpty(
+  kind.toUpperCase()+" questions and practice materials will be added here soon."
+ ));
+}
+
+// MAIN PAGE ROUTER
 function openPage(page){
  homePage.style.display="none";
  innerPage.classList.add("active");
- pageContent.innerHTML="";
+ clearContent();
 
- // STEP 1: SELECT GROUP
- if(page.startsWith("path-")&&page.split("-").length===2){
-  const group=page.replace("path-","");
-
-  const groupNames={
-   science:"Science",
-   arts:"Arts",
-   commerce:"Commerce"
-  };
-
-  if(!groupNames[group]){
-   showNotFound();
-   return;
-  }
-
-  setPage(
-   groupNames[group]+" Group",
-   "Choose Your Level",
-   "Select your academic level to explore the subjects.",
-   demoImages[group],
-   "?#learning"
-  );
-
-  const grid=document.createElement("div");
-  grid.className="choice-grid";
-
-  grid.appendChild(makeCard(
-   "SSC",
-   "Secondary School Certificate",
-   "?page=path-"+group+"-ssc",
-   "▤"
-  ));
-
-  grid.appendChild(makeCard(
-   "HSC",
-   "Higher Secondary Certificate",
-   "?page=path-"+group+"-hsc",
-   "▣"
-  ));
-
-  pageContent.appendChild(grid);
+ // OFFLINE: SSC / HSC -> GROUP
+ if(page==="offline-ssc"||page==="offline-hsc"){
+  renderGroups(page.replace("offline-",""),"offline");
  }
 
- // STEP 2: SELECT SSC / HSC SUBJECTS
- else if(page.startsWith("path-")){
+ // OFFLINE: GROUP -> SUBJECT
+ else if(page.startsWith("offline-group-")){
   const parts=page.split("-");
-  const group=parts[1];
-  const level=parts[2];
-
-  if(!learningSubjects[group]||
-     !learningSubjects[group][level]){
-   showNotFound();
-   return;
-  }
-
-  const groupName={
-   science:"Science",
-   arts:"Arts",
-   commerce:"Commerce"
-  }[group];
-
-  setPage(
-   groupName+" | "+level.toUpperCase(),
-   level.toUpperCase()+" Subjects",
-   "Choose a subject to open its video lesson page.",
-   demoImages[group],
-   "?page=path-"+group
-  );
-
-  const grid=document.createElement("div");
-  grid.className="choice-grid";
-
-  learningSubjects[group][level].forEach(subject=>{
-   grid.appendChild(makeCard(
-    subject[0],
-    "Explore "+subject[0]+" lessons",
-    "?page=lesson-"+group+"-"+level+"-"+subject[1],
-    "▶"
-   ));
-  });
-
-  pageContent.appendChild(grid);
+  renderSubjectChoices(parts[2],parts[3],"offline");
  }
 
- // STEP 3: SUBJECT VIDEO PAGE
- else if(page.startsWith("lesson-")){
+ // OFFLINE: SUBJECT -> POSTS
+ else if(page.startsWith("offline-subject-")){
   const parts=page.split("-");
-  const group=parts[1];
-  const level=parts[2];
-  const subjectKey=parts.slice(3).join("-");
-
-  if(!learningSubjects[group]||
-     !learningSubjects[group][level]){
-   showNotFound();
-   return;
-  }
-
-  const subject=learningSubjects[group][level].find(
-   item=>item[1]===subjectKey
-  );
-
-  if(!subject){
-   showNotFound();
-   return;
-  }
-
-  const groupName={
-   science:"Science",
-   arts:"Arts",
-   commerce:"Commerce"
-  }[group];
-
-  setPage(
-   subject[0]+" Video Lessons",
-   groupName+" | "+level.toUpperCase(),
-   "Watch video lessons for "+subject[0]+".",
-   demoImages[group],
-   "?page=path-"+group+"-"+level
-  );
-
-  const list=document.createElement("div");
-  list.className="video-list";
-
-  const videoKey=group+"-"+level+"-"+subjectKey;
-  const videos=youtubeVideos[videoKey]||[];
-
-  if(videos.length){
-   videos.forEach((videoId,index)=>{
-    const card=document.createElement("div");
-    card.className="video-lesson";
-
-    const iframe=document.createElement("iframe");
-    iframe.className="video-embed";
-    iframe.src="https://www.youtube.com/embed/"+encodeURIComponent(videoId);
-    iframe.title=subject[0]+" lesson "+(index+1);
-    iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-    iframe.allowFullscreen=true;
-    iframe.loading="lazy";
-
-    const heading=document.createElement("h3");
-    heading.textContent=subject[0]+" — Lesson "+(index+1);
-
-    card.append(iframe,heading);
-    list.appendChild(card);
-   });
-  }else{
-   const note=document.createElement("div");
-   note.className="empty-note";
-   note.textContent="Video lessons for this subject will be added soon.";
-
-   const channel=document.createElement("a");
-   channel.className="channel-link";
-   channel.href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G";
-   channel.target="_blank";
-   channel.rel="noopener";
-   channel.textContent="Visit Our YouTube Channel ↗";
-
-   pageContent.append(note,channel);
-  }
-
-  if(videos.length)pageContent.appendChild(list);
+  const program=parts[2];
+  const group=parts[3];
+  const subjectKey=parts.slice(4).join("-");
+  renderOfflinePosts(program,group,subjectKey);
  }
 
- // ONLINE BATCH PROGRAMS
- else if(page==="video-ssc"||
-         page==="video-hsc"||
-         page==="video-admission"){
-
-  const program=page==="video-ssc"?"SSC":
-                page==="video-hsc"?"HSC":"Admission";
-
-  setPage(
-   program+" Preparation",
-   program+" Program",
-   "Choose your group to explore the learning path.",
-   demoImages.classroom,
-   "?"
-  );
-
-  const grid=document.createElement("div");
-  grid.className="choice-grid";
-
-  ["science","arts","commerce"].forEach(group=>{
-   const name=group.charAt(0).toUpperCase()+group.slice(1);
-   grid.appendChild(makeCard(
-    name,
-    "Explore "+name+" subjects",
-    "?page=path-"+group,
-    "▤"
-   ));
-  });
-
-  pageContent.appendChild(grid);
+ 
+ // ONLINE: PROGRAM -> GROUP
+ else if(page==="online-ssc"||page==="online-hsc"||page==="online-admission"){
+  renderGroups(page.replace("online-",""),"online");
  }
 
- // OFFLINE BATCH DETAILS PAGE
- else if(page==="offline-ssc"||page==="offline-hsc"){
-  const program=page==="offline-ssc"?"ssc":"hsc";
-  const programName=program.toUpperCase();
-
-  setPage(
-   programName+" Offline Batch",
-   "Offline Classroom Program",
-   "Explore the "+programName+" classroom program and upcoming learning opportunities.",
-   demoImages.classroom,
-   "?#offline"
-  );
-
-  const details=document.createElement("div");
-  details.className="offline-post";
-
-  const img=document.createElement("img");
-  img.src=demoImages.classroom;
-  img.alt=programName+" classroom batch";
-  img.loading="lazy";
-
-  const content=document.createElement("div");
-  content.className="post-content";
-
-  const heading=document.createElement("h2");
-  heading.textContent=programName+" Classroom Program";
-
-  const description=document.createElement("p");
-  description.textContent="Explore the subjects available in our "+programName+" offline program. Class schedules, teachers and batch information will be updated here.";
-
-  const meta=document.createElement("div");
-  meta.className="post-meta";
-
-  [
-   ["▤","Program: "+programName],
-   ["◷","Class schedule: To be announced"],
-   ["♙","Teachers: To be announced"],
-   ["⌖","Location: Academy classroom"]
-  ].forEach(item=>{
-   const line=document.createElement("div");
-   const icon=document.createElement("span");
-   icon.textContent=item[0];
-   const text=document.createElement("span");
-   text.textContent=item[1];
-   line.append(icon,text);
-   meta.append(line);
-  });
-
-  content.append(heading,description,meta);
-  details.append(img,content);
-  pageContent.appendChild(details);
-
-  const buttons=document.createElement("div");
-  buttons.className="choice-grid";
-  buttons.style.marginTop="20px";
-
-  buttons.appendChild(makeCard(
-   "Explore Subjects",
-   "See all "+programName+" offline subjects",
-   "?page=offline-"+program+"-subjects",
-   "▤"
-  ));
-
-  const contact=makeCard(
-   "Contact Academy",
-   "Ask about admission and batches",
-   "#contact",
-   "☎"
-  );
-  buttons.appendChild(contact);
-
-  pageContent.appendChild(buttons);
- }
-
- // OFFLINE SUBJECT SELECTION
- else if(page==="offline-ssc-subjects"||
-         page==="offline-hsc-subjects"){
-
-  const program=page==="offline-ssc-subjects"?"ssc":"hsc";
-  const programName=program.toUpperCase();
-
-  setPage(
-   programName+" Offline Subjects",
-   "Explore Subjects",
-   "Choose a subject to view its upcoming offline class information.",
-   demoImages.classroom,
-   "?page=offline-"+program
-  );
-
-  const grid=document.createElement("div");
-  grid.className="choice-grid";
-
-  offlineSubjects[program].forEach(subject=>{
-   const key=subject.toLowerCase().replaceAll(" ","-");
-   grid.appendChild(makeCard(
-    subject,
-    "View upcoming "+subject+" classes",
-    "?page=offline-"+program+"-"+key,
-    "▤"
-   ));
-  });
-
-  pageContent.appendChild(grid);
- }
-
- // OFFLINE SUBJECT CLASS DETAILS
- else if(page.startsWith("offline-")){
+ // ONLINE: GROUP -> SUBJECT
+ else if(page.startsWith("online-group-")){
   const parts=page.split("-");
-  const program=parts[1];
-
-  if(!offlineSubjects[program]){
-   showNotFound();
-   return;
-  }
-
-  const subjectKey=parts.slice(2).join("-");
-  const subject=offlineSubjects[program].find(item=>
-   item.toLowerCase().replaceAll(" ","-")===subjectKey
-  );
-
-  if(!subject){
-   showNotFound();
-   return;
-  }
-
-  setPage(
-   subject+" Offline Classes",
-   program.toUpperCase()+" | Offline Batch",
-   "Upcoming class schedules and academy announcements.",
-   demoImages.classroom,
-   "?page=offline-"+program+"-subjects"
-  );
-
-  const posts=document.createElement("div");
-  posts.className="post-list";
-  posts.appendChild(makePost(subject,program));
-  pageContent.appendChild(posts);
+  renderSubjectChoices(parts[2],parts[3],"online");
  }
 
- // STUDY MATERIALS: PDF NOTES
- else if(page==="materials-pdf"){
-  setPage(
-   "PDF Notes",
-   "Study Materials",
-   "Subject-wise PDF notes and learning resources.",
-   demoImages.classroom,
-   "?#materials"
-  );
-
-  const note=document.createElement("div");
-  note.className="empty-note";
-  note.textContent="PDF notes will be uploaded here. Select your class and subject when the study materials are available.";
-
-  pageContent.appendChild(note);
+ // ONLINE: SUBJECT -> VIDEOS
+ else if(page.startsWith("online-lessons-")){
+  const parts=page.split("-");
+  const program=parts[2];
+  const group=parts[3];
+  const subjectKey=parts.slice(4).join("-");
+  renderOnlineLessons(program,group,subjectKey);
  }
 
- // STUDY MATERIALS: PRACTICE
- else if(page==="materials-practice"){
-  setPage(
-   "Practice Materials",
-   "Study Materials",
-   "Practice questions and learning exercises.",
-   demoImages.classroom,
-   "?#materials"
-  );
+ // EXAM: SSC / HSC -> GROUP
+ else if(page==="exam-ssc"||page==="exam-hsc"){
+  renderGroups(page.replace("exam-",""),"exam");
+ }
 
-  const note=document.createElement("div");
-  note.className="empty-note";
-  note.textContent="Practice questions and worksheets will be added here soon.";
+ // EXAM: GROUP -> SUBJECT
+ else if(page.startsWith("exam-group-")){
+  const parts=page.split("-");
+  renderSubjectChoices(parts[2],parts[3],"exam");
+ }
 
-  pageContent.appendChild(note);
+ // EXAM: SUBJECT -> COURSE LIST
+ else if(page.startsWith("exam-courses-")){
+  const parts=page.split("-");
+  const program=parts[2];
+  const group=parts[3];
+  const subjectKey=parts.slice(4).join("-");
+  renderExamCourses(program,group,subjectKey);
+ }
+
+ // EXAM: COURSE DETAILS
+ else if(page.startsWith("exam-detail-")){
+  const parts=page.split("-");
+  const program=parts[2];
+  const group=parts[3];
+  const subjectKey=parts.slice(4,-2).join("-");
+  const courseId=parts.slice(-2).join("-");
+  renderExamDetails(program,group,subjectKey,courseId);
+ }
+
+ // STUDY MATERIALS: PDF / PRACTICE
+ else if(page==="materials-pdf"||page==="materials-practice"){
+  renderMaterialLevels(page.replace("materials-",""));
+ }
+
+ // MATERIALS: LEVEL
+ else if(page.startsWith("materials-level-")){
+  const parts=page.split("-");
+  renderMaterialGroups(parts[2],parts[3]);
+ }
+
+ // MATERIALS: GROUP
+ else if(page.startsWith("materials-group-")){
+  const parts=page.split("-");
+  renderMaterialSubjects(parts[2],parts[3],parts[4]);
+ }
+
+ // MATERIALS: SUBJECT
+ else if(page.startsWith("materials-subject-")){
+  const parts=page.split("-");
+  const type=parts[2];
+  const level=parts[3];
+  const group=parts[4];
+  const subjectKey=parts.slice(5).join("-");
+  renderMaterialChapters(type,level,group,subjectKey);
+ }
+
+ // MATERIALS: CHAPTER CONTENT
+ else if(page.startsWith("materials-content-")){
+  const parts=page.split("-");
+  const type=parts[2];
+  const level=parts[3];
+  const group=parts[4];
+  const subjectKey=parts.slice(5,-2).join("-");
+  const chapter=parts.slice(-2).join("-");
+  renderMaterialContent(type,level,group,subjectKey,chapter);
+ }
+
+ // PRACTICE: CQ / MCQ CONTENT
+ else if(page.startsWith("materials-practice-content-")){
+  const parts=page.split("-");
+  const level=parts[3];
+  const group=parts[4];
+  const subjectKey=parts.slice(5,-3).join("-");
+  const chapter=parts.slice(-3,-1).join("-");
+  const kind=parts[parts.length-1];
+  renderPracticeContent(level,group,subjectKey,chapter,kind);
  }
 
  else{
   showNotFound();
-  return;
  }
 
  window.scrollTo(0,0);
 }
 
-// READ URL
+// URL ROUTING
 function renderRoute(){
  const params=new URLSearchParams(window.location.search);
  const page=params.get("page");
@@ -1063,7 +1240,6 @@ document.addEventListener("click",event=>{
  const href=link.getAttribute("href");
  if(!href)return;
 
- // PAGE NAVIGATION
  if(href.startsWith("?page=")){
   event.preventDefault();
   history.pushState({}, "", href);
@@ -1071,13 +1247,24 @@ document.addEventListener("click",event=>{
   return;
  }
 
- // INNER PAGE FOOTER CONTACT
- if(href==="#contact"&&innerPage.classList.contains("active")){
+ // Return to homepage before navigating to a homepage section.
+ if(href.startsWith("#")&&innerPage.classList.contains("active")){
   event.preventDefault();
   innerPage.classList.remove("active");
   homePage.style.display="block";
-  history.pushState({}, "", "#contact");
-  document.getElementById("contact").scrollIntoView({behavior:"smooth"});
+  history.pushState({}, "", href);
+  const target=document.querySelector(href);
+  if(target)target.scrollIntoView({behavior:"smooth"});
+  return;
+ }
+
+ // Homepage section links
+ if(href.startsWith("#")&&!innerPage.classList.contains("active")){
+  const target=document.querySelector(href);
+  if(target){
+   event.preventDefault();
+   target.scrollIntoView({behavior:"smooth"});
+  }
  }
 });
 
@@ -1085,4 +1272,3 @@ renderRoute();
 </script>
 </body>
 </html>
-
