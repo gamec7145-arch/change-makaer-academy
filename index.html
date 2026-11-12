@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,12 +23,11 @@
 
   <nav class="desktop-nav">
    <a href="?">Home</a>
-   <a href="#offline">Offline Batches</a>
    <a href="#batches">Online Batches</a>
-   <a href="#exam">Exam Preparation</a>
+   <a href="#offline">Offline Batches</a>
    <a href="#materials">Study Materials</a>
+   <a href="#exam">Exam Preparation</a>
    <a href="#reviews">Student Reviews</a>
-   <a href="#contact">Contact</a>
   </nav>
 
   <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
@@ -35,19 +35,19 @@
 
  <nav class="mobile-menu" id="mobileMenu">
   <a href="?">Home</a>
-  <a href="#offline">Offline Batches</a>
   <a href="#batches">Online Batches</a>
-  <a href="#exam">Exam Preparation</a>
+  <a href="#offline">Offline Batches</a>
   <a href="#materials">Study Materials</a>
+  <a href="#exam">Exam Preparation</a>
   <a href="#reviews">Student Reviews</a>
   <a href="#brandIntro">About Us</a>
-  <a href="#contact">Contact</a>
  </nav>
 </header>
 
 <main id="homePage">
  <div class="container">
 
+  <!-- MAIN BANNER -->
   <section class="hero">
    <div class="banner" id="banner">
     <div class="banner-slide active">
@@ -68,36 +68,6 @@
    </div>
 
    <div class="banner-dots" id="bannerDots"></div>
-  </section>
-
-  <!-- OFFLINE BATCHES -->
-  <section id="offline" class="offline-section">
-   <span class="section-label">Classroom Learning</span>
-
-   <div class="section-heading">
-    <h2>Offline Batches</h2>
-    <p>Join our classroom learning programs.</p>
-   </div>
-
-   <div class="offline-grid">
-    <a href="?page=offline-ssc" class="offline-card">
-     <div class="offline-icon">▤</div>
-     <div>
-      <h3>SSC</h3>
-      <p>Class 9 & 10</p>
-     </div>
-     <span>›</span>
-    </a>
-
-    <a href="?page=offline-hsc" class="offline-card">
-     <div class="offline-icon">▣</div>
-     <div>
-      <h3>HSC</h3>
-      <p>College</p>
-     </div>
-     <span>›</span>
-    </a>
-   </div>
   </section>
 
   <!-- ONLINE BATCHES -->
@@ -133,6 +103,64 @@
       <p>University Admission Preparation</p>
      </div>
      <span class="batch-arrow">›</span>
+    </a>
+   </div>
+  </section>
+
+  <!-- OFFLINE BATCHES -->
+  <section id="offline" class="offline-section">
+   <span class="section-label">Classroom Learning</span>
+
+   <div class="section-heading">
+    <h2>Offline Batches</h2>
+    <p>Join our classroom learning programs.</p>
+   </div>
+
+   <div class="offline-grid">
+    <a href="?page=offline-ssc" class="offline-card">
+     <div class="offline-icon">▤</div>
+     <div>
+      <h3>SSC</h3>
+      <p>Class 9 & 10</p>
+     </div>
+     <span>›</span>
+    </a>
+
+    <a href="?page=offline-hsc" class="offline-card">
+     <div class="offline-icon">▣</div>
+     <div>
+      <h3>HSC</h3>
+      <p>College</p>
+     </div>
+     <span>›</span>
+    </a>
+   </div>
+  </section>
+
+  <!-- STUDY MATERIALS -->
+  <section id="materials">
+   <div class="section-heading">
+    <h2>Study Materials</h2>
+    <p>Access learning resources and practice materials.</p>
+   </div>
+
+   <div class="offline-grid">
+    <a href="?page=materials-pdf" class="offline-card">
+     <div class="offline-icon">▤</div>
+     <div>
+      <h3>PDF Notes</h3>
+      <p>Subject-wise study notes</p>
+     </div>
+     <span>›</span>
+    </a>
+
+    <a href="?page=materials-practice" class="offline-card">
+     <div class="offline-icon">✎</div>
+     <div>
+      <h3>Practice</h3>
+      <p>Questions and practice sets</p>
+     </div>
+     <span>›</span>
     </a>
    </div>
   </section>
@@ -183,33 +211,6 @@
      <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>
      <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
     </div>
-   </div>
-  </section>
-    <!-- STUDY MATERIALS -->
-  <section id="materials">
-   <div class="section-heading">
-    <h2>Study Materials</h2>
-    <p>Access learning resources and practice materials.</p>
-   </div>
-
-   <div class="offline-grid">
-    <a href="?page=materials-pdf" class="offline-card">
-     <div class="offline-icon">▤</div>
-     <div>
-      <h3>PDF Notes</h3>
-      <p>Subject-wise study notes</p>
-     </div>
-     <span>›</span>
-    </a>
-
-    <a href="?page=materials-practice" class="offline-card">
-     <div class="offline-icon">✎</div>
-     <div>
-      <h3>Practice</h3>
-      <p>Questions and practice sets</p>
-     </div>
-     <span>›</span>
-    </a>
    </div>
   </section>
 
@@ -303,64 +304,9 @@
    </div>
   </section>
 
-  <!-- COMPANY DETAILS -->
-  <section id="companyDetails">
-   <div class="section-heading">
-    <h2>Company Details & Contact</h2>
-    <p>Get in touch with Change Maker Academy.</p>
-   </div>
-
-   <div class="company-grid">
-    <div class="company-item">
-     <small>LICENSE NO.</small>
-     <p>To be added</p>
-    </div>
-
-    <div class="company-item">
-     <small>ADDRESS</small>
-     <p>To be added</p>
-    </div>
-
-    <div class="company-item">
-     <small>CONTACT PHONE</small>
-     <p>To be added</p>
-    </div>
-
-    <div class="company-item">
-     <small>EMAIL</small>
-     <p>To be added</p>
-    </div>
-   </div>
-  </section>
-
-  <!-- LATEST NOTICES -->
-  <section id="notices">
-   <div class="section-heading">
-    <h2>Latest Notices</h2>
-    <p>Stay updated with academy news.</p>
-   </div>
-
-   <div class="notice-list">
-    <div class="notice-item">
-     <div class="notice-icon">♧</div>
-     <div>
-      <h3>Academic Announcements</h3>
-      <p>Latest academy updates and notices.</p>
-     </div>
-    </div>
-
-    <div class="notice-item">
-     <div class="notice-icon">▦</div>
-     <div>
-      <h3>Upcoming Class Schedules</h3>
-      <p>Check your upcoming classes and events.</p>
-     </div>
-    </div>
-   </div>
-  </section>
-
  </div>
 </main>
+
 <!-- INNER PAGES -->
 <main id="innerPage" class="inner-page">
  <div class="container">
@@ -385,19 +331,17 @@
 <footer class="footer" id="contact">
  <div class="container">
 
-  <h2>CHANGE MAKER ACADEMY</h2>
   <p>Academic & Admission Program</p>
   <p>Helping learners build a brighter future.</p>
 
   <div class="footer-links">
    <a href="?">Home</a>
-   <a href="#offline">Offline Batches</a>
    <a href="#batches">Online Batches</a>
-   <a href="#exam">Exam Preparation</a>
+   <a href="#offline">Offline Batches</a>
    <a href="#materials">Study Materials</a>
+   <a href="#exam">Exam Preparation</a>
    <a href="#reviews">Student Reviews</a>
    <a href="#brandIntro">About Us</a>
-   <a href="#companyDetails">Company Details</a>
   </div>
 
   <div class="footer-bottom">
@@ -411,32 +355,17 @@
  target="_blank"
  rel="noopener"
  aria-label="WhatsApp Contact">☎</a>
- <!-- JAVASCRIPT FILE CONNECTIONS -->
 
-<!-- Shared data, common functions and video player -->
+<!-- JAVASCRIPT FILE CONNECTIONS -->
+
 <script defer src="js/shared.js"></script>
-
-<!-- Homepage menu and sliders -->
 <script defer src="js/home.js"></script>
-
-<!-- Shared group and subject navigation -->
 <script defer src="js/navigation.js"></script>
-
-<!-- Offline Batches -->
 <script defer src="js/offline-batches.js"></script>
-
-<!-- Online Batches -->
 <script defer src="js/online-batches.js"></script>
-
-<!-- Exam Preparation -->
 <script defer src="js/exam-preparation.js"></script>
-
-<!-- Study Materials -->
 <script defer src="js/study-materials.js"></script>
-
-<!-- Main URL Router (must load last) -->
 <script defer src="js/router.js"></script>
 
 </body>
 </html>
- 
