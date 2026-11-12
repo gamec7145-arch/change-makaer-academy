@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -207,6 +206,59 @@ section{padding:30px 0}
 .chapter-card h3{font-size:16px;margin-bottom:10px}
 .chapter-actions{display:flex;gap:10px;flex-wrap:wrap}
 .chapter-actions a{padding:9px 13px;border-radius:10px;background:#08C99A26;color:var(--mint);font-weight:800;font-size:13px}
+
+/* EXAM PREPARATION: HOMEPAGE FEATURED COURSE SLIDER */
+.exam-showcase{
+ background:linear-gradient(140deg,#06474B,#084348);
+ border:1px solid #12635F;border-radius:22px;padding:24px;
+}
+.exam-showcase-top{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:12px;margin-bottom:18px;
+}
+.exam-showcase-top p{color:var(--muted);font-size:13px}
+.exam-learn-more{
+ display:inline-flex;align-items:center;gap:7px;
+ color:var(--mint);font-size:14px;font-weight:900;
+ white-space:nowrap;
+}
+.exam-learn-more:hover{color:#fff}
+.exam-featured-track{
+ display:flex;overflow-x:auto;gap:14px;
+ scroll-snap-type:x mandatory;scroll-behavior:smooth;
+ scrollbar-width:none;touch-action:pan-y;
+}
+.exam-featured-track::-webkit-scrollbar{display:none}
+.exam-featured-card{
+ flex:0 0 100%;min-width:0;overflow:hidden;
+ scroll-snap-align:center;
+ background:var(--card);border:1px solid var(--border);
+ border-radius:18px;
+}
+.exam-featured-image{
+ width:100%;aspect-ratio:16/8;object-fit:cover;
+ background:#123E50;
+}
+.exam-featured-info{padding:20px}
+.exam-featured-tag{
+ display:inline-block;background:#08C99A26;color:var(--mint);
+ border-radius:30px;padding:5px 12px;font-size:11px;
+ font-weight:900;margin-bottom:9px;
+}
+.exam-featured-info h3{font-size:21px;font-weight:900;line-height:1.3}
+.exam-featured-info p{color:var(--muted);font-size:13px;margin-top:7px}
+.exam-slider-footer{
+ display:flex;align-items:center;justify-content:center;
+ gap:9px;margin-top:16px;
+}
+.exam-slider-dot{
+ width:8px;height:8px;border:0;border-radius:20px;
+ background:#78949D;padding:0;
+}
+.exam-slider-dot.active{width:25px;background:var(--green)}
+.exam-slider-count{color:var(--muted);font-size:11px;margin-left:5px}
+
+/* FOOTER */
 .footer{margin-top:45px;background:var(--deep);padding:45px 0 30px}
 .footer h2{font-size:22px;margin-bottom:5px}
 .footer p{color:var(--muted);font-size:13px}
@@ -253,6 +305,11 @@ section{padding:30px 0}
  .brand-intro h2{font-size:22px}
  .company-grid{grid-template-columns:1fr}
  .review-card{flex-basis:270px}
+ .exam-showcase{padding:17px}
+ .exam-showcase-top{align-items:flex-start}
+ .exam-featured-image{aspect-ratio:16/9}
+ .exam-featured-info{padding:16px}
+ .exam-featured-info h3{font-size:19px}
 }
 @media(min-width:701px){.menu-btn{display:none}}
 </style>
@@ -323,16 +380,47 @@ section{padding:30px 0}
    </div>
   </section>
 
-  <!-- EXAM PREPARATION -->
+  <!-- EXAM PREPARATION: FEATURED SINGLE-POST SLIDER -->
   <section id="exam">
-   <div class="section-heading"><h2>Exam Preparation</h2><p>Prepare with subject-wise courses and guidance.</p></div>
-   <div class="offline-grid">
-    <a href="?page=exam-ssc" class="offline-card"><div class="offline-icon">▤</div><div><h3>SSC Preparation</h3><p>Class 9 & 10</p></div><span>›</span></a>
-    <a href="?page=exam-hsc" class="offline-card"><div class="offline-icon">▣</div><div><h3>HSC Preparation</h3><p>College</p></div><span>›</span></a>
+   <div class="section-heading">
+    <h2>Exam Preparation</h2>
+    <p>Explore our featured exam preparation courses.</p>
    </div>
-  </section>
 
-  <!-- STUDY MATERIALS -->
+   <div class="exam-showcase">
+    <div class="exam-showcase-top">
+     <p>Featured Courses</p>
+     <a href="?page=exam-choose" class="exam-learn-more">Learn More <span>→</span></a>
+    </div>
+
+    <div class="exam-featured-track" id="examFeaturedTrack">
+     <article class="exam-featured-card">
+      <img class="exam-featured-image" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85" alt="SSC exam preparation">
+      <div class="exam-featured-info">
+       <span class="exam-featured-tag">SSC PREPARATION</span>
+       <h3>SSC Complete Preparation</h3>
+       <p>Explore subject-wise courses, lessons and exam preparation resources for Class 9 and 10.</p>
+      </div>
+     </article>
+
+     <article class="exam-featured-card">
+      <img class="exam-featured-image" src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85" alt="HSC exam preparation">
+      <div class="exam-featured-info">
+       <span class="exam-featured-tag">HSC PREPARATION</span>
+       <h3>HSC Complete Preparation</h3>
+       <p>Explore subject-wise courses, lessons and preparation resources for college students.</p>
+      </div>
+     </article>
+    </div>
+
+    <div class="exam-slider-footer" id="examSliderDots">
+     <button class="exam-slider-dot active" type="button" aria-label="Show course 1"></button>
+     <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>
+     <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
+    </div>
+    </div>
+  </section>
+    <!-- STUDY MATERIALS -->
   <section id="materials">
    <div class="section-heading"><h2>Study Materials</h2><p>Access learning resources and practice materials.</p></div>
    <div class="offline-grid">
@@ -450,6 +538,7 @@ section{padding:30px 0}
 </footer>
 
 <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
+
 <script>
 // MOBILE MENU
 const menuBtn=document.getElementById("menuBtn");
@@ -527,6 +616,34 @@ banner.addEventListener("touchend",e=>{
 showSlide(0);
 restartSlider();
 
+// EXAM PREPARATION: FEATURED COURSE SLIDER
+const examTrack=document.getElementById("examFeaturedTrack");
+const examDots=[...document.querySelectorAll(".exam-slider-dot")];
+const examCount=document.getElementById("examSliderCount");
+
+function updateExamSlider(){
+ const cardWidth=examTrack.clientWidth;
+ const activeIndex=Math.round(examTrack.scrollLeft/cardWidth);
+
+ examDots.forEach((dot,index)=>{
+  dot.classList.toggle("active",index===activeIndex);
+ });
+
+ examCount.textContent=(activeIndex+1)+" / "+examDots.length;
+}
+
+examDots.forEach((dot,index)=>{
+ dot.addEventListener("click",()=>{
+  examTrack.scrollTo({
+   left:index*examTrack.clientWidth,
+   behavior:"smooth"
+  });
+ });
+});
+
+examTrack.addEventListener("scroll",updateExamSlider,{passive:true});
+window.addEventListener("resize",updateExamSlider);
+
 // SUBJECT DATABASE
 const learningSubjects={
  science:{
@@ -594,8 +711,7 @@ const examCourses=[
  {id:"course-1",name:"Complete Subject Preparation",price:"To be announced",description:"A structured subject-wise preparation course with lessons and study guidance.",video:""},
  {id:"course-2",name:"Exam Revision Course",price:"To be announced",description:"Revision-focused lessons and preparation support for upcoming examinations.",video:""}
 ];
-
-// PAGE ELEMENTS
+ // PAGE ELEMENTS
 const innerPage=document.getElementById("innerPage");
 const homePage=document.getElementById("homePage");
 const pageBanner=document.getElementById("pageBanner");
@@ -666,6 +782,35 @@ function getSubject(group,level,key){
 function showNotFound(){
  setPage("Page Not Found","404","This page could not be found.",demoImages.classroom,"?");
  pageContent.appendChild(makeEmpty("Please return to the homepage and choose a valid section."));
+}
+
+// EXAM PREPARATION: LEARN MORE -> SSC / HSC
+function renderExamLevels(){
+ setPage(
+  "Exam Preparation",
+  "Learn More",
+  "Choose your examination to explore available courses.",
+  demoImages.classroom,
+  "?#exam"
+ );
+
+ const grid=makeGrid();
+
+ grid.appendChild(makeCard(
+  "SSC Preparation",
+  "Class 9 & 10",
+  "?page=exam-ssc",
+  "▤"
+ ));
+
+ grid.appendChild(makeCard(
+  "HSC Preparation",
+  "College",
+  "?page=exam-hsc",
+  "▣"
+ ));
+
+ pageContent.appendChild(grid);
 }
 
 function makePost(subject,program,group){
@@ -1109,7 +1254,6 @@ function openPage(page){
   renderOfflinePosts(program,group,subjectKey);
  }
 
- 
  // ONLINE: PROGRAM -> GROUP
  else if(page==="online-ssc"||page==="online-hsc"||page==="online-admission"){
   renderGroups(page.replace("online-",""),"online");
@@ -1128,6 +1272,11 @@ function openPage(page){
   const group=parts[3];
   const subjectKey=parts.slice(4).join("-");
   renderOnlineLessons(program,group,subjectKey);
+ }
+
+ // EXAM: LEARN MORE -> SSC / HSC
+ else if(page==="exam-choose"){
+  renderExamLevels();
  }
 
  // EXAM: SSC / HSC -> GROUP
