@@ -17,7 +17,7 @@ body{
  font-family:'Nunito Sans',sans-serif;
  background:var(--bg);
  color:var(--white);
- line-height:1.55;
+ line-height:1.6;
  font-weight:400;
  -webkit-font-smoothing:antialiased;
 }
@@ -76,7 +76,7 @@ img{max-width:100%;display:block}
  display:flex;
  align-items:center;
  gap:20px;
- font-size:12px;
+ font-size:14px;
  font-weight:500;
  color:#33495B;
 }
@@ -95,7 +95,7 @@ img{max-width:100%;display:block}
 
 .mobile-menu a{
  color:#203B4C;
- font-size:12px;
+ font-size:14px;
  font-weight:500;
  padding:5px 0;
 }
@@ -105,15 +105,15 @@ section{padding:27px 0}
 .section-heading{margin-bottom:22px}
 
 .section-heading h2{
- font-size:clamp(20px,3vw,25px);
+ font-size:clamp(19px,2.5vw,23px);
  font-weight:500;
- line-height:1.35;
- letter-spacing:-.3px;
+ line-height:1.4;
+ letter-spacing:-.2px;
 }
 
 .section-heading p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  font-weight:400;
  margin-top:6px;
 }
@@ -124,7 +124,7 @@ section{padding:27px 0}
  border-radius:30px;
  background:#04cd9d26;
  color:var(--mint);
- font-size:10px;
+ font-size:12px;
  font-weight:500;
  letter-spacing:.2px;
  margin-bottom:15px;
@@ -213,14 +213,14 @@ section{padding:27px 0}
 }
 
 .batch-title{
- font-size:clamp(23px,4vw,30px);
+ font-size:clamp(21px,3.5vw,27px);
  font-weight:500;
- line-height:1.35;
- letter-spacing:-.4px;
+ line-height:1.4;
+ letter-spacing:-.2px;
 }
 
 .batch-subtitle{
- font-size:17px;
+ font-size:16px;
  color:var(--mint);
  margin:10px 0 23px;
  font-weight:500;
@@ -258,24 +258,24 @@ section{padding:27px 0}
 }
 
 .batch-card h3{
- font-size:16px;
+ font-size:17px;
  font-weight:500;
  letter-spacing:0;
 }
 
 .batch-card p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  margin-top:3px;
 }
 
+/* STATS */
 .batch-arrow{
  margin-left:auto;
  color:#9BC8D3;
  font-size:21px;
 }
 
-/* STATS */
 .stats-grid{
  display:grid;
  grid-template-columns:repeat(3,1fr);
@@ -298,7 +298,7 @@ section{padding:27px 0}
 
 .stat-card p{
  color:var(--muted);
- font-size:11px;
+ font-size:13px;
 }
 
 /* LEARNING PATHS */
@@ -323,13 +323,13 @@ section{padding:27px 0}
 }
 
 .path-card h3{
- font-size:16px;
+ font-size:17px;
  font-weight:500;
 }
 
 .path-card p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  margin-top:5px;
 }
 
@@ -378,12 +378,12 @@ section{padding:27px 0}
 }
 
 .offline-card h3{
- font-size:15px;
+ font-size:16px;
  font-weight:500;
 }
 
 .offline-card p{
- font-size:11px;
+ font-size:13px;
  color:var(--muted);
 }
 
@@ -412,13 +412,13 @@ section{padding:27px 0}
 .video-info{padding:15px}
 
 .video-info h3{
- font-size:14px;
+ font-size:16px;
  font-weight:500;
 }
 
 .video-info p{
  color:var(--muted);
- font-size:11px;
+ font-size:13px;
  margin-top:5px;
 }
 
@@ -481,7 +481,7 @@ section{padding:27px 0}
 .back-home{
  display:inline-block;
  color:var(--mint);
- font-size:12px;
+ font-size:14px;
  font-weight:500;
  margin-bottom:19px;
 }
@@ -498,15 +498,15 @@ section{padding:27px 0}
 .page-intro{margin-bottom:24px}
 
 .page-intro h1{
- font-size:clamp(22px,4vw,29px);
+ font-size:clamp(21px,3.5vw,26px);
  font-weight:500;
- line-height:1.35;
- letter-spacing:-.3px;
+ line-height:1.4;
+ letter-spacing:-.2px;
 }
 
 .page-intro p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  margin-top:6px;
 }
 
@@ -546,14 +546,14 @@ section{padding:27px 0}
 }
 
 .choice-card strong{
- font-size:13px;
+ font-size:15px;
  font-weight:500;
 }
 
 .choice-card small{
  display:block;
  color:var(--muted);
- font-size:10px;
+ font-size:12px;
 }
 
 .video-list{
@@ -579,7 +579,7 @@ section{padding:27px 0}
 }
 
 .video-lesson h3{
- font-size:13px;
+ font-size:15px;
  font-weight:500;
  margin:9px 3px 3px;
 }
@@ -603,14 +603,14 @@ section{padding:27px 0}
 .post-content{padding:18px}
 
 .post-content h2{
- font-size:16px;
+ font-size:17px;
  font-weight:500;
  margin-bottom:7px;
 }
 
 .post-content p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  margin:6px 0;
 }
 
@@ -626,7 +626,7 @@ section{padding:27px 0}
  display:flex;
  align-items:center;
  gap:9px;
- font-size:12px;
+ font-size:14px;
 }
 
 .post-meta span{color:var(--mint)}
@@ -637,7 +637,7 @@ section{padding:27px 0}
  border-radius:14px;
  color:var(--muted);
  text-align:center;
- font-size:12px;
+ font-size:14px;
 }
 
 .channel-link{
@@ -647,7 +647,7 @@ section{padding:27px 0}
  background:var(--green);
  color:#063C36;
  border-radius:11px;
- font-size:12px;
+ font-size:14px;
  font-weight:500;
 }
 
@@ -681,23 +681,23 @@ section{padding:27px 0}
 
 .review-card p{
  color:#D3E2E9;
- font-size:12px;
+ font-size:14px;
 }
 
 .review-card h3{
- font-size:13px;
+ font-size:15px;
  font-weight:500;
  margin-top:13px;
 }
 
 .review-card small{
  color:var(--muted);
- font-size:10px;
+ font-size:12px;
 }
 
 .sample-note{
  color:var(--muted);
- font-size:10px;
+ font-size:12px;
  margin-top:9px;
 }
 
@@ -719,7 +719,7 @@ section{padding:27px 0}
 }
 
 .brand-intro h2{
- font-size:19px;
+ font-size:18px;
  font-weight:500;
  letter-spacing:0;
  margin-bottom:7px;
@@ -727,7 +727,7 @@ section{padding:27px 0}
 
 .brand-intro p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  line-height:1.7;
 }
 
@@ -766,14 +766,14 @@ section{padding:27px 0}
 .company-item small{
  display:block;
  color:var(--mint);
- font-size:10px;
+ font-size:12px;
  font-weight:500;
  margin-bottom:5px;
 }
 
 .company-item p{
  color:#D5E4EA;
- font-size:12px;
+ font-size:14px;
  overflow-wrap:anywhere;
 }
 
@@ -801,13 +801,13 @@ section{padding:27px 0}
 .course-card-body{padding:18px}
 
 .course-card h3{
- font-size:15px;
+ font-size:16px;
  font-weight:500;
 }
 
 .course-card p{
  color:var(--muted);
- font-size:12px;
+ font-size:14px;
  margin:5px 0 11px;
 }
 
@@ -824,7 +824,7 @@ section{padding:27px 0}
  padding:9px 14px;
  background:var(--green);
  color:#063C36;
- font-size:12px;
+ font-size:14px;
  font-weight:500;
 }
 
@@ -837,7 +837,7 @@ section{padding:27px 0}
 
 .detail-box p{
  color:#D2E1E7;
- font-size:12px;
+ font-size:14px;
  margin:9px 0;
 }
 
@@ -904,7 +904,7 @@ section{padding:27px 0}
 .exam-video-title{
  padding:12px 15px;
  font-weight:500;
- font-size:13px;
+ font-size:15px;
 }
 
 .exam-video-frame{
@@ -940,7 +940,7 @@ section{padding:27px 0}
 
 .exam-showcase-top p{
  color:var(--muted);
- font-size:11px;
+ font-size:13px;
 }
 
 .exam-learn-more{
@@ -948,7 +948,7 @@ section{padding:27px 0}
  align-items:center;
  gap:7px;
  color:var(--mint);
- font-size:12px;
+ font-size:14px;
  font-weight:500;
  white-space:nowrap;
 }
@@ -992,7 +992,7 @@ section{padding:27px 0}
  color:var(--mint);
  border-radius:30px;
  padding:5px 11px;
- font-size:9px;
+ font-size:11px;
  font-weight:500;
  margin-bottom:8px;
 }
@@ -1005,7 +1005,7 @@ section{padding:27px 0}
 
 .exam-featured-info p{
  color:var(--muted);
- font-size:11px;
+ font-size:13px;
  margin-top:6px;
 }
 
@@ -1033,7 +1033,7 @@ section{padding:27px 0}
 
 .exam-slider-count{
  color:var(--muted);
- font-size:10px;
+ font-size:12px;
  margin-left:5px;
 }
 
@@ -1052,7 +1052,7 @@ section{padding:27px 0}
 
 .footer p{
  color:var(--muted);
- font-size:11px;
+ font-size:13px;
 }
 
 .footer-links{
@@ -1061,7 +1061,7 @@ section{padding:27px 0}
  gap:17px;
  margin:17px 0;
  color:#C5D9E3;
- font-size:11px;
+ font-size:13px;
 }
 
 .footer-bottom{
@@ -1069,7 +1069,7 @@ section{padding:27px 0}
  padding-top:16px;
  margin-top:18px;
  color:#829EAD;
- font-size:10px;
+ font-size:12px;
 }
 
 .whatsapp{
@@ -1129,12 +1129,12 @@ section{padding:27px 0}
  }
 
  .batch-title{
-  font-size:23px;
+  font-size:22px;
   letter-spacing:0;
  }
 
  .batch-subtitle{
-  font-size:16px;
+  font-size:15px;
   margin:9px 0 20px;
  }
 
@@ -1149,13 +1149,13 @@ section{padding:27px 0}
   font-size:21px;
  }
 
- .batch-card h3{font-size:15px}
- .batch-card p{font-size:11px}
+ .batch-card h3{font-size:16px}
+ .batch-card p{font-size:13px}
 
  .stats-grid{gap:8px}
  .stat-card{padding:16px 5px}
  .stat-card h3{font-size:21px}
- .stat-card p{font-size:10px}
+ .stat-card p{font-size:12px}
 
  .path-grid{
   grid-template-columns:1fr;
@@ -1163,8 +1163,8 @@ section{padding:27px 0}
  }
 
  .path-card{padding:17px 14px}
- .path-card h3{font-size:15px}
- .path-card p{font-size:11px}
+ .path-card h3{font-size:16px}
+ .path-card p{font-size:13px}
 
  .offline-section{padding:19px 13px}
 
@@ -1179,22 +1179,22 @@ section{padding:27px 0}
   font-size:17px;
  }
 
- .offline-card h3{font-size:13px}
- .offline-card p{font-size:10px}
+ .offline-card h3{font-size:14px}
+ .offline-card p{font-size:12px}
 
  .container{width:calc(100% - 32px)}
 
- .section-heading h2{font-size:20px}
- .section-heading p{font-size:11px}
+ .section-heading h2{font-size:19px}
+ .section-heading p{font-size:13px}
 
  .section-label{
-  font-size:9px;
+  font-size:11px;
   padding:6px 13px;
  }
 
  .page-banner{border-radius:14px}
- .page-intro h1{font-size:22px}
- .page-intro p{font-size:11px}
+ .page-intro h1{font-size:21px}
+ .page-intro p{font-size:13px}
 
  .choice-card{
   padding:12px 9px;
@@ -1207,14 +1207,14 @@ section{padding:27px 0}
   font-size:16px;
  }
 
- .choice-card strong{font-size:12px}
- .choice-card small{font-size:9px}
+ .choice-card strong{font-size:14px}
+ .choice-card small{font-size:11px}
 
  .video-list{grid-template-columns:1fr}
 
  .post-content{padding:14px}
- .post-content h2{font-size:15px}
- .post-content p{font-size:11px}
+ .post-content h2{font-size:16px}
+ .post-content p{font-size:13px}
 
  .brand-intro{
   display:block;
@@ -1228,22 +1228,22 @@ section{padding:27px 0}
  }
 
  .brand-intro h2{font-size:17px}
- .brand-intro p{font-size:11px}
+ .brand-intro p{font-size:13px}
 
  .company-grid{grid-template-columns:1fr}
  .review-card{flex-basis:260px}
- .review-card p{font-size:11px}
+ .review-card p{font-size:13px}
 
  .exam-showcase{padding:15px}
  .exam-showcase-top{align-items:flex-start}
  .exam-featured-image{aspect-ratio:16/9}
  .exam-featured-info{padding:14px}
  .exam-featured-info h3{font-size:15px}
- .exam-featured-info p{font-size:11px}
+ .exam-featured-info p{font-size:13px}
 
  .course-card-body{padding:14px}
- .course-card h3{font-size:14px}
- .course-card p{font-size:11px}
+ .course-card h3{font-size:15px}
+ .course-card p{font-size:13px}
 
  .footer-links{gap:12px}
 
@@ -1257,4 +1257,4 @@ section{padding:27px 0}
 
 @media(min-width:701px){
  .menu-btn{display:none}
- }
+}
