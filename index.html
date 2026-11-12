@@ -188,8 +188,18 @@ section{padding:30px 0}
 .company-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:19px}
 .company-item small{display:block;color:var(--mint);font-weight:800;margin-bottom:5px}
 .company-item p{color:#D5E4EA;font-size:14px;overflow-wrap:anywhere}
+
+/* COURSE POSTS */
 .course-list{display:grid;gap:16px}
-.course-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:21px;transition:.2s}
+.course-card{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:18px;overflow:hidden;transition:.2s;
+}
+.course-card-image{
+ width:100%;aspect-ratio:16/8;object-fit:cover;
+ background:#123E50;
+}
+.course-card-body{padding:21px}
 .course-card h3{font-size:19px}
 .course-card p{color:var(--muted);font-size:14px;margin:5px 0 12px}
 .course-price{color:var(--mint);font-weight:900;margin-bottom:12px}
@@ -201,11 +211,35 @@ section{padding:30px 0}
 .detail-box p{color:#D2E1E7;margin:10px 0}
 .detail-video{width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#001923}
 .detail-bottom{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
-.chapter-list{display:grid;gap:12px}
-.chapter-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:17px}
-.chapter-card h3{font-size:16px;margin-bottom:10px}
-.chapter-actions{display:flex;gap:10px;flex-wrap:wrap}
-.chapter-actions a{padding:9px 13px;border-radius:10px;background:#08C99A26;color:var(--mint);font-weight:800;font-size:13px}
+
+/* EXAM COURSE VIDEO POSTS */
+.exam-video-list{display:grid;gap:16px;margin-top:20px}
+.exam-video-card{
+ background:#0b3544;border:1px solid var(--border);
+ border-radius:16px;overflow:hidden;
+}
+.exam-video-thumb{
+ position:relative;width:100%;display:block;padding:0;
+ border:0;background:#001923;overflow:hidden;
+}
+.exam-video-thumb img{
+ width:100%;aspect-ratio:16/9;object-fit:cover;
+}
+.exam-video-play{
+ position:absolute;left:50%;top:50%;
+ transform:translate(-50%,-50%);
+ width:58px;height:58px;border-radius:50%;
+ background:var(--green);color:#063C36;
+ display:grid;place-items:center;font-size:25px;
+ box-shadow:0 5px 20px #0005;
+}
+.exam-video-title{padding:13px 16px;font-weight:800;font-size:15px}
+.exam-video-frame{display:none;padding:10px}
+.exam-video-frame.active{display:block}
+.exam-video-frame iframe{
+ width:100%;aspect-ratio:16/9;border:0;
+ border-radius:12px;background:#001923;
+}
 
 /* EXAM PREPARATION: HOMEPAGE FEATURED COURSE SLIDER */
 .exam-showcase{
@@ -310,11 +344,11 @@ section{padding:30px 0}
  .exam-featured-image{aspect-ratio:16/9}
  .exam-featured-info{padding:16px}
  .exam-featured-info h3{font-size:19px}
+ .course-card-body{padding:16px}
 }
 @media(min-width:701px){.menu-btn{display:none}}
 </style>
 </head>
-
 <body>
 <header class="header">
  <div class="header-inner">
@@ -380,10 +414,10 @@ section{padding:30px 0}
    </div>
   </section>
 
-  <!-- EXAM PREPARATION: FEATURED SINGLE-POST SLIDER -->
+  <!-- EXAM PREPARATION COURSE -->
   <section id="exam">
    <div class="section-heading">
-    <h2>Exam Preparation</h2>
+    <h2>Exam Preparation Course</h2>
     <p>Explore our featured exam preparation courses.</p>
    </div>
 
@@ -418,9 +452,10 @@ section{padding:30px 0}
      <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>
      <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
     </div>
-    </div>
+   </div>
   </section>
-    <!-- STUDY MATERIALS -->
+
+  <!-- STUDY MATERIALS -->
   <section id="materials">
    <div class="section-heading"><h2>Study Materials</h2><p>Access learning resources and practice materials.</p></div>
    <div class="offline-grid">
@@ -640,12 +675,11 @@ examDots.forEach((dot,index)=>{
   });
  });
 });
-
 examTrack.addEventListener("scroll",updateExamSlider,{passive:true});
 window.addEventListener("resize",updateExamSlider);
 
 // SUBJECT DATABASE
-const learningSubjects={
+ const learningSubjects={
  science:{
   ssc:[
    ["Physics","physics"],["Chemistry","chemistry"],["Biology","biology"],
@@ -701,17 +735,121 @@ const demoImages={
  classroom:"https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1200&q=85"
 };
 
-// ADD YOUTUBE VIDEO IDs HERE LATER.
-// Example: "ssc-science-physics":["VIDEO_ID_1","VIDEO_ID_2"]
-const youtubeVideos={};
+// ADD YOUTUBE VIDEO LINKS OR IDs HERE LATER.
+// Example:
+// videos:[
+//  "https://www.youtube.com/watch?v=VIDEO_ID",
+//  {title:"Chapter 2 Lesson",url:"https://youtu.be/VIDEO_ID",image:"thumbnail.jpg"}
+// ]
 
-// DEMO COURSE DATA
-// Replace these sample courses with actual academy courses later.
+// EXAM COURSE DATA
+// image = course post photo
+// videos = YouTube video links/IDs shown inside Course Details
 const examCourses=[
- {id:"course-1",name:"Complete Subject Preparation",price:"To be announced",description:"A structured subject-wise preparation course with lessons and study guidance.",video:""},
- {id:"course-2",name:"Exam Revision Course",price:"To be announced",description:"Revision-focused lessons and preparation support for upcoming examinations.",video:""}
+ {
+  id:"course-1",
+  name:"Complete Subject Preparation",
+  price:"To be announced",
+  description:"A structured subject-wise preparation course with lessons and study guidance.",
+  image:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85",
+  videos:[]
+ },
+ {
+  id:"course-2",
+  name:"Exam Revision Course",
+  price:"To be announced",
+  description:"Revision-focused lessons and preparation support for upcoming examinations.",
+  image:"https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85",
+  videos:[]
+ }
 ];
- // PAGE ELEMENTS
+
+// YOUTUBE PLAYER CONTROL
+let activeExamVideoFrame=null;
+let examVideoObserver=null;
+
+function getYouTubeVideoId(value){
+ const text=String(value||"").trim();
+ if(!text)return "";
+
+ if(/^[a-zA-Z0-9_-]{11}$/.test(text)){
+  return text;
+ }
+
+ const match=text.match(
+  /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+ );
+
+ return match?match[1]:"";
+}
+
+function pauseExamVideo(frame){
+ if(!frame||!frame.contentWindow)return;
+
+ frame.contentWindow.postMessage(
+  JSON.stringify({
+   event:"command",
+   func:"pauseVideo",
+   args:[]
+  }),
+  "*"
+ );
+}
+
+function stopActiveExamVideo(removeFrame=false){
+ if(examVideoObserver){
+  examVideoObserver.disconnect();
+  examVideoObserver=null;
+ }
+
+ if(activeExamVideoFrame){
+  pauseExamVideo(activeExamVideoFrame);
+
+  if(removeFrame){
+   activeExamVideoFrame.remove();
+  }
+
+  activeExamVideoFrame=null;
+ }
+}
+
+function playExamVideo(videoId,slot,title){
+ stopActiveExamVideo(true);
+
+ const iframe=document.createElement("iframe");
+ iframe.className="detail-video";
+ iframe.src=
+  "https://www.youtube.com/embed/"+
+  encodeURIComponent(videoId)+
+  "?autoplay=1&enablejsapi=1&playsinline=1&rel=0";
+
+ iframe.title=title||"Course video";
+ iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+ iframe.allowFullscreen=true;
+ iframe.loading="eager";
+ iframe.referrerPolicy="strict-origin-when-cross-origin";
+
+ slot.innerHTML="";
+ slot.classList.add("active");
+ slot.appendChild(iframe);
+
+ activeExamVideoFrame=iframe;
+
+ // Pause the video when its player moves away from the screen.
+ if("IntersectionObserver" in window){
+  examVideoObserver=new IntersectionObserver(entries=>{
+   entries.forEach(entry=>{
+    if(!entry.isIntersecting||entry.intersectionRatio<0.2){
+     pauseExamVideo(iframe);
+    }
+   });
+  },{threshold:[0,0.2]});
+
+  examVideoObserver.observe(slot);
+ }
+}
+
+// PAGE ELEMENTS
 const innerPage=document.getElementById("innerPage");
 const homePage=document.getElementById("homePage");
 const pageBanner=document.getElementById("pageBanner");
@@ -732,6 +870,7 @@ function setPage(title,label,description,image,back){
 }
 
 function clearContent(){
+ stopActiveExamVideo(true);
  pageContent.innerHTML="";
 }
 
@@ -787,7 +926,7 @@ function showNotFound(){
 // EXAM PREPARATION: LEARN MORE -> SSC / HSC
 function renderExamLevels(){
  setPage(
-  "Exam Preparation",
+  "Exam Preparation Course",
   "Learn More",
   "Choose your examination to explore available courses.",
   demoImages.classroom,
@@ -858,7 +997,7 @@ function makePost(subject,program,group){
 
 function renderGroups(program,mode){
  const title=mode==="offline"?"Offline Batches":
-             mode==="exam"?"Exam Preparation":"Online Batches";
+             mode==="exam"?"Exam Preparation Course":"Online Batches";
 
  setPage(
   "Choose Your Group",
@@ -891,7 +1030,7 @@ function renderSubjectChoices(program,group,mode){
  if(!subjects.length){showNotFound();return}
 
  const modeTitle=mode==="offline"?"Offline Batch":
-                 mode==="exam"?"Exam Preparation":"Online Lessons";
+                 mode==="exam"?"Exam Preparation Course":"Online Lessons";
 
  setPage(
   groupNames[group]+" | "+program.toUpperCase(),
@@ -991,14 +1130,14 @@ function renderOfflinePosts(program,group,subjectKey){
  pageContent.appendChild(makeEmpty("More batch posts will appear here when the academy publishes them."));
 }
 
-// EXAM PREPARATION: SUBJECT -> COURSES
+// EXAM PREPARATION: SUBJECT -> COURSE POSTS
 function renderExamCourses(program,group,subjectKey){
  const subject=getSubject(group,program,subjectKey);
  if(!subject){showNotFound();return}
 
  setPage(
   subject[0]+" Courses",
-  "Exam Preparation | "+program.toUpperCase()+" | "+groupNames[group],
+  "Exam Preparation Course | "+program.toUpperCase()+" | "+groupNames[group],
   "Choose a course to see its details.",
   demoImages[group],
   "?page=exam-group-"+program+"-"+group
@@ -1010,6 +1149,16 @@ function renderExamCourses(program,group,subjectKey){
  examCourses.forEach(course=>{
   const card=document.createElement("article");
   card.className="course-card";
+
+  // Post photo appears first.
+  const image=document.createElement("img");
+  image.className="course-card-image";
+  image.src=course.image||demoImages.classroom;
+  image.alt=course.name+" course photo";
+  image.loading="lazy";
+
+  const body=document.createElement("div");
+  body.className="course-card-body";
 
   const heading=document.createElement("h3");
   heading.textContent=course.name;
@@ -1026,13 +1175,15 @@ function renderExamCourses(program,group,subjectKey){
   link.href="?page=exam-detail-"+program+"-"+group+"-"+subjectKey+"-"+course.id;
   link.textContent="View Details →";
 
-  card.append(heading,desc,price,link);
+  body.append(heading,desc,price,link);
+  card.append(image,body);
   list.appendChild(card);
  });
 
  pageContent.appendChild(list);
 }
 
+// EXAM PREPARATION: COURSE DETAILS + VIDEO POSTS
 function renderExamDetails(program,group,subjectKey,courseId){
  const subject=getSubject(group,program,subjectKey);
  const course=examCourses.find(item=>item.id===courseId);
@@ -1043,27 +1194,24 @@ function renderExamDetails(program,group,subjectKey,courseId){
   course.name,
   "Course Details | "+subject[0],
   "Read the course information before making an enquiry.",
-  demoImages[group],
+  course.image||demoImages[group],
   "?page=exam-courses-"+program+"-"+group+"-"+subjectKey
  );
 
  const box=document.createElement("div");
  box.className="detail-box";
 
- if(course.video){
-  const iframe=document.createElement("iframe");
-  iframe.className="detail-video";
-  iframe.src="https://www.youtube.com/embed/"+encodeURIComponent(course.video);
-  iframe.title=course.name+" introduction";
-  iframe.allowFullscreen=true;
-  box.appendChild(iframe);
- }else{
-  box.appendChild(makeEmpty("Course introduction video will be added soon."));
- }
+ const courseImage=document.createElement("img");
+ courseImage.src=course.image||demoImages.classroom;
+ courseImage.alt=course.name+" course photo";
+ courseImage.style.width="100%";
+ courseImage.style.aspectRatio="16/8";
+ courseImage.style.objectFit="cover";
+ courseImage.style.borderRadius="14px";
+ courseImage.style.marginBottom="18px";
 
  const heading=document.createElement("h2");
  heading.textContent=course.name;
- heading.style.marginTop="18px";
 
  const description=document.createElement("p");
  description.textContent=course.description;
@@ -1073,6 +1221,79 @@ function renderExamDetails(program,group,subjectKey,courseId){
 
  const value=document.createElement("p");
  value.textContent="Course Value: "+course.price;
+
+ box.append(courseImage,heading,description,subjectInfo,value);
+
+ // Accepts either YouTube IDs/links or video objects.
+ const videos=Array.isArray(course.videos)?[...course.videos]:[];
+
+ if(course.video){
+  videos.unshift(course.video);
+ }
+
+ if(videos.length){
+  const videoHeading=document.createElement("h2");
+  videoHeading.textContent="Course Videos";
+  videoHeading.style.marginTop="24px";
+  box.appendChild(videoHeading);
+
+  const videoList=document.createElement("div");
+  videoList.className="exam-video-list";
+
+  videos.forEach((entry,index)=>{
+   const videoData=typeof entry==="string"
+    ?{url:entry}
+    :entry;
+
+   const videoId=getYouTubeVideoId(videoData.url||videoData.id||"");
+
+   if(!videoId)return;
+
+   const videoTitle=videoData.title||("Lesson "+(index+1));
+
+   const videoCard=document.createElement("article");
+   videoCard.className="exam-video-card";
+
+   const thumbButton=document.createElement("button");
+   thumbButton.type="button";
+   thumbButton.className="exam-video-thumb";
+   thumbButton.setAttribute("aria-label","Play "+videoTitle);
+
+   const thumb=document.createElement("img");
+   thumb.src=videoData.image||("https://img.youtube.com/vi/"+videoId+"/hqdefault.jpg");
+   thumb.alt=videoTitle;
+   thumb.loading="lazy";
+
+   const playIcon=document.createElement("span");
+   playIcon.className="exam-video-play";
+   playIcon.textContent="▶";
+
+   thumbButton.append(thumb,playIcon);
+
+   const title=document.createElement("div");
+   title.className="exam-video-title";
+   title.textContent=videoTitle;
+
+   const frameSlot=document.createElement("div");
+   frameSlot.className="exam-video-frame";
+
+   thumbButton.addEventListener("click",()=>{
+    playExamVideo(videoId,frameSlot,videoTitle);
+    frameSlot.scrollIntoView({behavior:"smooth",block:"nearest"});
+   });
+
+   videoCard.append(thumbButton,title,frameSlot);
+   videoList.appendChild(videoCard);
+  });
+
+  if(videoList.children.length){
+   box.appendChild(videoList);
+  }else{
+   box.appendChild(makeEmpty("No valid YouTube video links have been added yet."));
+  }
+ }else{
+  box.appendChild(makeEmpty("Course videos will be added here soon."));
+ }
 
  const bottom=document.createElement("div");
  bottom.className="detail-bottom";
@@ -1086,11 +1307,9 @@ function renderExamDetails(program,group,subjectKey,courseId){
  });
 
  bottom.appendChild(purchase);
- box.append(heading,description,subjectInfo,value,bottom);
+ box.appendChild(bottom);
  pageContent.appendChild(box);
-}
-
-// STUDY MATERIALS
+ // STUDY MATERIALS
 function renderMaterialLevels(type){
  setPage(
   type==="pdf"?"PDF Notes":"Practice Materials",
@@ -1290,7 +1509,7 @@ function openPage(page){
   renderSubjectChoices(parts[2],parts[3],"exam");
  }
 
- // EXAM: SUBJECT -> COURSE LIST
+ // EXAM: SUBJECT -> COURSE POSTS
  else if(page.startsWith("exam-courses-")){
   const parts=page.split("-");
   const program=parts[2];
@@ -1421,3 +1640,4 @@ renderRoute();
 </script>
 </body>
 </html>
+ }
