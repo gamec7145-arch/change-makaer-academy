@@ -54,9 +54,29 @@ section{padding:30px 0}
 /* BANNER */
 .hero{padding:40px 0 70px}
 .banner{position:relative;overflow:hidden;border-radius:24px;background:#123E50;box-shadow:0 18px 45px #0003}
-.banner-slide{display:none}
-.banner-slide.active{display:block;animation:fadeIn .5s}
-.banner-slide img{width:100%;aspect-ratio:16/8;object-fit:cover}
+.banner-slide{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  opacity:0;
+  transform:translateX(40px);
+  transition:transform .7s ease, opacity .7s ease;
+  pointer-events:none;
+}
+
+.banner-slide.active{
+  opacity:1;
+  transform:translateX(0);
+  pointer-events:auto;
+  z-index:2;
+}
+
+.banner-slide img{
+  width:100%;
+  aspect-ratio:16/8;
+  object-fit:cover;
+}
 @keyframes fadeIn{from{opacity:.4}to{opacity:1}}
 .banner-arrow{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid #ffffff55;border-radius:50%;background:#031924a6;color:white;font-size:25px}
 .banner-prev{left:18px}.banner-next{right:18px}
