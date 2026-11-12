@@ -25,11 +25,7 @@ img{max-width:100%;display:block}
 
 /* HEADER */
 .header{background:#fff;color:#142333;position:sticky;top:0;z-index:100;box-shadow:0 2px 14px #0001}
-.header-inner{
- max-width:1200px;margin:auto;min-height:82px;
- padding:8px 4%;display:flex;align-items:center;
- justify-content:space-between;gap:16px;
-}
+.header-inner{max-width:1200px;margin:auto;min-height:82px;padding:8px 4%;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .brand img{width:190px;height:78px;object-fit:contain;object-position:left center;display:block}
 .menu-btn{width:44px;height:44px;border:0;background:transparent;color:#243746;font-size:30px}
@@ -48,24 +44,11 @@ section{padding:30px 0}
 
 /* BANNER */
 .hero{padding:40px 0 70px}
-.banner{
- position:relative;overflow:hidden;border-radius:24px;
- background:#123E50;box-shadow:0 18px 45px #0003;
- aspect-ratio:16/8;
-}
-.banner-slide{
- display:block;position:absolute;inset:0;width:100%;height:100%;
- opacity:0;transform:translateX(100%);
- transition:transform .65s ease,opacity .65s ease;
- pointer-events:none;
-}
+.banner{position:relative;overflow:hidden;border-radius:24px;background:#123E50;box-shadow:0 18px 45px #0003;aspect-ratio:16/8}
+.banner-slide{display:block;position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:translateX(100%);transition:transform .65s ease,opacity .65s ease;pointer-events:none}
 .banner-slide.active{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
 .banner-slide img{width:100%;height:100%;object-fit:cover}
-.banner-arrow{
- position:absolute;bottom:16px;z-index:5;
- width:43px;height:43px;border:1px solid #ffffff55;
- border-radius:50%;background:#031924a6;color:white;font-size:23px;
-}
+.banner-arrow{position:absolute;bottom:16px;z-index:5;width:43px;height:43px;border:1px solid #ffffff55;border-radius:50%;background:#031924a6;color:white;font-size:23px}
 .banner-prev{left:16px}.banner-next{right:16px}
 .banner-dots{display:flex;justify-content:center;gap:9px;padding-top:18px}
 .banner-dot{width:8px;height:8px;border:0;border-radius:20px;background:#78949D}
@@ -152,38 +135,20 @@ section{padding:30px 0}
 .channel-link{display:inline-block;margin-top:16px;padding:12px 18px;background:var(--green);color:#063C36;border-radius:12px;font-weight:900}
 
 /* NEW FEATURE CONTENT */
-.review-track{
- display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;
- padding:3px 2px 16px;scrollbar-width:none;
-}
+.review-track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:3px 2px 16px;scrollbar-width:none}
 .review-track::-webkit-scrollbar{display:none}
-.review-card{
- flex:0 0 290px;scroll-snap-align:start;
- background:var(--card);border:1px solid var(--border);
- border-radius:18px;padding:22px;
-}
+.review-card{flex:0 0 290px;scroll-snap-align:start;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px}
 .review-stars{color:var(--mint);letter-spacing:3px;font-size:17px;margin-bottom:10px}
 .review-card p{color:#D3E2E9;font-size:14px}
 .review-card h3{font-size:16px;margin-top:15px}
 .review-card small{color:var(--muted)}
 .sample-note{color:var(--muted);font-size:12px;margin-top:10px}
-.brand-intro{
- display:flex;align-items:center;gap:28px;
- background:var(--card);border:1px solid var(--border);
- border-radius:20px;padding:28px;
-}
+.brand-intro{display:flex;align-items:center;gap:28px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px}
 .brand-intro img{width:170px;height:130px;object-fit:contain;flex-shrink:0}
 .brand-intro h2{font-size:25px;margin-bottom:8px}
 .brand-intro p{color:var(--muted);font-size:14px}
 .social-links{display:flex;gap:12px;margin-top:17px;flex-wrap:wrap}
-.social-links a{
- width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
- background:#fff;color:#073746;font-weight:900;font-size:15px;
-}
-.social-links span{
- width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
- background:#fff;color:#073746;font-weight:900;font-size:15px;
-}
+.social-links a,.social-links span{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#073746;font-weight:900;font-size:15px}
 .company-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
 .company-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:19px}
 .company-item small{display:block;color:var(--mint);font-weight:800;margin-bottom:5px}
@@ -191,104 +156,45 @@ section{padding:30px 0}
 
 /* COURSE POSTS */
 .course-list{display:grid;gap:16px}
-.course-card{
- background:var(--card);border:1px solid var(--border);
- border-radius:18px;overflow:hidden;transition:.2s;
-}
-.course-card-image{
- width:100%;aspect-ratio:16/8;object-fit:cover;
- background:#123E50;
-}
+.course-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:.2s}
+.course-card-image{width:100%;aspect-ratio:16/8;object-fit:cover;background:#123E50}
 .course-card-body{padding:21px}
 .course-card h3{font-size:19px}
 .course-card p{color:var(--muted);font-size:14px;margin:5px 0 12px}
 .course-price{color:var(--mint);font-weight:900;margin-bottom:12px}
-.action-link,.purchase-button{
- display:inline-block;border:0;border-radius:11px;padding:11px 17px;
- background:var(--green);color:#063C36;font-weight:900;
-}
+.action-link,.purchase-button{display:inline-block;border:0;border-radius:11px;padding:11px 17px;background:var(--green);color:#063C36;font-weight:900}
 .detail-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px}
 .detail-box p{color:#D2E1E7;margin:10px 0}
 .detail-video{width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#001923}
 .detail-bottom{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
 
-/* EXAM COURSE VIDEO POSTS */
+/* UNIVERSAL VIDEO POSTS */
 .exam-video-list{display:grid;gap:16px;margin-top:20px}
-.exam-video-card{
- background:#0b3544;border:1px solid var(--border);
- border-radius:16px;overflow:hidden;
-}
-.exam-video-thumb{
- position:relative;width:100%;display:block;padding:0;
- border:0;background:#001923;overflow:hidden;
-}
-.exam-video-thumb img{
- width:100%;aspect-ratio:16/9;object-fit:cover;
-}
-.exam-video-play{
- position:absolute;left:50%;top:50%;
- transform:translate(-50%,-50%);
- width:58px;height:58px;border-radius:50%;
- background:var(--green);color:#063C36;
- display:grid;place-items:center;font-size:25px;
- box-shadow:0 5px 20px #0005;
-}
+.exam-video-card{background:#0b3544;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.exam-video-thumb{position:relative;width:100%;display:block;padding:0;border:0;background:#001923;overflow:hidden}
+.exam-video-thumb img{width:100%;aspect-ratio:16/9;object-fit:cover}
+.exam-video-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:var(--green);color:#063C36;display:grid;place-items:center;font-size:25px;box-shadow:0 5px 20px #0005}
 .exam-video-title{padding:13px 16px;font-weight:800;font-size:15px}
 .exam-video-frame{display:none;padding:10px}
 .exam-video-frame.active{display:block}
-.exam-video-frame iframe{
- width:100%;aspect-ratio:16/9;border:0;
- border-radius:12px;background:#001923;
-}
+.exam-video-frame iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#001923}
 
-/* EXAM PREPARATION: HOMEPAGE FEATURED COURSE SLIDER */
-.exam-showcase{
- background:linear-gradient(140deg,#06474B,#084348);
- border:1px solid #12635F;border-radius:22px;padding:24px;
-}
-.exam-showcase-top{
- display:flex;align-items:center;justify-content:space-between;
- gap:12px;margin-bottom:18px;
-}
+/* EXAM PREPARATION SHOWCASE */
+.exam-showcase{background:linear-gradient(140deg,#06474B,#084348);border:1px solid #12635F;border-radius:22px;padding:24px}
+.exam-showcase-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 .exam-showcase-top p{color:var(--muted);font-size:13px}
-.exam-learn-more{
- display:inline-flex;align-items:center;gap:7px;
- color:var(--mint);font-size:14px;font-weight:900;
- white-space:nowrap;
-}
+.exam-learn-more{display:inline-flex;align-items:center;gap:7px;color:var(--mint);font-size:14px;font-weight:900;white-space:nowrap}
 .exam-learn-more:hover{color:#fff}
-.exam-featured-track{
- display:flex;overflow-x:auto;gap:14px;
- scroll-snap-type:x mandatory;scroll-behavior:smooth;
- scrollbar-width:none;touch-action:pan-y;
-}
+.exam-featured-track{display:flex;overflow-x:auto;gap:14px;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;touch-action:pan-y}
 .exam-featured-track::-webkit-scrollbar{display:none}
-.exam-featured-card{
- flex:0 0 100%;min-width:0;overflow:hidden;
- scroll-snap-align:center;
- background:var(--card);border:1px solid var(--border);
- border-radius:18px;
-}
-.exam-featured-image{
- width:100%;aspect-ratio:16/8;object-fit:cover;
- background:#123E50;
-}
+.exam-featured-card{flex:0 0 100%;min-width:0;overflow:hidden;scroll-snap-align:center;background:var(--card);border:1px solid var(--border);border-radius:18px}
+.exam-featured-image{width:100%;aspect-ratio:16/8;object-fit:cover;background:#123E50}
 .exam-featured-info{padding:20px}
-.exam-featured-tag{
- display:inline-block;background:#08C99A26;color:var(--mint);
- border-radius:30px;padding:5px 12px;font-size:11px;
- font-weight:900;margin-bottom:9px;
-}
+.exam-featured-tag{display:inline-block;background:#08C99A26;color:var(--mint);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:900;margin-bottom:9px}
 .exam-featured-info h3{font-size:21px;font-weight:900;line-height:1.3}
 .exam-featured-info p{color:var(--muted);font-size:13px;margin-top:7px}
-.exam-slider-footer{
- display:flex;align-items:center;justify-content:center;
- gap:9px;margin-top:16px;
-}
-.exam-slider-dot{
- width:8px;height:8px;border:0;border-radius:20px;
- background:#78949D;padding:0;
-}
+.exam-slider-footer{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px}
+.exam-slider-dot{width:8px;height:8px;border:0;border-radius:20px;background:#78949D;padding:0}
 .exam-slider-dot.active{width:25px;background:var(--green)}
 .exam-slider-count{color:var(--muted);font-size:11px;margin-left:5px}
 
@@ -380,6 +286,7 @@ section{padding:30px 0}
 
 <main id="homePage">
  <div class="container">
+
   <section class="hero">
    <div class="banner" id="banner">
     <div class="banner-slide active"><img src="banner1.jpg" alt="Academy banner 1"></div>
@@ -395,10 +302,21 @@ section{padding:30px 0}
   <!-- OFFLINE BATCHES -->
   <section id="offline" class="offline-section">
    <span class="section-label">Classroom Learning</span>
-   <div class="section-heading"><h2>Offline Batches</h2><p>Join our classroom learning programs.</p></div>
+   <div class="section-heading">
+    <h2>Offline Batches</h2>
+    <p>Join our classroom learning programs.</p>
+   </div>
    <div class="offline-grid">
-    <a href="?page=offline-ssc" class="offline-card"><div class="offline-icon">▤</div><div><h3>SSC</h3><p>Class 9 & 10</p></div><span>›</span></a>
-    <a href="?page=offline-hsc" class="offline-card"><div class="offline-icon">▣</div><div><h3>HSC</h3><p>College</p></div><span>›</span></a>
+    <a href="?page=offline-ssc" class="offline-card">
+     <div class="offline-icon">▤</div>
+     <div><h3>SSC</h3><p>Class 9 & 10</p></div>
+     <span>›</span>
+    </a>
+    <a href="?page=offline-hsc" class="offline-card">
+     <div class="offline-icon">▣</div>
+     <div><h3>HSC</h3><p>College</p></div>
+     <span>›</span>
+    </a>
    </div>
   </section>
 
@@ -408,9 +326,21 @@ section{padding:30px 0}
    <h1 class="batch-title">Online Batches are ongoing!</h1>
    <p class="batch-subtitle">Book your seat now!</p>
    <div class="batch-list">
-    <a href="?page=online-ssc" class="batch-card"><div class="batch-icon">▤</div><div><h3>Class 9, 10</h3><p>SSC Preparation</p></div><span class="batch-arrow">›</span></a>
-    <a href="?page=online-hsc" class="batch-card"><div class="batch-icon">▣</div><div><h3>College</h3><p>HSC Preparation</p></div><span class="batch-arrow">›</span></a>
-    <a href="?page=online-admission" class="batch-card"><div class="batch-icon">♜</div><div><h3>Admission</h3><p>University Admission Preparation</p></div><span class="batch-arrow">›</span></a>
+    <a href="?page=online-ssc" class="batch-card">
+     <div class="batch-icon">▤</div>
+     <div><h3>Class 9, 10</h3><p>SSC Preparation</p></div>
+     <span class="batch-arrow">›</span>
+    </a>
+    <a href="?page=online-hsc" class="batch-card">
+     <div class="batch-icon">▣</div>
+     <div><h3>College</h3><p>HSC Preparation</p></div>
+     <span class="batch-arrow">›</span>
+    </a>
+    <a href="?page=online-admission" class="batch-card">
+     <div class="batch-icon">♜</div>
+     <div><h3>Admission</h3><p>University Admission Preparation</p></div>
+     <span class="batch-arrow">›</span>
+    </a>
    </div>
   </section>
 
@@ -424,12 +354,16 @@ section{padding:30px 0}
    <div class="exam-showcase">
     <div class="exam-showcase-top">
      <p>Featured Courses</p>
-     <a href="?page=exam-choose" class="exam-learn-more">Learn More <span>→</span></a>
+     <a href="?page=exam-choose" class="exam-learn-more">
+      Learn More <span>→</span>
+     </a>
     </div>
 
     <div class="exam-featured-track" id="examFeaturedTrack">
      <article class="exam-featured-card">
-      <img class="exam-featured-image" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85" alt="SSC exam preparation">
+      <img class="exam-featured-image"
+       src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"
+       alt="SSC exam preparation">
       <div class="exam-featured-info">
        <span class="exam-featured-tag">SSC PREPARATION</span>
        <h3>SSC Complete Preparation</h3>
@@ -438,7 +372,9 @@ section{padding:30px 0}
      </article>
 
      <article class="exam-featured-card">
-      <img class="exam-featured-image" src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85" alt="HSC exam preparation">
+      <img class="exam-featured-image"
+       src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85"
+       alt="HSC exam preparation">
       <div class="exam-featured-info">
        <span class="exam-featured-tag">HSC PREPARATION</span>
        <h3>HSC Complete Preparation</h3>
@@ -457,20 +393,30 @@ section{padding:30px 0}
 
   <!-- STUDY MATERIALS -->
   <section id="materials">
-   <div class="section-heading"><h2>Study Materials</h2><p>Access learning resources and practice materials.</p></div>
+   <div class="section-heading">
+    <h2>Study Materials</h2>
+    <p>Access learning resources and practice materials.</p>
+   </div>
    <div class="offline-grid">
     <a href="?page=materials-pdf" class="offline-card">
-     <div class="offline-icon">▤</div><div><h3>PDF Notes</h3><p>Subject-wise study notes</p></div><span>›</span>
+     <div class="offline-icon">▤</div>
+     <div><h3>PDF Notes</h3><p>Subject-wise study notes</p></div>
+     <span>›</span>
     </a>
     <a href="?page=materials-practice" class="offline-card">
-     <div class="offline-icon">✎</div><div><h3>Practice</h3><p>Questions and practice sets</p></div><span>›</span>
+     <div class="offline-icon">✎</div>
+     <div><h3>Practice</h3><p>Questions and practice sets</p></div>
+     <span>›</span>
     </a>
    </div>
   </section>
 
-  <!-- ACHIEVEMENTS: ORIGINAL CONTENT -->
+  <!-- ACHIEVEMENTS -->
   <section>
-   <div class="section-heading"><h2>Our Achievements</h2><p>Growing together, achieving more.</p></div>
+   <div class="section-heading">
+    <h2>Our Achievements</h2>
+    <p>Growing together, achieving more.</p>
+   </div>
    <div class="stats-grid">
     <div class="stat-card"><h3>1K+</h3><p>Students</p></div>
     <div class="stat-card"><h3>20+</h3><p>Courses</p></div>
@@ -480,7 +426,10 @@ section{padding:30px 0}
 
   <!-- STUDENT REVIEWS -->
   <section id="reviews">
-   <div class="section-heading"><h2>What Our Students Say</h2><p>Hear from our learning community.</p></div>
+   <div class="section-heading">
+    <h2>What Our Students Say</h2>
+    <p>Hear from our learning community.</p>
+   </div>
    <div class="review-track">
     <article class="review-card">
      <div class="review-stars">★★★★★</div>
@@ -524,7 +473,10 @@ section{padding:30px 0}
 
   <!-- COMPANY DETAILS -->
   <section id="companyDetails">
-   <div class="section-heading"><h2>Company Details & Contact</h2><p>Get in touch with Change Maker Academy.</p></div>
+   <div class="section-heading">
+    <h2>Company Details & Contact</h2>
+    <p>Get in touch with Change Maker Academy.</p>
+   </div>
    <div class="company-grid">
     <div class="company-item"><small>LICENSE NO.</small><p>To be added</p></div>
     <div class="company-item"><small>ADDRESS</small><p>To be added</p></div>
@@ -535,12 +487,22 @@ section{padding:30px 0}
 
   <!-- LATEST NOTICES -->
   <section id="notices">
-   <div class="section-heading"><h2>Latest Notices</h2><p>Stay updated with academy news.</p></div>
+   <div class="section-heading">
+    <h2>Latest Notices</h2>
+    <p>Stay updated with academy news.</p>
+   </div>
    <div class="notice-list">
-    <div class="notice-item"><div class="notice-icon">♧</div><div><h3>Academic Announcements</h3><p>Latest academy updates and notices.</p></div></div>
-    <div class="notice-item"><div class="notice-icon">▦</div><div><h3>Upcoming Class Schedules</h3><p>Check your upcoming classes and events.</p></div></div>
+    <div class="notice-item">
+     <div class="notice-icon">♧</div>
+     <div><h3>Academic Announcements</h3><p>Latest academy updates and notices.</p></div>
+    </div>
+    <div class="notice-item">
+     <div class="notice-icon">▦</div>
+     <div><h3>Upcoming Class Schedules</h3><p>Check your upcoming classes and events.</p></div>
+    </div>
    </div>
   </section>
+
  </div>
 </main>
 
@@ -563,17 +525,20 @@ section{padding:30px 0}
   <p>Academic & Admission Program</p>
   <p>Helping learners build a brighter future.</p>
   <div class="footer-links">
-   <a href="?">Home</a><a href="#offline">Offline Batches</a>
-   <a href="#batches">Online Batches</a><a href="#exam">Exam Preparation</a>
-   <a href="#materials">Study Materials</a><a href="#reviews">Student Reviews</a>
-   <a href="#brandIntro">About Us</a><a href="#companyDetails">Company Details</a>
+   <a href="?">Home</a>
+   <a href="#offline">Offline Batches</a>
+   <a href="#batches">Online Batches</a>
+   <a href="#exam">Exam Preparation</a>
+   <a href="#materials">Study Materials</a>
+   <a href="#reviews">Student Reviews</a>
+   <a href="#brandIntro">About Us</a>
+   <a href="#companyDetails">Company Details</a>
   </div>
   <div class="footer-bottom">© 2026 Change Maker Academy. All rights reserved.</div>
  </div>
 </footer>
 
 <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
-
 <script>
 // MOBILE MENU
 const menuBtn=document.getElementById("menuBtn");
@@ -627,10 +592,13 @@ function restartSlider(){
 }
 
 document.getElementById("nextBanner").addEventListener("click",()=>{
- nextSlide();restartSlider();
+ nextSlide();
+ restartSlider();
 });
+
 document.getElementById("prevBanner").addEventListener("click",()=>{
- prevSlide();restartSlider();
+ prevSlide();
+ restartSlider();
 });
 
 let touchStartX=0;
@@ -651,14 +619,19 @@ banner.addEventListener("touchend",e=>{
 showSlide(0);
 restartSlider();
 
-// EXAM PREPARATION: FEATURED COURSE SLIDER
+// EXAM FEATURED SLIDER
 const examTrack=document.getElementById("examFeaturedTrack");
 const examDots=[...document.querySelectorAll(".exam-slider-dot")];
 const examCount=document.getElementById("examSliderCount");
 
 function updateExamSlider(){
  const cardWidth=examTrack.clientWidth;
- const activeIndex=Math.round(examTrack.scrollLeft/cardWidth);
+ if(!cardWidth)return;
+
+ const activeIndex=Math.min(
+  examDots.length-1,
+  Math.max(0,Math.round(examTrack.scrollLeft/cardWidth))
+ );
 
  examDots.forEach((dot,index)=>{
   dot.classList.toggle("active",index===activeIndex);
@@ -675,44 +648,68 @@ examDots.forEach((dot,index)=>{
   });
  });
 });
+
 examTrack.addEventListener("scroll",updateExamSlider,{passive:true});
 window.addEventListener("resize",updateExamSlider);
 
 // SUBJECT DATABASE
- const learningSubjects={
+const learningSubjects={
  science:{
   ssc:[
-   ["Physics","physics"],["Chemistry","chemistry"],["Biology","biology"],
-   ["Higher Mathematics","higher-math"],["General Mathematics","general-math"]
+   ["Physics","physics"],
+   ["Chemistry","chemistry"],
+   ["Biology","biology"],
+   ["Higher Mathematics","higher-math"],
+   ["General Mathematics","general-math"]
   ],
   hsc:[
-   ["Physics","physics"],["Chemistry","chemistry"],["Biology","biology"],
-   ["Higher Mathematics","higher-math"],["ICT","ict"]
+   ["Physics","physics"],
+   ["Chemistry","chemistry"],
+   ["Biology","biology"],
+   ["Higher Mathematics","higher-math"],
+   ["ICT","ict"]
   ]
  },
  arts:{
   ssc:[
-   ["Bangla","bangla"],["English","english"],["General Mathematics","general-math"],
-   ["ICT","ict"],["Bangladesh and Global Studies","bangladesh-global-studies"],
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["General Mathematics","general-math"],
+   ["ICT","ict"],
+   ["Bangladesh and Global Studies","bangladesh-global-studies"],
    ["History of Bangladesh and World Civilization","history"],
-   ["Geography and Environment","geography"],["Civics and Citizenship","civics"],
+   ["Geography and Environment","geography"],
+   ["Civics and Citizenship","civics"],
    ["Economics","economics"]
   ],
   hsc:[
-   ["Bangla","bangla"],["English","english"],["ICT","ict"],["Civics","civics"],
-   ["Economics","economics"],["Logic","logic"],["History","history"],
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["ICT","ict"],
+   ["Civics","civics"],
+   ["Economics","economics"],
+   ["Logic","logic"],
+   ["History","history"],
    ["Islamic History and Culture","islamic-history"],
-   ["Geography","geography"],["Sociology","sociology"]
+   ["Geography","geography"],
+   ["Sociology","sociology"]
   ]
  },
  commerce:{
   ssc:[
-   ["Bangla","bangla"],["English","english"],["General Mathematics","general-math"],
-   ["ICT","ict"],["Accounting","accounting"],["Finance and Banking","finance-banking"],
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["General Mathematics","general-math"],
+   ["ICT","ict"],
+   ["Accounting","accounting"],
+   ["Finance and Banking","finance-banking"],
    ["Business Entrepreneurship","business-entrepreneurship"]
   ],
   hsc:[
-   ["Bangla","bangla"],["English","english"],["ICT","ict"],["Accounting","accounting"],
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["ICT","ict"],
+   ["Accounting","accounting"],
    ["Finance, Banking and Insurance","finance-banking"],
    ["Business Organization and Management","business-management"],
    ["Production Management and Marketing","production-marketing"]
@@ -721,7 +718,9 @@ window.addEventListener("resize",updateExamSlider);
 };
 
 const groupNames={
- science:"Science",arts:"Arts",commerce:"Commerce"
+ science:"Science",
+ arts:"Arts",
+ commerce:"Commerce"
 };
 
 const demoImages={
@@ -735,16 +734,26 @@ const demoImages={
  classroom:"https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1200&q=85"
 };
 
-// ADD YOUTUBE VIDEO LINKS OR IDs HERE LATER.
+// ==================================================
+// CONTENT DATA
+// ==================================================
+
+// ONLINE VIDEO DATA
+// Add YouTube video IDs or full YouTube links here.
 // Example:
-// videos:[
-//  "https://www.youtube.com/watch?v=VIDEO_ID",
-//  {title:"Chapter 2 Lesson",url:"https://youtu.be/VIDEO_ID",image:"thumbnail.jpg"}
+// "ssc-science-physics":[
+//  {title:"Physics Chapter 1",url:"https://youtu.be/VIDEO_ID",image:""},
+//  "ANOTHER_VIDEO_ID"
 // ]
 
+const youtubeVideos={
+ // "ssc-science-physics":[]
+};
+
 // EXAM COURSE DATA
-// image = course post photo
-// videos = YouTube video links/IDs shown inside Course Details
+// Each course post has its own image and video list.
+// Later Admin Panel can manage these records.
+
 const examCourses=[
  {
   id:"course-1",
@@ -764,12 +773,17 @@ const examCourses=[
  }
 ];
 
-// YOUTUBE PLAYER CONTROL
-let activeExamVideoFrame=null;
-let examVideoObserver=null;
+// ==================================================
+// UNIVERSAL YOUTUBE VIDEO PLAYER
+// ==================================================
+
+let activeVideoFrame=null;
+let activeVideoObserver=null;
+let activeVideoSlot=null;
 
 function getYouTubeVideoId(value){
  const text=String(value||"").trim();
+
  if(!text)return "";
 
  if(/^[a-zA-Z0-9_-]{11}$/.test(text)){
@@ -783,47 +797,40 @@ function getYouTubeVideoId(value){
  return match?match[1]:"";
 }
 
-function pauseExamVideo(frame){
- if(!frame||!frame.contentWindow)return;
-
- frame.contentWindow.postMessage(
-  JSON.stringify({
-   event:"command",
-   func:"pauseVideo",
-   args:[]
-  }),
-  "*"
- );
-}
-
-function stopActiveExamVideo(removeFrame=false){
- if(examVideoObserver){
-  examVideoObserver.disconnect();
-  examVideoObserver=null;
+function stopActiveVideo(){
+ if(activeVideoObserver){
+  activeVideoObserver.disconnect();
+  activeVideoObserver=null;
  }
 
- if(activeExamVideoFrame){
-  pauseExamVideo(activeExamVideoFrame);
+ if(activeVideoFrame){
+  activeVideoFrame.src="about:blank";
+  activeVideoFrame.remove();
+  activeVideoFrame=null;
+ }
 
-  if(removeFrame){
-   activeExamVideoFrame.remove();
-  }
-
-  activeExamVideoFrame=null;
+ if(activeVideoSlot){
+  activeVideoSlot.classList.remove("active");
+  activeVideoSlot.innerHTML="";
+  activeVideoSlot=null;
  }
 }
 
-function playExamVideo(videoId,slot,title){
- stopActiveExamVideo(true);
+function playUniversalVideo(videoId,slot,title){
+ if(!videoId||!slot)return;
+
+ // Stop the previous video completely.
+ stopActiveVideo();
 
  const iframe=document.createElement("iframe");
  iframe.className="detail-video";
- iframe.src=
-  "https://www.youtube.com/embed/"+
-  encodeURIComponent(videoId)+
-  "?autoplay=1&enablejsapi=1&playsinline=1&rel=0";
 
- iframe.title=title||"Course video";
+ iframe.src=
+  "https://www.youtube-nocookie.com/embed/"+
+  encodeURIComponent(videoId)+
+  "?autoplay=1&playsinline=1&rel=0";
+
+ iframe.title=title||"Academy video lesson";
  iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
  iframe.allowFullscreen=true;
  iframe.loading="eager";
@@ -833,23 +840,34 @@ function playExamVideo(videoId,slot,title){
  slot.classList.add("active");
  slot.appendChild(iframe);
 
- activeExamVideoFrame=iframe;
+ activeVideoFrame=iframe;
+ activeVideoSlot=slot;
 
- // Pause the video when its player moves away from the screen.
+ // Stop the video when it is no longer sufficiently visible.
  if("IntersectionObserver" in window){
-  examVideoObserver=new IntersectionObserver(entries=>{
+  activeVideoObserver=new IntersectionObserver(entries=>{
    entries.forEach(entry=>{
-    if(!entry.isIntersecting||entry.intersectionRatio<0.2){
-     pauseExamVideo(iframe);
+    if(!entry.isIntersecting||entry.intersectionRatio<0.20){
+     stopActiveVideo();
     }
    });
-  },{threshold:[0,0.2]});
+  },{threshold:[0,0.20]});
 
-  examVideoObserver.observe(slot);
+  activeVideoObserver.observe(slot);
  }
 }
 
+// Stop video when the browser tab is hidden.
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){
+  stopActiveVideo();
+ }
+});
+
+// ==================================================
 // PAGE ELEMENTS
+// ==================================================
+
 const innerPage=document.getElementById("innerPage");
 const homePage=document.getElementById("homePage");
 const pageBanner=document.getElementById("pageBanner");
@@ -870,7 +888,7 @@ function setPage(title,label,description,image,back){
 }
 
 function clearContent(){
- stopActiveExamVideo(true);
+ stopActiveVideo();
  pageContent.innerHTML="";
 }
 
@@ -884,6 +902,7 @@ function makeCard(title,subtitle,url,icon="▤"){
  symbol.textContent=icon;
 
  const info=document.createElement("div");
+
  const strong=document.createElement("strong");
  strong.textContent=title;
 
@@ -892,6 +911,7 @@ function makeCard(title,subtitle,url,icon="▤"){
 
  info.append(strong,small);
  a.append(symbol,info);
+
  return a;
 }
 
@@ -910,6 +930,7 @@ function makeEmpty(text){
 
 function getSubjects(group,level){
  if(!learningSubjects[group])return [];
+
  const actualLevel=level==="admission"?"hsc":level;
  return learningSubjects[group][actualLevel]||[];
 }
@@ -919,11 +940,22 @@ function getSubject(group,level,key){
 }
 
 function showNotFound(){
- setPage("Page Not Found","404","This page could not be found.",demoImages.classroom,"?");
- pageContent.appendChild(makeEmpty("Please return to the homepage and choose a valid section."));
-}
+ setPage(
+  "Page Not Found",
+  "404",
+  "This page could not be found.",
+  demoImages.classroom,
+  "?"
+ );
 
-// EXAM PREPARATION: LEARN MORE -> SSC / HSC
+ pageContent.appendChild(
+  makeEmpty("Please return to the homepage and choose a valid section.")
+ );
+}
+ // ==================================================
+// EXAM PREPARATION: LEARN MORE
+// ==================================================
+
 function renderExamLevels(){
  setPage(
   "Exam Preparation Course",
@@ -952,6 +984,10 @@ function renderExamLevels(){
  pageContent.appendChild(grid);
 }
 
+// ==================================================
+// OFFLINE POST SYSTEM
+// ==================================================
+
 function makePost(subject,program,group){
  const article=document.createElement("article");
  article.className="offline-post";
@@ -968,7 +1004,8 @@ function makePost(subject,program,group){
  heading.textContent=subject+" Offline Batch";
 
  const description=document.createElement("p");
- description.textContent="Upcoming "+subject+" offline batch information. Actual class schedules and teacher details will be added by the academy.";
+ description.textContent=
+  "Upcoming "+subject+" offline batch information. Actual class schedules and teacher details will be added by the academy.";
 
  const meta=document.createElement("div");
  meta.className="post-meta";
@@ -982,18 +1019,26 @@ function makePost(subject,program,group){
   ["▣","Group: "+groupNames[group]]
  ].forEach(item=>{
   const line=document.createElement("div");
+
   const symbol=document.createElement("span");
   symbol.textContent=item[0];
+
   const text=document.createElement("span");
   text.textContent=item[1];
+
   line.append(symbol,text);
   meta.append(line);
  });
 
  content.append(heading,description,meta);
  article.append(img,content);
+
  return article;
 }
+
+// ==================================================
+// GROUP SELECTION
+// ==================================================
 
 function renderGroups(program,mode){
  const title=mode==="offline"?"Offline Batches":
@@ -1004,10 +1049,12 @@ function renderGroups(program,mode){
   title+" | "+program.toUpperCase(),
   "Select your group to continue.",
   demoImages.classroom,
-  mode==="offline"?"?#offline":mode==="exam"?"?#exam":"?#batches"
+  mode==="offline"?"?#offline":
+  mode==="exam"?"?#exam":"?#batches"
  );
 
  const grid=makeGrid();
+
  ["science","arts","commerce"].forEach(group=>{
   const destination=mode==="offline"
    ?"offline-group-"+program+"-"+group
@@ -1022,12 +1069,21 @@ function renderGroups(program,mode){
    group==="science"?"⚗":group==="arts"?"📚":"▤"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
+// ==================================================
+// SUBJECT SELECTION
+// ==================================================
+
 function renderSubjectChoices(program,group,mode){
  const subjects=getSubjects(group,program);
- if(!subjects.length){showNotFound();return}
+
+ if(!subjects.length){
+  showNotFound();
+  return;
+ }
 
  const modeTitle=mode==="offline"?"Offline Batch":
                  mode==="exam"?"Exam Preparation Course":"Online Lessons";
@@ -1037,16 +1093,28 @@ function renderSubjectChoices(program,group,mode){
   modeTitle+" Subjects",
   "Choose a subject to continue.",
   demoImages[group],
-  "?page="+(mode==="offline"?"offline-"+program:
-           mode==="exam"?"exam-"+program:"online-"+program)
+  "?page="+(
+   mode==="offline"?"offline-"+program:
+   mode==="exam"?"exam-"+program:"online-"+program
+  )
  );
 
  const grid=makeGrid();
+
  subjects.forEach(subject=>{
   let destination="";
-  if(mode==="offline")destination="offline-subject-"+program+"-"+group+"-"+subject[1];
-  if(mode==="exam")destination="exam-courses-"+program+"-"+group+"-"+subject[1];
-  if(mode==="online")destination="online-lessons-"+program+"-"+group+"-"+subject[1];
+
+  if(mode==="offline"){
+   destination="offline-subject-"+program+"-"+group+"-"+subject[1];
+  }
+
+  if(mode==="exam"){
+   destination="exam-courses-"+program+"-"+group+"-"+subject[1];
+  }
+
+  if(mode==="online"){
+   destination="online-lessons-"+program+"-"+group+"-"+subject[1];
+  }
 
   grid.appendChild(makeCard(
    subject[0],
@@ -1055,16 +1123,108 @@ function renderSubjectChoices(program,group,mode){
    mode==="online"?"▶":"▤"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
+// ==================================================
+// UNIVERSAL VIDEO POST RENDERER
+// ==================================================
+
+function renderVideoPosts(videos,headingText){
+ if(!Array.isArray(videos)||!videos.length){
+  pageContent.appendChild(
+   makeEmpty("Video lessons will be added here soon.")
+  );
+  return;
+ }
+
+ const heading=document.createElement("h2");
+ heading.textContent=headingText||"Video Lessons";
+ heading.style.marginBottom="16px";
+
+ const list=document.createElement("div");
+ list.className="exam-video-list";
+
+ videos.forEach((entry,index)=>{
+  const videoData=typeof entry==="string"
+   ?{url:entry}
+   :entry;
+
+  const videoId=getYouTubeVideoId(
+   videoData.url||videoData.id||""
+  );
+
+  if(!videoId)return;
+
+  const videoTitle=videoData.title||("Lesson "+(index+1));
+
+  const card=document.createElement("article");
+  card.className="exam-video-card";
+
+  const thumbButton=document.createElement("button");
+  thumbButton.type="button";
+  thumbButton.className="exam-video-thumb";
+  thumbButton.setAttribute("aria-label","Play "+videoTitle);
+
+  const thumb=document.createElement("img");
+  thumb.src=videoData.image||
+   "https://img.youtube.com/vi/"+videoId+"/hqdefault.jpg";
+  thumb.alt=videoTitle;
+  thumb.loading="lazy";
+
+  const playIcon=document.createElement("span");
+  playIcon.className="exam-video-play";
+  playIcon.textContent="▶";
+
+  thumbButton.append(thumb,playIcon);
+
+  const title=document.createElement("div");
+  title.className="exam-video-title";
+  title.textContent=videoTitle;
+
+  const frameSlot=document.createElement("div");
+  frameSlot.className="exam-video-frame";
+
+  thumbButton.addEventListener("click",()=>{
+   playUniversalVideo(videoId,frameSlot,videoTitle);
+
+   frameSlot.scrollIntoView({
+    behavior:"smooth",
+    block:"nearest"
+   });
+  });
+
+  card.append(thumbButton,title,frameSlot);
+  list.appendChild(card);
+ });
+
+ if(!list.children.length){
+  pageContent.appendChild(
+   makeEmpty("No valid YouTube video links have been added yet.")
+  );
+  return;
+ }
+
+ pageContent.append(heading,list);
+}
+
+// ==================================================
+// ONLINE: SUBJECT -> VIDEO POSTS
+// ==================================================
+
 function renderOnlineLessons(program,group,subjectKey){
  const subject=getSubject(group,program,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" Video Lessons",
-  (program==="admission"?"Admission":program.toUpperCase())+" | "+groupNames[group],
+  (program==="admission"?"Admission":program.toUpperCase())+
+   " | "+groupNames[group],
   "Watch the available video lessons for "+subject[0]+".",
   demoImages[group],
   "?page=online-group-"+program+"-"+group
@@ -1074,46 +1234,35 @@ function renderOnlineLessons(program,group,subjectKey){
  const videos=youtubeVideos[videoKey]||[];
 
  if(!videos.length){
-  pageContent.appendChild(makeEmpty("Video lessons for this subject will be added soon."));
+  pageContent.appendChild(
+   makeEmpty("Video lessons for this subject will be added soon.")
+  );
+
   const channel=document.createElement("a");
   channel.className="channel-link";
   channel.href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G";
   channel.target="_blank";
   channel.rel="noopener";
   channel.textContent="Visit Our YouTube Channel ↗";
+
   pageContent.appendChild(channel);
   return;
  }
 
- const list=document.createElement("div");
- list.className="video-list";
-
- videos.forEach((videoId,index)=>{
-  const card=document.createElement("div");
-  card.className="video-lesson";
-
-  const iframe=document.createElement("iframe");
-  iframe.className="video-embed";
-  iframe.src="https://www.youtube.com/embed/"+encodeURIComponent(videoId);
-  iframe.title=subject[0]+" lesson "+(index+1);
-  iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-  iframe.allowFullscreen=true;
-  iframe.loading="lazy";
-
-  const heading=document.createElement("h3");
-  heading.textContent=subject[0]+" — Lesson "+(index+1);
-
-  card.append(iframe,heading);
-  list.appendChild(card);
- });
-
- pageContent.appendChild(list);
+ renderVideoPosts(videos,subject[0]+" Video Lessons");
 }
 
+// ==================================================
 // OFFLINE: SUBJECT -> BATCH POSTS
+// ==================================================
+
 function renderOfflinePosts(program,group,subjectKey){
  const subject=getSubject(group,program,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" Offline Batch Posts",
@@ -1125,15 +1274,26 @@ function renderOfflinePosts(program,group,subjectKey){
 
  const posts=document.createElement("div");
  posts.className="post-list";
+
  posts.appendChild(makePost(subject[0],program,group));
  pageContent.appendChild(posts);
- pageContent.appendChild(makeEmpty("More batch posts will appear here when the academy publishes them."));
+
+ pageContent.appendChild(
+  makeEmpty("More batch posts will appear here when the academy publishes them.")
+ );
 }
 
-// EXAM PREPARATION: SUBJECT -> COURSE POSTS
+// ==================================================
+// EXAM: SUBJECT -> COURSE POSTS
+// ==================================================
+
 function renderExamCourses(program,group,subjectKey){
  const subject=getSubject(group,program,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" Courses",
@@ -1150,7 +1310,6 @@ function renderExamCourses(program,group,subjectKey){
   const card=document.createElement("article");
   card.className="course-card";
 
-  // Post photo appears first.
   const image=document.createElement("img");
   image.className="course-card-image";
   image.src=course.image||demoImages.classroom;
@@ -1183,12 +1342,18 @@ function renderExamCourses(program,group,subjectKey){
  pageContent.appendChild(list);
 }
 
-// EXAM PREPARATION: COURSE DETAILS + VIDEO POSTS
+// ==================================================
+// EXAM: COURSE DETAILS + VIDEO POSTS
+// ==================================================
+
 function renderExamDetails(program,group,subjectKey,courseId){
  const subject=getSubject(group,program,subjectKey);
  const course=examCourses.find(item=>item.id===courseId);
 
- if(!subject||!course){showNotFound();return}
+ if(!subject||!course){
+  showNotFound();
+  return;
+ }
 
  setPage(
   course.name,
@@ -1217,14 +1382,16 @@ function renderExamDetails(program,group,subjectKey,courseId){
  description.textContent=course.description;
 
  const subjectInfo=document.createElement("p");
- subjectInfo.textContent="Subject: "+subject[0]+" | Group: "+groupNames[group]+" | Level: "+program.toUpperCase();
+ subjectInfo.textContent=
+  "Subject: "+subject[0]+
+  " | Group: "+groupNames[group]+
+  " | Level: "+program.toUpperCase();
 
  const value=document.createElement("p");
  value.textContent="Course Value: "+course.price;
 
  box.append(courseImage,heading,description,subjectInfo,value);
 
- // Accepts either YouTube IDs/links or video objects.
  const videos=Array.isArray(course.videos)?[...course.videos]:[];
 
  if(course.video){
@@ -1232,67 +1399,20 @@ function renderExamDetails(program,group,subjectKey,courseId){
  }
 
  if(videos.length){
-  const videoHeading=document.createElement("h2");
-  videoHeading.textContent="Course Videos";
-  videoHeading.style.marginTop="24px";
-  box.appendChild(videoHeading);
+  const heading=document.createElement("h2");
+  heading.textContent="Course Videos";
+  heading.style.marginTop="24px";
 
-  const videoList=document.createElement("div");
-  videoList.className="exam-video-list";
+  box.appendChild(heading);
 
-  videos.forEach((entry,index)=>{
-   const videoData=typeof entry==="string"
-    ?{url:entry}
-    :entry;
+  const oldContent=pageContent;
+  pageContent.appendChild(box);
 
-   const videoId=getYouTubeVideoId(videoData.url||videoData.id||"");
-
-   if(!videoId)return;
-
-   const videoTitle=videoData.title||("Lesson "+(index+1));
-
-   const videoCard=document.createElement("article");
-   videoCard.className="exam-video-card";
-
-   const thumbButton=document.createElement("button");
-   thumbButton.type="button";
-   thumbButton.className="exam-video-thumb";
-   thumbButton.setAttribute("aria-label","Play "+videoTitle);
-
-   const thumb=document.createElement("img");
-   thumb.src=videoData.image||("https://img.youtube.com/vi/"+videoId+"/hqdefault.jpg");
-   thumb.alt=videoTitle;
-   thumb.loading="lazy";
-
-   const playIcon=document.createElement("span");
-   playIcon.className="exam-video-play";
-   playIcon.textContent="▶";
-
-   thumbButton.append(thumb,playIcon);
-
-   const title=document.createElement("div");
-   title.className="exam-video-title";
-   title.textContent=videoTitle;
-
-   const frameSlot=document.createElement("div");
-   frameSlot.className="exam-video-frame";
-
-   thumbButton.addEventListener("click",()=>{
-    playExamVideo(videoId,frameSlot,videoTitle);
-    frameSlot.scrollIntoView({behavior:"smooth",block:"nearest"});
-   });
-
-   videoCard.append(thumbButton,title,frameSlot);
-   videoList.appendChild(videoCard);
-  });
-
-  if(videoList.children.length){
-   box.appendChild(videoList);
-  }else{
-   box.appendChild(makeEmpty("No valid YouTube video links have been added yet."));
-  }
+  renderVideoPosts(videos,"");
  }else{
-  box.appendChild(makeEmpty("Course videos will be added here soon."));
+  box.appendChild(
+   makeEmpty("Course videos will be added here soon.")
+  );
  }
 
  const bottom=document.createElement("div");
@@ -1302,14 +1422,104 @@ function renderExamDetails(program,group,subjectKey,courseId){
  purchase.className="purchase-button";
  purchase.type="button";
  purchase.textContent="Purchase Now";
+
  purchase.addEventListener("click",()=>{
   alert("The course purchase process will be announced by Change Maker Academy. Please contact the academy for details.");
  });
 
  bottom.appendChild(purchase);
  box.appendChild(bottom);
+
+ if(!videos.length){
+  pageContent.appendChild(box);
+ }
+ }
+ // ==================================================
+// FIXED EXAM COURSE DETAILS VIDEO DISPLAY
+// ==================================================
+
+function renderExamDetails(program,group,subjectKey,courseId){
+ const subject=getSubject(group,program,subjectKey);
+ const course=examCourses.find(item=>item.id===courseId);
+
+ if(!subject||!course){
+  showNotFound();
+  return;
+ }
+
+ setPage(
+  course.name,
+  "Course Details | "+subject[0],
+  "Read the course information before making an enquiry.",
+  course.image||demoImages[group],
+  "?page=exam-courses-"+program+"-"+group+"-"+subjectKey
+ );
+
+ const box=document.createElement("div");
+ box.className="detail-box";
+
+ const courseImage=document.createElement("img");
+ courseImage.src=course.image||demoImages.classroom;
+ courseImage.alt=course.name+" course photo";
+ courseImage.style.width="100%";
+ courseImage.style.aspectRatio="16/8";
+ courseImage.style.objectFit="cover";
+ courseImage.style.borderRadius="14px";
+ courseImage.style.marginBottom="18px";
+
+ const heading=document.createElement("h2");
+ heading.textContent=course.name;
+
+ const description=document.createElement("p");
+ description.textContent=course.description;
+
+ const subjectInfo=document.createElement("p");
+ subjectInfo.textContent=
+  "Subject: "+subject[0]+
+  " | Group: "+groupNames[group]+
+  " | Level: "+program.toUpperCase();
+
+ const value=document.createElement("p");
+ value.textContent="Course Value: "+course.price;
+
+ box.append(courseImage,heading,description,subjectInfo,value);
+
+ const videos=Array.isArray(course.videos)?[...course.videos]:[];
+
+ if(course.video){
+  videos.unshift(course.video);
+ }
+
  pageContent.appendChild(box);
- // STUDY MATERIALS
+
+ if(videos.length){
+  renderVideoPosts(videos,"Course Videos");
+ }else{
+  box.appendChild(
+   makeEmpty("Course videos will be added here soon.")
+  );
+ }
+
+ const bottom=document.createElement("div");
+ bottom.className="detail-bottom";
+
+ const purchase=document.createElement("button");
+ purchase.className="purchase-button";
+ purchase.type="button";
+ purchase.textContent="Purchase Now";
+
+ purchase.addEventListener("click",()=>{
+  alert("The course purchase process will be announced by Change Maker Academy. Please contact the academy for details.");
+ });
+
+ bottom.appendChild(purchase);
+ box.appendChild(bottom);
+}
+
+// ==================================================
+// STUDY MATERIALS
+// ==================================================
+
 function renderMaterialLevels(type){
  setPage(
   type==="pdf"?"PDF Notes":"Practice Materials",
@@ -1320,6 +1530,7 @@ function renderMaterialLevels(type){
  );
 
  const grid=makeGrid();
+
  ["ssc","hsc"].forEach(level=>{
   grid.appendChild(makeCard(
    level.toUpperCase(),
@@ -1328,6 +1539,7 @@ function renderMaterialLevels(type){
    "▤"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
@@ -1341,6 +1553,7 @@ function renderMaterialGroups(type,level){
  );
 
  const grid=makeGrid();
+
  ["science","arts","commerce"].forEach(group=>{
   grid.appendChild(makeCard(
    groupNames[group],
@@ -1349,6 +1562,7 @@ function renderMaterialGroups(type,level){
    "▤"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
@@ -1362,6 +1576,7 @@ function renderMaterialSubjects(type,level,group){
  );
 
  const grid=makeGrid();
+
  getSubjects(group,level).forEach(subject=>{
   grid.appendChild(makeCard(
    subject[0],
@@ -1370,12 +1585,17 @@ function renderMaterialSubjects(type,level,group){
    "▤"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
 function renderMaterialChapters(type,level,group,subjectKey){
  const subject=getSubject(group,level,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" Chapters",
@@ -1390,6 +1610,7 @@ function renderMaterialChapters(type,level,group,subjectKey){
 
  ["Chapter 1","Chapter 2","Chapter 3"].forEach((chapter,index)=>{
   const key="chapter-"+(index+1);
+
   list.appendChild(makeCard(
    chapter,
    subject[0]+" | "+chapter,
@@ -1403,7 +1624,11 @@ function renderMaterialChapters(type,level,group,subjectKey){
 
 function renderMaterialContent(type,level,group,subjectKey,chapter){
  const subject=getSubject(group,level,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" | "+chapter.replaceAll("-"," ").toUpperCase(),
@@ -1414,11 +1639,14 @@ function renderMaterialContent(type,level,group,subjectKey,chapter){
  );
 
  if(type==="pdf"){
-  pageContent.appendChild(makeEmpty("PDF notes for this chapter will be uploaded here."));
+  pageContent.appendChild(
+   makeEmpty("PDF notes for this chapter will be uploaded here.")
+  );
   return;
  }
 
  const grid=makeGrid();
+
  ["CQ","MCQ"].forEach(kind=>{
   grid.appendChild(makeCard(
    kind,
@@ -1427,12 +1655,17 @@ function renderMaterialContent(type,level,group,subjectKey,chapter){
    "✎"
   ));
  });
+
  pageContent.appendChild(grid);
 }
 
 function renderPracticeContent(level,group,subjectKey,chapter,kind){
  const subject=getSubject(group,level,subjectKey);
- if(!subject){showNotFound();return}
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
 
  setPage(
   subject[0]+" "+kind.toUpperCase(),
@@ -1442,12 +1675,17 @@ function renderPracticeContent(level,group,subjectKey,chapter,kind){
   "?page=materials-content-practice-"+level+"-"+group+"-"+subjectKey+"-"+chapter
  );
 
- pageContent.appendChild(makeEmpty(
-  kind.toUpperCase()+" questions and practice materials will be added here soon."
- ));
+ pageContent.appendChild(
+  makeEmpty(
+   kind.toUpperCase()+" questions and practice materials will be added here soon."
+  )
+ );
 }
 
+// ==================================================
 // MAIN PAGE ROUTER
+// ==================================================
+
 function openPage(page){
  homePage.style.display="none";
  innerPage.classList.add("active");
@@ -1474,7 +1712,11 @@ function openPage(page){
  }
 
  // ONLINE: PROGRAM -> GROUP
- else if(page==="online-ssc"||page==="online-hsc"||page==="online-admission"){
+ else if(
+  page==="online-ssc"||
+  page==="online-hsc"||
+  page==="online-admission"
+ ){
   renderGroups(page.replace("online-",""),"online");
  }
 
@@ -1484,7 +1726,7 @@ function openPage(page){
   renderSubjectChoices(parts[2],parts[3],"online");
  }
 
- // ONLINE: SUBJECT -> VIDEOS
+ // ONLINE: SUBJECT -> VIDEO POSTS
  else if(page.startsWith("online-lessons-")){
   const parts=page.split("-");
   const program=parts[2];
@@ -1525,11 +1767,15 @@ function openPage(page){
   const group=parts[3];
   const subjectKey=parts.slice(4,-2).join("-");
   const courseId=parts.slice(-2).join("-");
+
   renderExamDetails(program,group,subjectKey,courseId);
  }
 
  // STUDY MATERIALS: PDF / PRACTICE
- else if(page==="materials-pdf"||page==="materials-practice"){
+ else if(
+  page==="materials-pdf"||
+  page==="materials-practice"
+ ){
   renderMaterialLevels(page.replace("materials-",""));
  }
 
@@ -1552,6 +1798,7 @@ function openPage(page){
   const level=parts[3];
   const group=parts[4];
   const subjectKey=parts.slice(5).join("-");
+
   renderMaterialChapters(type,level,group,subjectKey);
  }
 
@@ -1563,6 +1810,7 @@ function openPage(page){
   const group=parts[4];
   const subjectKey=parts.slice(5,-2).join("-");
   const chapter=parts.slice(-2).join("-");
+
   renderMaterialContent(type,level,group,subjectKey,chapter);
  }
 
@@ -1574,6 +1822,7 @@ function openPage(page){
   const subjectKey=parts.slice(5,-3).join("-");
   const chapter=parts.slice(-3,-1).join("-");
   const kind=parts[parts.length-1];
+
   renderPracticeContent(level,group,subjectKey,chapter,kind);
  }
 
@@ -1584,7 +1833,10 @@ function openPage(page){
  window.scrollTo(0,0);
 }
 
+// ==================================================
 // URL ROUTING
+// ==================================================
+
 function renderRoute(){
  const params=new URLSearchParams(window.location.search);
  const page=params.get("page");
@@ -1592,6 +1844,7 @@ function renderRoute(){
  if(page){
   openPage(page);
  }else{
+  clearContent();
   innerPage.classList.remove("active");
   homePage.style.display="block";
   document.title="Change Maker Academy | Learn. Grow. Lead.";
@@ -1600,7 +1853,10 @@ function renderRoute(){
 
 window.addEventListener("popstate",renderRoute);
 
+// ==================================================
 // INTERNAL NAVIGATION
+// ==================================================
+
 document.addEventListener("click",event=>{
  const link=event.target.closest("a");
  if(!link)return;
@@ -1615,20 +1871,27 @@ document.addEventListener("click",event=>{
   return;
  }
 
- // Return to homepage before navigating to a homepage section.
+ // Homepage section links from inner pages.
  if(href.startsWith("#")&&innerPage.classList.contains("active")){
   event.preventDefault();
+
+  clearContent();
   innerPage.classList.remove("active");
   homePage.style.display="block";
+
   history.pushState({}, "", href);
+
   const target=document.querySelector(href);
-  if(target)target.scrollIntoView({behavior:"smooth"});
+  if(target){
+   target.scrollIntoView({behavior:"smooth"});
+  }
   return;
  }
 
- // Homepage section links
+ // Homepage section links.
  if(href.startsWith("#")&&!innerPage.classList.contains("active")){
   const target=document.querySelector(href);
+
   if(target){
    event.preventDefault();
    target.scrollIntoView({behavior:"smooth"});
@@ -1636,8 +1899,8 @@ document.addEventListener("click",event=>{
  }
 });
 
+// START
 renderRoute();
 </script>
 </body>
 </html>
- }
