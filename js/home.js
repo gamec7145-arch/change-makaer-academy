@@ -34,8 +34,12 @@
  // HOMEPAGE BANNER SLIDER
  // ==================================================
 
- const slides = document.querySelectorAll(".slide");
- const dotsContainer = document.getElementById("sliderDots");
+ const slides = document.querySelectorAll(".banner-slide");
+ const dotsContainer = document.getElementById("bannerDots");
+
+ const nextBtn = document.getElementById("nextBanner");
+ const prevBtn = document.getElementById("prevBanner");
+ const slider = document.getElementById("banner");
 
  if (slides.length > 0) {
 
@@ -61,6 +65,7 @@
   }
 
   function showSlide(index) {
+
    currentSlide = (index + slides.length) % slides.length;
 
    slides.forEach((slide, i) => {
@@ -83,15 +88,13 @@
   }
 
   function restartSlider() {
+
    clearInterval(sliderTimer);
 
    if (slides.length > 1) {
     sliderTimer = setInterval(nextSlide, 5000);
    }
   }
-
-  const nextBtn = document.getElementById("nextSlide");
-  const prevBtn = document.getElementById("prevSlide");
 
   if (nextBtn) {
    nextBtn.addEventListener("click", () => {
@@ -107,24 +110,23 @@
    });
   }
 
-  // Mobile touch swipe
-
-  const slider = document.querySelector(".hero-slider");
+  // MOBILE TOUCH SWIPE
 
   if (slider) {
+
    let touchStartX = 0;
-   let touchEndX = 0;
 
    slider.addEventListener("touchstart", event => {
     touchStartX = event.changedTouches[0].screenX;
    }, { passive: true });
 
    slider.addEventListener("touchend", event => {
-    touchEndX = event.changedTouches[0].screenX;
 
+    const touchEndX = event.changedTouches[0].screenX;
     const difference = touchStartX - touchEndX;
 
     if (Math.abs(difference) > 50) {
+
      if (difference > 0) {
       nextSlide();
      } else {
@@ -133,6 +135,7 @@
 
      restartSlider();
     }
+
    }, { passive: true });
   }
 
@@ -146,37 +149,18 @@
  // EXAM PREPARATION FEATURED SLIDER
  // ==================================================
 
- const examTrack = document.getElementById("examTrack");
- const examDots = document.getElementById("examDots");
+ const examTrack = document.getElementById("examFeaturedTrack");
+ const examDots = document.getElementById("examSliderDots");
+ const examCount = document.getElementById("examSliderCount");
 
  if (examTrack) {
 
   const examSlides = Array.from(examTrack.children);
-  const examCount = examSlides.length;
-
-  if (examDots) {
-   examDots.innerHTML = "";
-
-   examSlides.forEach((slide, index) => {
-    const dot = document.createElement("button");
-
-    dot.className = "exam-dot";
-    dot.setAttribute("aria-label", "Go to exam item " + (index + 1));
-
-    dot.addEventListener("click", () => {
-     examTrack.scrollTo({
-      left: slide.offsetLeft - examTrack.offsetLeft,
-      behavior: "smooth"
-     });
-    });
-
-    examDots.appendChild(dot);
-   });
-  }
+  const totalSlides = examSlides.length;
 
   function updateExamSlider() {
 
-   if (examCount === 0) return;
+   if (totalSlides === 0) return;
 
    const trackPosition = examTrack.scrollLeft;
 
@@ -184,6 +168,7 @@
    let smallestDistance = Infinity;
 
    examSlides.forEach((slide, index) => {
+
     const distance = Math.abs(
      (slide.offsetLeft - examTrack.offsetLeft) - trackPosition
     );
@@ -192,13 +177,42 @@
      smallestDistance = distance;
      activeIndex = index;
     }
+
    });
 
    if (examDots) {
-    examDots.querySelectorAll(".exam-dot").forEach((dot, index) => {
+    examDots.querySelectorAll(".exam-slider-dot").forEach((dot, index) => {
      dot.classList.toggle("active", index === activeIndex);
     });
    }
+
+   if (examCount) {
+    examCount.textContent = (activeIndex + 1) + " / " + totalSlides;
+   }
+
+  }
+
+  if (examDots && totalSlides > 0) {
+
+   const existingDots = examDots.querySelectorAll(".exam-slider-dot");
+
+   existingDots.forEach((dot, index) => {
+
+    dot.addEventListener("click", () => {
+
+     const slide = examSlides[index];
+
+     if (slide) {
+      examTrack.scrollTo({
+       left: slide.offsetLeft - examTrack.offsetLeft,
+       behavior: "smooth"
+      });
+     }
+
+    });
+
+   });
+
   }
 
   examTrack.addEventListener("scroll", updateExamSlider, {
@@ -212,3 +226,4 @@
  }
 
 })();
+ 
