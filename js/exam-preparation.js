@@ -126,10 +126,50 @@ function renderVideoPosts(videos,headingText){
 
 
 // ==================================================
+// EXAM: COURSE FILTER
+// ==================================================
+
+function getExamCoursesForSubject(
+ program,
+ group,
+ subjectKey,
+ partIndex=null,
+ partName=""
+){
+
+ return examCourses.filter(course=>{
+
+  if(course.program && course.program!==program)return false;
+  if(course.group && course.group!==group)return false;
+  if(course.subjectKey && course.subjectKey!==subjectKey)return false;
+
+  const coursePart=course.part||course.paper||"";
+  const coursePartIndex=Number(
+   course.partIndex||course.paperIndex||0
+  );
+
+  if(partIndex!==null){
+   return (
+    coursePartIndex===Number(partIndex) ||
+    coursePart===partName
+   );
+  }
+
+  return !coursePartIndex&&!coursePart;
+ });
+}
+
+
+// ==================================================
 // EXAM: SUBJECT -> COURSE POSTS
 // ==================================================
 
-function renderExamCourses(program,group,subjectKey){
+function renderExamCourses(
+ program,
+ group,
+ subjectKey,
+ partIndex=null
+){
 
  const subject=getSubject(group,program,subjectKey);
 
@@ -138,18 +178,66 @@ function renderExamCourses(program,group,subjectKey){
   return;
  }
 
+ const availableParts=getSubjectParts(
+  group,program,subjectKey
+ );
+
+ let partName="";
+
+ if(partIndex!==null){
+
+  const index=Number(partIndex);
+
+  if(
+   !Number.isInteger(index)||
+   index<1||
+   index>availableParts.length
+  ){
+   showNotFound();
+   return;
+  }
+
+  partName=availableParts[index-1];
+ }
+
+ const subjectTitle=
+  subject[0]+(partName?" "+partName:"");
+
  setPage(
-  subject[0]+" Courses",
+  subjectTitle+" Courses",
   "Exam Preparation Course | "+program.toUpperCase()+" | "+groupNames[group],
   "Choose a course to see its details.",
   demoImages[group],
-  "?page=exam-group-"+program+"-"+group
+  "?page="+(
+   partName
+    ?"subject-parts-exam-"+program+"-"+group+"-"+subjectKey
+    :"exam-group-"+program+"-"+group
+  )
  );
 
  const list=document.createElement("div");
  list.className="course-list";
 
- examCourses.forEach(course=>{
+ const courses=getExamCoursesForSubject(
+  program,
+  group,
+  subjectKey,
+  partIndex,
+  partName
+ );
+
+ if(!courses.length){
+  pageContent.appendChild(
+   makeEmpty(
+    partName
+     ?"Courses for "+subjectTitle+" will be added soon."
+     :"Courses for this subject will be added soon."
+   )
+  );
+  return;
+ }
+
+ courses.forEach(course=>{
 
   const card=document.createElement("article");
   card.className="course-card";
@@ -175,7 +263,13 @@ function renderExamCourses(program,group,subjectKey){
 
   const link=document.createElement("a");
   link.className="action-link";
-  link.href="?page=exam-detail-"+program+"-"+group+"-"+subjectKey+"-"+course.id;
+
+  const detailRoute=
+   "exam-detail-"+program+"-"+group+"-"+subjectKey+
+   "-"+course.id+
+   (partIndex!==null?"-part-"+partIndex:"");
+
+  link.href="?page="+detailRoute;
   link.textContent="View Details →";
 
   body.append(heading,desc,price,link);
@@ -193,7 +287,13 @@ function renderExamCourses(program,group,subjectKey){
 // EXAM: COURSE DETAILS + VIDEO POSTS
 // ==================================================
 
-function renderExamDetails(program,group,subjectKey,courseId){
+function renderExamDetails(
+ program,
+ group,
+ subjectKey,
+ courseId,
+ partIndex=null
+){
 
  const subject=getSubject(group,program,subjectKey);
  const course=examCourses.find(item=>item.id===courseId);
@@ -203,12 +303,49 @@ function renderExamDetails(program,group,subjectKey,courseId){
   return;
  }
 
+ const availableParts=getSubjectParts(
+  group,program,subjectKey
+ );
+
+ let partName="";
+
+ if(partIndex!==null){
+
+  const index=Number(partIndex);
+
+  if(
+   !Number.isInteger(index)||
+   index<1||
+   index>availableParts.length
+  ){
+   showNotFound();
+   return;
+  }
+
+  partName=availableParts[index-1];
+
+  const coursePart=course.part||course.paper||"";
+  const coursePartIndex=Number(
+   course.partIndex||course.paperIndex||0
+  );
+
+  if(
+   coursePartIndex!==index&&
+   coursePart!==partName
+  ){
+   showNotFound();
+   return;
+  }
+ }
+
  setPage(
   course.name,
-  "Course Details | "+subject[0],
+  "Course Details | "+subject[0]+
+   (partName?" | "+partName:""),
   "Read the course information before making an enquiry.",
   course.image||demoImages[group],
-  "?page=exam-courses-"+program+"-"+group+"-"+subjectKey
+  "?page=exam-courses-"+program+"-"+group+"-"+subjectKey+
+   (partIndex!==null?"-part-"+partIndex:"")
  );
 
  const box=document.createElement("div");
@@ -232,6 +369,7 @@ function renderExamDetails(program,group,subjectKey,courseId){
  const subjectInfo=document.createElement("p");
  subjectInfo.textContent=
   "Subject: "+subject[0]+
+  (partName?" | Paper: "+partName:"")+
   " | Group: "+groupNames[group]+
   " | Level: "+program.toUpperCase();
 
@@ -270,5 +408,4 @@ function renderExamDetails(program,group,subjectKey,courseId){
 
  bottom.appendChild(purchase);
  box.appendChild(bottom);
-                     }
-   
+}
