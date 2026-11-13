@@ -123,192 +123,113 @@ body{
 }
 
 /* =================================
-   CLASSROOM LEARNING — ADMISSION
+   CLASSROOM LEARNING — COMPACT CARDS
 ================================= */
 
-.admission-highlight{
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  padding:25px;
-  margin-top:20px;
-  border:1px solid rgba(8,201,154,.35);
-  border-radius:20px;
-  background:linear-gradient(135deg,#08494B 0%,#052D3B 100%);
-  box-shadow:0 12px 30px rgba(5,45,59,.12);
-}
-
-.admission-highlight::before{
-  content:"";
-  position:absolute;
-  width:180px;
-  height:180px;
-  right:-65px;
-  top:-85px;
-  border-radius:50%;
-  background:rgba(8,201,154,.12);
-}
-
-.admission-highlight-content{
-  position:relative;
-  z-index:1;
-}
-
-.admission-highlight-tag{
-  display:inline-block;
-  margin-bottom:10px;
-  color:#78E0C2;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-}
-
-.admission-highlight h3{
-  margin:0 0 7px;
-  color:#FFFFFF;
-  font-size:25px;
-  line-height:1.25;
-  font-weight:900;
-}
-
-.admission-highlight p{
-  margin:0;
-  color:#B5CBD3;
-  font-size:14px;
-  line-height:1.6;
-}
-
-.admission-highlight-button{
-  position:relative;
-  z-index:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  width:100%;
-  box-sizing:border-box;
-  padding:14px 20px;
-  border-radius:13px;
-  background:#08C99A;
-  color:#052D3B;
-  text-decoration:none;
-  font-size:15px;
-  font-weight:900;
-  transition:transform .2s ease,background .2s ease;
-}
-
-.admission-highlight-button:active{
-  transform:scale(.98);
-}
-
-@media(min-width:768px){
-  .admission-highlight{
-    flex-direction:row;
-    align-items:center;
-    justify-content:space-between;
-    padding:30px;
-  }
-
-  .admission-highlight-content{
-    max-width:65%;
-  }
-
-  .admission-highlight-button{
-    width:auto;
-    min-width:175px;
-  }
-}
-
-/* =================================
-   OFFLINE CLASSES — SEPARATE SECTION
-================================= */
-
-.offline-classroom-block{
-  margin-top:28px;
-}
-
-.offline-classroom-heading{
-  margin-bottom:15px;
-}
-
-.offline-classroom-heading h3{
-  margin:0 0 5px;
-  color:var(--white);
-  font-size:21px;
-  font-weight:900;
-}
-
-.offline-classroom-heading p{
-  margin:0;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.6;
-}
-
-.offline-classroom-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:13px;
-}
-
-.offline-classroom-card{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-  padding:17px 13px;
+.classroom-option{
+  padding:17px;
+  margin-top:16px;
   border:1px solid var(--border);
   border-radius:17px;
   background:var(--card);
   color:var(--white);
-  text-decoration:none;
-  transition:transform .2s ease,border-color .2s ease;
+  transition:border-color .2s ease;
 }
 
-.offline-classroom-card:active{
-  transform:scale(.98);
+.classroom-option-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  margin-bottom:16px;
 }
 
-.offline-classroom-icon{
-  width:43px;
-  height:43px;
+.classroom-option-icon{
+  width:48px;
+  height:48px;
   flex-shrink:0;
   display:flex;
   align-items:center;
   justify-content:center;
   border-radius:13px;
-  background:rgba(8,201,154,.13);
-  color:var(--mint);
-  font-size:21px;
-  font-weight:900;
+  font-size:24px;
+  color:#052D3B;
 }
 
-.offline-classroom-info{
+.classroom-option-icon.admission-icon{
+  background:#68DDB9;
+}
+
+.classroom-option-icon.offline-icon{
+  background:#08C99A;
+}
+
+.classroom-option-info{
   flex:1;
   min-width:0;
 }
 
-.offline-classroom-info h4{
+.classroom-option-info h3{
   margin:0 0 3px;
   color:var(--white);
-  font-size:16px;
+  font-size:17px;
   font-weight:900;
 }
 
-.offline-classroom-info p{
+.classroom-option-info p{
   margin:0;
   color:var(--muted);
-  font-size:11px;
-  line-height:1.4;
+  font-size:12px;
+  line-height:1.5;
 }
 
-.offline-classroom-arrow{
+.classroom-option-arrow{
   color:var(--mint);
-  font-size:23px;
+  font-size:24px;
   font-weight:900;
+}
+
+.classroom-option-links{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.classroom-option-link{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-width:0;
+  padding:11px 8px;
+  border-radius:11px;
+  background:#08494B;
+  color:#FFFFFF;
+  text-decoration:none;
+  text-align:center;
+  transition:transform .2s ease,background .2s ease;
+}
+
+.classroom-option-link:active{
+  transform:scale(.97);
+}
+
+.classroom-option-link strong{
+  font-size:14px;
+  font-weight:900;
+}
+
+.classroom-option-link span{
+  color:#A8C0CE;
+  font-size:11px;
+  font-weight:700;
+}
+
+@media(min-width:768px){
+  .classroom-option{
+    padding:20px;
+  }
 }
 
 </style>
@@ -436,72 +357,74 @@ body{
     <p>Learn Better. Achieve More.</p>
    </div>
 
-   <!-- PART 1: ADMISSION -->
+   <!-- APPLY FOR ADMISSION -->
 
-   <div class="admission-highlight">
+   <div class="classroom-option">
 
-    <div class="admission-highlight-content">
+    <div class="classroom-option-header">
 
-     <span class="admission-highlight-tag">
-      ADMISSION OPEN
-     </span>
+     <div class="classroom-option-icon admission-icon">
+      🎓
+     </div>
 
-     <h3>Apply for Admission</h3>
+     <div class="classroom-option-info">
+      <h3>Apply for Admission</h3>
+      <p>Choose your program and apply for admission</p>
+     </div>
 
-     <p>
-      Start your learning journey with us.
-     </p>
+     <span class="classroom-option-arrow">›</span>
 
     </div>
 
-    <a href="?page=admission-programs"
-       class="admission-highlight-button">
+    <div class="classroom-option-links">
 
-     Apply Now <span>→</span>
+     <a href="?page=admission-programs"
+        class="classroom-option-link">
+      <strong>SSC</strong>
+      <span>Apply Now</span>
+     </a>
 
-    </a>
+     <a href="?page=admission-programs"
+        class="classroom-option-link">
+      <strong>HSC</strong>
+      <span>Apply Now</span>
+     </a>
+
+    </div>
 
    </div>
 
-   <!-- PART 2: OFFLINE CLASSES -->
+   <!-- OFFLINE CLASSES -->
 
-   <div class="offline-classroom-block">
+   <div class="classroom-option">
 
-    <div class="offline-classroom-heading">
-     <h3>Offline Classes</h3>
-     <p>
-      Explore classroom schedules, teachers and class information.
-     </p>
+    <div class="classroom-option-header">
+
+     <div class="classroom-option-icon offline-icon">
+      ▤
+     </div>
+
+     <div class="classroom-option-info">
+      <h3>Offline Classes</h3>
+      <p>Explore our offline classroom programs</p>
+     </div>
+
+     <span class="classroom-option-arrow">›</span>
+
     </div>
 
-    <div class="offline-classroom-grid">
+    <div class="classroom-option-links">
 
      <a href="?page=offline-ssc"
-        class="offline-classroom-card">
-
-      <div class="offline-classroom-icon">▤</div>
-
-      <div class="offline-classroom-info">
-       <h4>SSC</h4>
-       <p>Class 9 & 10</p>
-      </div>
-
-      <span class="offline-classroom-arrow">›</span>
-
+        class="classroom-option-link">
+      <strong>SSC</strong>
+      <span>View Classes</span>
      </a>
 
      <a href="?page=offline-hsc"
-        class="offline-classroom-card">
-
-      <div class="offline-classroom-icon">▣</div>
-
-      <div class="offline-classroom-info">
-       <h4>HSC</h4>
-       <p>College</p>
-      </div>
-
-      <span class="offline-classroom-arrow">›</span>
-
+        class="classroom-option-link">
+      <strong>HSC</strong>
+      <span>View Classes</span>
      </a>
 
     </div>
