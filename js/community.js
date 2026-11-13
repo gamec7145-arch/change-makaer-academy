@@ -1,8 +1,8 @@
 
-// ==================================================
-// CHANGE MAKER ACADEMY
-// COMMUNITY — FRONTEND SYSTEM
-// ==================================================
+/* ==================================================
+   CHANGE MAKER ACADEMY
+   COMMUNITY — FRONTEND SYSTEM
+================================================== */
 
 (function(){
 
@@ -14,7 +14,12 @@
 
  const reactionOptions = ["👍","❤️","😂","🔥"];
 
- function createElement(tag, className, text){
+
+ // ================================================
+ // COMMON FUNCTIONS
+ // ================================================
+
+ function createElement(tag,className,text){
 
   const element = document.createElement(tag);
 
@@ -28,9 +33,7 @@
 
  function showNotice(message){
 
-  const notice = document.querySelector(
-   ".community-notice"
-  );
+  const notice = document.querySelector(".community-notice");
 
   if(!notice) return;
 
@@ -40,9 +43,69 @@
  }
 
 
- function renderCommunityPage(){
+ // SVG ICON CREATOR
 
-  // GET THE EXISTING PAGE CONTENT CONTAINER
+ function createIcon(name){
+
+  const icons = {
+
+   search: `
+    <circle cx="10.8" cy="10.8" r="6.8"></circle>
+    <path d="m16 16 5 5"></path>
+   `,
+
+   home: `
+    <path d="m3 10 9-7 9 7"></path>
+    <path d="M5 9v11h14V9"></path>
+    <path d="M9 20v-7h6v7"></path>
+   `,
+
+   user: `
+    <circle cx="12" cy="8" r="4"></circle>
+    <path d="M5 21a7 7 0 0 1 14 0"></path>
+   `,
+
+   creator: `
+    <path d="m16 4 4 4"></path>
+    <path d="M4 20 15.5 8.5"></path>
+    <path d="m13 6 5 5"></path>
+    <path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"></path>
+   `,
+
+   bell: `
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+    <path d="M10 21h4"></path>
+   `
+
+  };
+
+  const svg = document.createElementNS(
+   "http://www.w3.org/2000/svg",
+   "svg"
+  );
+
+  svg.setAttribute("viewBox","0 0 24 24");
+  svg.setAttribute("width","22");
+  svg.setAttribute("height","22");
+  svg.setAttribute("fill","none");
+  svg.setAttribute("stroke","currentColor");
+  svg.setAttribute("stroke-width","1.8");
+  svg.setAttribute("stroke-linecap","round");
+  svg.setAttribute("stroke-linejoin","round");
+  svg.setAttribute("aria-hidden","true");
+
+  svg.innerHTML = icons[name] || "";
+
+  return svg;
+
+ }
+
+
+ // ================================================
+ // RENDER COMMUNITY PAGE
+ // ================================================
+
+ function renderCommunityPage(){
 
   const pageContent = document.getElementById("pageContent");
 
@@ -53,25 +116,16 @@
 
   document.body.classList.add("community-active");
 
-  const root = createElement(
-   "div",
-   "community-page"
-  );
+  const root = createElement("div","community-page");
 
 
   // ================================================
   // HEADER
   // ================================================
 
-  const header = createElement(
-   "header",
-   "community-header"
-  );
+  const header = createElement("header","community-header");
 
-  const brand = createElement(
-   "a",
-   "community-brand"
-  );
+  const brand = createElement("a","community-brand");
 
   brand.href = "?page=community";
   brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
@@ -79,29 +133,66 @@
   header.appendChild(brand);
 
 
-  // SEARCH
+  // ================================================
+  // SEARCH — TOP RIGHT
+  // ================================================
 
   const searchArea = createElement(
    "div",
    "community-search-area"
   );
 
+  searchArea.style.cssText = `
+   position:relative;
+   display:flex;
+   align-items:center;
+   justify-content:flex-end;
+   margin-left:auto;
+   flex-shrink:0;
+  `;
+
   const searchButton = createElement(
    "button",
-   "community-search-btn",
-   "⌕"
+   "community-search-btn"
   );
 
   searchButton.type = "button";
-  searchButton.setAttribute(
-   "aria-label",
-   "Open search"
-  );
+  searchButton.setAttribute("aria-label","Open search");
+  searchButton.setAttribute("aria-expanded","false");
+
+  searchButton.style.cssText = `
+   width:40px;
+   height:40px;
+   display:flex;
+   align-items:center;
+   justify-content:center;
+   border:1px solid var(--border);
+   border-radius:50%;
+   background:var(--panel);
+   color:var(--white);
+   cursor:pointer;
+  `;
+
+  searchButton.appendChild(createIcon("search"));
 
   const search = createElement(
    "div",
    "community-search"
   );
+
+  search.style.cssText = `
+   display:none;
+   position:absolute;
+   top:48px;
+   right:0;
+   width:min(260px,75vw);
+   z-index:1002;
+   padding:5px;
+   border:1px solid var(--border);
+   border-radius:25px;
+   background:var(--bg);
+   box-shadow:0 8px 24px rgba(0,0,0,.25);
+  `;
 
   const searchInput = createElement("input");
 
@@ -112,8 +203,6 @@
    "Search community posts"
   );
 
-  searchInput.style.display = "none";
-
   search.appendChild(searchInput);
 
   searchArea.appendChild(searchButton);
@@ -121,18 +210,34 @@
 
   header.appendChild(searchArea);
 
+
+  // OPEN / CLOSE SEARCH
+
   searchButton.addEventListener("click",()=>{
 
-   const isHidden = searchInput.style.display === "none";
-
-   searchInput.style.display = isHidden ? "block" : "none";
+   const isHidden = search.style.display === "none";
 
    if(isHidden){
+
+    search.style.display = "block";
+
+    searchButton.setAttribute("aria-expanded","true");
+    searchButton.setAttribute("aria-label","Close search");
+
     searchInput.focus();
+
    }else{
+
+    search.style.display = "none";
+
+    searchButton.setAttribute("aria-expanded","false");
+    searchButton.setAttribute("aria-label","Open search");
+
     searchInput.value = "";
     currentFilter = "";
+
     renderFeed();
+
    }
 
   });
@@ -148,10 +253,10 @@
   );
 
   const navItems = [
-   ["🏠","Home","home"],
-   ["👤","Me","me"],
-   ["✍️","Creator Panel","creator"],
-   ["🔔","Notification","notifications"]
+   ["home","Home","home"],
+   ["user","Me","me"],
+   ["creator","Creator Panel","creator"],
+   ["bell","Notification","notifications"]
   ];
 
   navItems.forEach((item,index)=>{
@@ -163,25 +268,53 @@
 
    button.type = "button";
 
-   button.setAttribute(
-    "aria-label",
-    item[1]
-   );
+   button.setAttribute("aria-label",item[1]);
+
+   button.style.cssText = `
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+   `;
+
+
+   // ICON WRAPPER
 
    const iconWrap = createElement(
     "span",
     "community-nav-icon-wrap"
    );
 
+   iconWrap.style.cssText = `
+    position:relative;
+    width:30px;
+    height:27px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+   `;
+
+
+   // SVG ICON
+
    const icon = createElement(
     "span",
-    "community-nav-icon",
-    item[0]
+    "community-nav-icon"
    );
+
+   icon.style.cssText = `
+    display:flex;
+    align-items:center;
+    justify-content:center;
+   `;
+
+   icon.appendChild(createIcon(item[0]));
 
    iconWrap.appendChild(icon);
 
-   // RED DOT IN THE CENTER OF THE BELL EMOJI
+
+   // NOTIFICATION RED DOT
 
    if(item[2] === "notifications"){
 
@@ -189,6 +322,20 @@
      "span",
      "community-notification-dot"
     );
+
+    dot.style.cssText = `
+     position:absolute;
+     top:50%;
+     left:50%;
+     width:8px;
+     height:8px;
+     border:1px solid var(--bg);
+     border-radius:50%;
+     background:#ff3b45;
+     transform:translate(-50%,-50%);
+     z-index:2;
+     pointer-events:none;
+    `;
 
     dot.setAttribute(
      "aria-label",
@@ -199,6 +346,9 @@
 
    }
 
+
+   // LABEL
+
    const label = createElement(
     "span",
     "community-nav-label",
@@ -207,6 +357,9 @@
 
    button.appendChild(iconWrap);
    button.appendChild(label);
+
+
+   // NAVIGATION ACTIONS
 
    button.addEventListener("click",()=>{
 
@@ -290,9 +443,7 @@
    )
   );
 
-  const textarea = createElement(
-   "textarea"
-  );
+  const textarea = createElement("textarea");
 
   textarea.placeholder = "What's on your mind?";
   textarea.maxLength = 2000;
@@ -403,10 +554,12 @@
 
    }
 
-
    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
 
     fileInput.value = "";
+
+    preview.style.display = "none";
+    fileName.textContent = "";
 
     showNotice(
      "Please choose a JPG, PNG or WEBP image."
@@ -416,10 +569,12 @@
 
    }
 
-
    if(file.size > 5 * 1024 * 1024){
 
     fileInput.value = "";
+
+    preview.style.display = "none";
+    fileName.textContent = "";
 
     showNotice(
      "Image size must be 5 MB or less."
@@ -428,7 +583,6 @@
     return;
 
    }
-
 
    const reader = new FileReader();
 
@@ -466,7 +620,6 @@
 
    }
 
-
    temporaryPosts.unshift({
 
     id: "temporary-" + Date.now(),
@@ -487,7 +640,6 @@
 
    });
 
-
    textarea.value = "";
    fileInput.value = "";
    fileName.textContent = "";
@@ -496,7 +648,6 @@
    preview.style.display = "none";
 
    selectedImage = "";
-
 
    showNotice(
     "Temporary preview post created. It is not saved to an account or database."
@@ -538,7 +689,6 @@
     ...temporaryPosts,
     ...demoPosts
    ];
-
 
    const filteredPosts = allPosts.filter(post=>{
 
@@ -594,7 +744,6 @@
      post.avatar || "U"
     );
 
-
     const authorInfo = createElement(
      "div",
      "community-author-info"
@@ -628,7 +777,6 @@
      );
 
     }
-
 
     if(post.isTemporary){
 
@@ -701,7 +849,6 @@
      ? post.reactions
      : [];
 
-
     postReactions.forEach(emoji=>{
 
      const reaction = createElement(
@@ -762,11 +909,9 @@
      )
     );
 
-
     const comments = Array.isArray(post.comments)
      ? post.comments
      : [];
-
 
     if(!comments.length){
 
@@ -806,7 +951,6 @@
      });
 
     }
-
 
     card.appendChild(commentsBox);
 
