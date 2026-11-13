@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#073746">
+<meta name="theme-color" content="#071225">
 <title>Change Maker Academy | Learn. Grow. Lead.</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,16 @@
 }
 
 /* =================================
+   SMART SEARCH POSITION
+================================= */
+
+.smart-search-section{
+ width:100%;
+ position:relative;
+ z-index:100;
+}
+
+/* =================================
    BALANCED BOTTOM NAVIGATION
 ================================= */
 
@@ -58,10 +68,10 @@ body{
  display:grid;
  grid-template-columns:repeat(5,1fr);
  align-items:center;
- background:#EAF7F3;
- border-top:1px solid #CDE9DF;
+ background:#0D1B31;
+ border-top:1px solid #24466B;
  padding:6px 5px calc(6px + env(safe-area-inset-bottom));
- box-shadow:0 -5px 24px rgba(5,45,59,.12);
+ box-shadow:0 -5px 24px rgba(0,0,0,.25);
 }
 
 .cma-bottom-nav a{
@@ -73,7 +83,7 @@ body{
  min-width:0;
  padding:5px 2px;
  border-radius:12px;
- color:#073746;
+ color:#A8C0CE;
  text-decoration:none;
  font-family:'Nunito Sans',sans-serif;
  font-size:11px;
@@ -92,8 +102,8 @@ body{
 }
 
 .cma-bottom-nav a.active{
- color:#079F7C;
- background:#D7F5EB;
+ color:#62B0FF;
+ background:#102B4B;
 }
 
 .cma-bottom-nav a:active{
@@ -106,10 +116,10 @@ body{
   left:50%;
   transform:translateX(-50%);
   bottom:12px;
-  border:1px solid #CDE9DF;
+  border:1px solid #24466B;
   border-radius:16px;
   padding:7px 10px;
-  box-shadow:0 5px 30px rgba(5,45,59,.15);
+  box-shadow:0 5px 30px rgba(0,0,0,.3);
  }
 
  body{
@@ -151,7 +161,10 @@ body{
 </header>
 
 <main id="homePage">
+
  <div class="container">
+
+  <!-- SMART SEARCH IS AUTOMATICALLY INSERTED HERE -->
 
   <section class="hero">
    <div class="banner" id="banner">
@@ -481,6 +494,7 @@ body{
 <script defer src="js/exam-preparation.js"></script>
 <script defer src="js/study-materials.js"></script>
 <script defer src="js/router.js"></script>
+<script defer src="js/smart-search.js"></script>
 
 </body>
 </html>
