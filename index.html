@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,80 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/style.css">
+
+<!-- FIXED BOTTOM NAVIGATION STYLE -->
+<style>
+body {
+ padding-bottom: 82px;
+}
+
+.cma-bottom-nav {
+ position: fixed;
+ bottom: 0;
+ left: 0;
+ width: 100%;
+ z-index: 9999;
+ display: grid;
+ grid-template-columns: repeat(5, 1fr);
+ align-items: center;
+ background: #052D3B;
+ border-top: 1px solid #245563;
+ padding: 9px 5px calc(9px + env(safe-area-inset-bottom));
+ box-shadow: 0 -5px 20px rgba(0,0,0,0.22);
+}
+
+.cma-bottom-nav a {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ gap: 4px;
+ min-width: 0;
+ color: #A8C0CE;
+ text-decoration: none;
+ font-family: 'Nunito Sans', sans-serif;
+ font-size: 11px;
+ font-weight: 800;
+ transition: 0.2s ease;
+}
+
+.cma-bottom-nav .nav-icon {
+ width: 27px;
+ height: 25px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 21px;
+ line-height: 1;
+}
+
+.cma-bottom-nav a.active {
+ color: #08C99A;
+}
+
+.cma-bottom-nav a:active {
+ transform: scale(0.94);
+}
+
+@media (min-width: 768px) {
+ .cma-bottom-nav {
+  max-width: 560px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 15px;
+  border: 1px solid #245563;
+  border-radius: 18px;
+  padding: 10px 12px;
+  box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+ }
+
+ body {
+  padding-bottom: 25px;
+ }
+}
+</style>
 </head>
+
 <body>
 
 <header class="header">
@@ -141,8 +215,6 @@
 
   <!-- COMBINED EXAM PREPARATION -->
   <section id="exam">
-
-   <!-- Keep old materials anchor working -->
    <div id="materials"></div>
 
    <div class="section-heading">
@@ -150,10 +222,9 @@
     <p>Choose your preferred way to prepare for your exams.</p>
    </div>
 
-   <!-- SINGLE OUTER CARD -->
    <div class="exam-showcase">
 
-    <!-- 1. EXAM PREPARATION COURSE -->
+    <!-- EXAM PREPARATION COURSE -->
     <div class="exam-showcase-top">
      <p>Exam Preparation Course</p>
      <a href="?page=exam-choose" class="exam-learn-more">
@@ -193,7 +264,7 @@
      <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
     </div>
 
-    <!-- 2. PDF NOTES -->
+    <!-- PDF NOTES -->
     <a href="?page=materials-pdf" class="exam-resource-row">
      <div class="exam-resource-icon">▤</div>
      <div class="exam-resource-info">
@@ -203,7 +274,7 @@
      <span class="exam-resource-arrow">›</span>
     </a>
 
-    <!-- 3. PRACTICE MATERIALS -->
+    <!-- PRACTICE MATERIALS -->
     <a href="?page=materials-practice" class="exam-resource-row">
      <div class="exam-resource-icon">✎</div>
      <div class="exam-resource-info">
@@ -215,7 +286,8 @@
 
    </div>
   </section>
-    <!-- ACHIEVEMENTS -->
+
+  <!-- ACHIEVEMENTS -->
   <section>
    <div class="section-heading">
     <h2>Our Achievements</h2>
@@ -356,6 +428,62 @@
  target="_blank"
  rel="noopener"
  aria-label="WhatsApp Contact">☎</a>
+
+<!-- FIXED BOTTOM NAVIGATION -->
+<nav class="cma-bottom-nav" aria-label="Main navigation">
+
+ <a href="?" data-nav="home" class="active">
+  <span class="nav-icon">⌂</span>
+  <span>Home</span>
+ </a>
+
+ <a href="?page=demo-ai" data-nav="demo-ai">
+  <span class="nav-icon">✦</span>
+  <span>Demo AI</span>
+ </a>
+
+ <a href="?page=community" data-nav="community">
+  <span class="nav-icon">♧</span>
+  <span>Community</span>
+ </a>
+
+ <a href="?page=teachers" data-nav="teachers">
+  <span class="nav-icon">🎓</span>
+  <span>Teachers</span>
+ </a>
+
+ <a href="?page=account" data-nav="account">
+  <span class="nav-icon">♙</span>
+  <span>Account</span>
+ </a>
+
+</nav>
+
+<!-- BOTTOM NAV ACTIVE STATE -->
+<script>
+(function () {
+ const params = new URLSearchParams(window.location.search);
+ const page = params.get("page");
+ const links = document.querySelectorAll(".cma-bottom-nav a");
+
+ links.forEach(function (link) {
+  link.classList.remove("active");
+ });
+
+ let active = "home";
+
+ if (page === "demo-ai") active = "demo-ai";
+ if (page === "community") active = "community";
+ if (page === "teachers") active = "teachers";
+ if (page === "account") active = "account";
+
+ const activeLink = document.querySelector(
+  '.cma-bottom-nav a[data-nav="' + active + '"]'
+ );
+
+ if (activeLink) activeLink.classList.add("active");
+})();
+</script>
 
 <!-- JAVASCRIPT FILE CONNECTIONS -->
 <script defer src="js/shared.js"></script>
