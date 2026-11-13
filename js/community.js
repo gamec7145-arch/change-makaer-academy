@@ -14,6 +14,9 @@
 
  const reactionOptions = ["👍","❤️","😂","🔥"];
 
+ // Track the user's own reactions separately
+ const userReactions = {};
+
 
  // ================================================
  // COMMON FUNCTIONS
@@ -27,7 +30,6 @@
   if(text !== undefined) element.textContent = text;
 
   return element;
-
  }
 
 
@@ -42,8 +44,6 @@
 
  }
 
-
- // SVG ICON CREATOR
 
  function createIcon(name){
 
@@ -97,7 +97,6 @@
   svg.innerHTML = icons[name] || "";
 
   return svg;
-
  }
 
 
@@ -134,7 +133,7 @@
 
 
   // ================================================
-  // SEARCH — TOP RIGHT
+  // SEARCH
   // ================================================
 
   const searchArea = createElement(
@@ -175,10 +174,7 @@
 
   searchButton.appendChild(createIcon("search"));
 
-  const search = createElement(
-   "div",
-   "community-search"
-  );
+  const search = createElement("div","community-search");
 
   search.style.cssText = `
    display:none;
@@ -198,20 +194,12 @@
 
   searchInput.type = "search";
   searchInput.placeholder = "Search posts...";
-  searchInput.setAttribute(
-   "aria-label",
-   "Search community posts"
-  );
+  searchInput.setAttribute("aria-label","Search community posts");
 
   search.appendChild(searchInput);
-
   searchArea.appendChild(searchButton);
   searchArea.appendChild(search);
-
   header.appendChild(searchArea);
-
-
-  // OPEN / CLOSE SEARCH
 
   searchButton.addEventListener("click",()=>{
 
@@ -220,16 +208,13 @@
    if(isHidden){
 
     search.style.display = "block";
-
     searchButton.setAttribute("aria-expanded","true");
     searchButton.setAttribute("aria-label","Close search");
-
     searchInput.focus();
 
    }else{
 
     search.style.display = "none";
-
     searchButton.setAttribute("aria-expanded","false");
     searchButton.setAttribute("aria-label","Open search");
 
@@ -247,10 +232,7 @@
   // NAVIGATION
   // ================================================
 
-  const nav = createElement(
-   "nav",
-   "community-nav"
-  );
+  const nav = createElement("nav","community-nav");
 
   const navItems = [
    ["home","Home","home"],
@@ -267,7 +249,6 @@
    );
 
    button.type = "button";
-
    button.setAttribute("aria-label",item[1]);
 
    button.style.cssText = `
@@ -277,9 +258,6 @@
     justify-content:center;
     gap:5px;
    `;
-
-
-   // ICON WRAPPER
 
    const iconWrap = createElement(
     "span",
@@ -295,13 +273,7 @@
     justify-content:center;
    `;
 
-
-   // SVG ICON
-
-   const icon = createElement(
-    "span",
-    "community-nav-icon"
-   );
+   const icon = createElement("span","community-nav-icon");
 
    icon.style.cssText = `
     display:flex;
@@ -310,11 +282,7 @@
    `;
 
    icon.appendChild(createIcon(item[0]));
-
    iconWrap.appendChild(icon);
-
-
-   // NOTIFICATION RED DOT
 
    if(item[2] === "notifications"){
 
@@ -337,17 +305,9 @@
      pointer-events:none;
     `;
 
-    dot.setAttribute(
-     "aria-label",
-     "New notifications"
-    );
-
     iconWrap.appendChild(dot);
 
    }
-
-
-   // LABEL
 
    const label = createElement(
     "span",
@@ -358,9 +318,6 @@
    button.appendChild(iconWrap);
    button.appendChild(label);
 
-
-   // NAVIGATION ACTIONS
-
    button.addEventListener("click",()=>{
 
     nav.querySelectorAll("button").forEach(btn=>{
@@ -370,33 +327,25 @@
     button.classList.add("active");
 
     if(item[2] === "home"){
-
      showNotice("Welcome to the Community feed.");
-
     }
 
     if(item[2] === "me"){
-
      showNotice(
       "My Profile will be connected with your Account in a future update."
      );
-
     }
 
     if(item[2] === "creator"){
-
      showNotice(
       "Creator Panel is planned for a future update."
      );
-
     }
 
     if(item[2] === "notifications"){
-
      showNotice(
       "Notifications will be connected after the account and backend system is ready."
      );
-
     }
 
    });
@@ -413,15 +362,9 @@
   // MAIN
   // ================================================
 
-  const main = createElement(
-   "main",
-   "community-main"
-  );
+  const main = createElement("main","community-main");
 
-  const notice = createElement(
-   "div",
-   "community-notice"
-  );
+  const notice = createElement("div","community-notice");
 
   main.appendChild(notice);
 
@@ -450,9 +393,6 @@
 
   composer.appendChild(textarea);
 
-
-  // IMAGE PREVIEW
-
   const preview = createElement(
    "img",
    "community-preview"
@@ -463,14 +403,10 @@
 
   composer.appendChild(preview);
 
-
   const composerBottom = createElement(
    "div",
    "community-composer-bottom"
   );
-
-
-  // PHOTO UPLOAD
 
   const photoLabel = createElement(
    "label",
@@ -485,14 +421,10 @@
 
   photoLabel.appendChild(fileInput);
 
-
   const fileName = createElement(
    "div",
    "community-selected-file"
   );
-
-
-  // PUBLISH BUTTON
 
   const publishButton = createElement(
    "button",
@@ -515,21 +447,17 @@
   // COMMUNITY FEED
   // ================================================
 
-  const feedTitle = createElement(
-   "h3",
-   "community-feed-title",
-   "Community Feed"
+  main.appendChild(
+   createElement(
+    "h3",
+    "community-feed-title",
+    "Community Feed"
+   )
   );
 
-  main.appendChild(feedTitle);
-
-  const feed = createElement(
-   "div",
-   "community-feed"
-  );
+  const feed = createElement("div","community-feed");
 
   main.appendChild(feed);
-
   root.appendChild(main);
 
   pageContent.appendChild(root);
@@ -551,37 +479,28 @@
     fileName.textContent = "";
 
     return;
-
    }
 
    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
 
     fileInput.value = "";
-
     preview.style.display = "none";
     fileName.textContent = "";
 
-    showNotice(
-     "Please choose a JPG, PNG or WEBP image."
-    );
+    showNotice("Please choose a JPG, PNG or WEBP image.");
 
     return;
-
    }
 
    if(file.size > 5 * 1024 * 1024){
 
     fileInput.value = "";
-
     preview.style.display = "none";
     fileName.textContent = "";
 
-    showNotice(
-     "Image size must be 5 MB or less."
-    );
+    showNotice("Image size must be 5 MB or less.");
 
     return;
-
    }
 
    const reader = new FileReader();
@@ -612,12 +531,8 @@
 
    if(!caption && !selectedImage){
 
-    showNotice(
-     "Write something or add a photo first."
-    );
-
+    showNotice("Write something or add a photo first.");
     return;
-
    }
 
    temporaryPosts.unshift({
@@ -635,7 +550,7 @@
     caption: caption,
     image: selectedImage,
 
-    reactions: ["👍","❤️"],
+    reactions: [],
     comments: []
 
    });
@@ -693,14 +608,11 @@
    const filteredPosts = allPosts.filter(post=>{
 
     const searchable = [
-
      post.author,
      post.caption,
-
      ...(post.comments || []).map(comment =>
       comment.author + " " + comment.text
      )
-
     ].join(" ").toLowerCase();
 
     return searchable.includes(currentFilter);
@@ -719,29 +631,26 @@
     );
 
     return;
-
    }
 
 
    filteredPosts.forEach(post=>{
 
-    const card = createElement(
-     "article",
-     "community-post"
-    );
+    const card = createElement("article","community-post");
 
 
+    // ================================================
     // AUTHOR
+    // ================================================
 
-    const top = createElement(
-     "div",
-     "community-post-top"
-    );
+    const top = createElement("div","community-post-top");
 
-    const avatar = createElement(
-     "div",
-     "community-avatar",
-     post.avatar || "U"
+    top.appendChild(
+     createElement(
+      "div",
+      "community-avatar",
+      post.avatar || "U"
+     )
     );
 
     const authorInfo = createElement(
@@ -764,7 +673,6 @@
       post.time || "Recently"
      )
     );
-
 
     if(post.isDemo){
 
@@ -790,8 +698,6 @@
 
     }
 
-
-    top.appendChild(avatar);
     top.appendChild(authorInfo);
 
     top.appendChild(
@@ -805,7 +711,9 @@
     card.appendChild(top);
 
 
+    // ================================================
     // CAPTION
+    // ================================================
 
     if(post.caption){
 
@@ -820,7 +728,9 @@
     }
 
 
+    // ================================================
     // IMAGE
+    // ================================================
 
     if(post.image){
 
@@ -838,50 +748,62 @@
     }
 
 
-    // REACTIONS
+    // ================================================
+    // REACTIONS — ONE BUTTON PER EMOJI
+    // ================================================
 
     const reactions = createElement(
      "div",
      "community-reactions"
     );
 
-    const postReactions = Array.isArray(post.reactions)
-     ? post.reactions
-     : [];
+    const postId = String(post.id || post.author + post.time);
 
-    postReactions.forEach(emoji=>{
-
-     const reaction = createElement(
-      "span",
-      "community-reaction",
-      emoji
-     );
-
-     reactions.appendChild(reaction);
-
-    });
-
-
-    // LOCAL REACTION SELECTION
+    if(!userReactions[postId]){
+     userReactions[postId] = {};
+    }
 
     reactionOptions.forEach(emoji=>{
 
+     const baseCount = Array.isArray(post.reactions)
+      ? post.reactions.filter(value=>value === emoji).length
+      : 0;
+
+     const selected = !!userReactions[postId][emoji];
+
+     const count = baseCount + (selected ? 1 : 0);
+
      const button = createElement(
       "button",
-      "community-reaction community-reaction-button",
-      emoji
+      "community-reaction community-reaction-button"
      );
 
      button.type = "button";
 
+     button.textContent = count > 0
+      ? emoji + " " + count
+      : emoji;
+
      button.setAttribute(
       "aria-label",
-      "Select reaction " + emoji
+      "React with " + emoji + ". " + count + " reactions."
      );
+
+     if(selected){
+      button.classList.add("selected");
+     }
 
      button.addEventListener("click",()=>{
 
-      button.classList.toggle("selected");
+      const wasSelected = !!userReactions[postId][emoji];
+
+      userReactions[postId][emoji] = !wasSelected;
+
+      if(!userReactions[postId][emoji]){
+       delete userReactions[postId][emoji];
+      }
+
+      renderFeed();
 
      });
 
@@ -913,9 +835,14 @@
      ? post.comments
      : [];
 
+    const commentsList = createElement(
+     "div",
+     "community-comments-list"
+    );
+
     if(!comments.length){
 
-     commentsBox.appendChild(
+     commentsList.appendChild(
       createElement(
        "div",
        "community-comment",
@@ -946,11 +873,104 @@
        )
       );
 
-      commentsBox.appendChild(commentLine);
+      commentsList.appendChild(commentLine);
 
      });
 
     }
+
+    commentsBox.appendChild(commentsList);
+
+
+    // ================================================
+    // WRITE A COMMENT
+    // ================================================
+
+    const commentForm = createElement(
+     "form",
+     "community-comment-form"
+    );
+
+    commentForm.style.cssText = `
+     display:flex;
+     align-items:center;
+     gap:8px;
+     margin-top:12px;
+    `;
+
+    const commentInput = createElement(
+     "input",
+     "community-comment-input"
+    );
+
+    commentInput.type = "text";
+    commentInput.placeholder = "Write a comment...";
+    commentInput.maxLength = 500;
+    commentInput.required = true;
+
+    commentInput.style.cssText = `
+     flex:1;
+     min-width:0;
+     padding:11px 13px;
+     border:1px solid var(--border);
+     border-radius:22px;
+     outline:none;
+     background:var(--panel);
+     color:var(--white);
+     font-family:inherit;
+     font-size:12px;
+    `;
+
+    const sendButton = createElement(
+     "button",
+     "community-comment-send",
+     "Send"
+    );
+
+    sendButton.type = "submit";
+
+    sendButton.style.cssText = `
+     padding:10px 15px;
+     border:0;
+     border-radius:20px;
+     background:var(--green);
+     color:#052D3B;
+     font-family:inherit;
+     font-size:12px;
+     font-weight:900;
+     cursor:pointer;
+     flex-shrink:0;
+    `;
+
+    commentForm.appendChild(commentInput);
+    commentForm.appendChild(sendButton);
+
+    commentForm.addEventListener("submit",event=>{
+
+     event.preventDefault();
+
+     const commentText = commentInput.value.trim();
+
+     if(!commentText) return;
+
+     if(!Array.isArray(post.comments)){
+      post.comments = [];
+     }
+
+     post.comments.push({
+      author:"You",
+      text:commentText
+     });
+
+     showNotice(
+      "Your comment has been added to this temporary preview."
+     );
+
+     renderFeed();
+
+    });
+
+    commentsBox.appendChild(commentForm);
 
     card.appendChild(commentsBox);
 
@@ -961,7 +981,9 @@
   }
 
 
+  // ================================================
   // FIRST FEED RENDER
+  // ================================================
 
   renderFeed();
 
@@ -987,9 +1009,7 @@
 
   if(params.get("page") !== "community"){
 
-   document.body.classList.remove(
-    "community-active"
-   );
+   document.body.classList.remove("community-active");
 
   }
 
