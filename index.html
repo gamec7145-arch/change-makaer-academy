@@ -33,7 +33,6 @@
 }
 
 @media(max-width:700px){
-
   .header-inner{
     min-height:76px !important;
     padding:5px 4%;
@@ -43,7 +42,6 @@
     width:105px !important;
     height:42px !important;
   }
-
 }
 
 /* =================================
@@ -108,7 +106,6 @@ body{
 }
 
 @media(min-width:768px){
-
   .cma-bottom-nav{
     max-width:540px;
     left:50%;
@@ -123,12 +120,10 @@ body{
   body{
     padding-bottom:20px;
   }
-
 }
 
 /* =================================
    CLASSROOM LEARNING — ADMISSION
-   Scoped styles only
 ================================= */
 
 .admission-highlight{
@@ -210,7 +205,6 @@ body{
 }
 
 @media(min-width:768px){
-
   .admission-highlight{
     flex-direction:row;
     align-items:center;
@@ -226,7 +220,95 @@ body{
     width:auto;
     min-width:175px;
   }
+}
 
+/* =================================
+   OFFLINE CLASSES — SEPARATE SECTION
+================================= */
+
+.offline-classroom-block{
+  margin-top:28px;
+}
+
+.offline-classroom-heading{
+  margin-bottom:15px;
+}
+
+.offline-classroom-heading h3{
+  margin:0 0 5px;
+  color:var(--white);
+  font-size:21px;
+  font-weight:900;
+}
+
+.offline-classroom-heading p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.offline-classroom-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+
+.offline-classroom-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  padding:17px 13px;
+  border:1px solid var(--border);
+  border-radius:17px;
+  background:var(--card);
+  color:var(--white);
+  text-decoration:none;
+  transition:transform .2s ease,border-color .2s ease;
+}
+
+.offline-classroom-card:active{
+  transform:scale(.98);
+}
+
+.offline-classroom-icon{
+  width:43px;
+  height:43px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:13px;
+  background:rgba(8,201,154,.13);
+  color:var(--mint);
+  font-size:21px;
+  font-weight:900;
+}
+
+.offline-classroom-info{
+  flex:1;
+  min-width:0;
+}
+
+.offline-classroom-info h4{
+  margin:0 0 3px;
+  color:var(--white);
+  font-size:16px;
+  font-weight:900;
+}
+
+.offline-classroom-info p{
+  margin:0;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+
+.offline-classroom-arrow{
+  color:var(--mint);
+  font-size:23px;
+  font-weight:900;
 }
 
 </style>
@@ -300,6 +382,8 @@ body{
 
   </section>
 
+  <!-- ONLINE BATCHES -->
+
   <section id="batches" class="batch-section">
 
    <span class="section-label">Online Course</span>
@@ -341,7 +425,7 @@ body{
 
   </section>
 
-  <!-- CLASSROOM LEARNING / ADMISSION -->
+  <!-- CLASSROOM LEARNING -->
 
   <section id="offline" class="offline-section">
 
@@ -351,6 +435,8 @@ body{
     <h2>Classroom Learning</h2>
     <p>Learn Better. Achieve More.</p>
    </div>
+
+   <!-- PART 1: ADMISSION -->
 
    <div class="admission-highlight">
 
@@ -374,6 +460,51 @@ body{
      Apply Now <span>→</span>
 
     </a>
+
+   </div>
+
+   <!-- PART 2: OFFLINE CLASSES -->
+
+   <div class="offline-classroom-block">
+
+    <div class="offline-classroom-heading">
+     <h3>Offline Classes</h3>
+     <p>
+      Explore classroom schedules, teachers and class information.
+     </p>
+    </div>
+
+    <div class="offline-classroom-grid">
+
+     <a href="?page=offline-ssc"
+        class="offline-classroom-card">
+
+      <div class="offline-classroom-icon">▤</div>
+
+      <div class="offline-classroom-info">
+       <h4>SSC</h4>
+       <p>Class 9 & 10</p>
+      </div>
+
+      <span class="offline-classroom-arrow">›</span>
+
+     </a>
+
+     <a href="?page=offline-hsc"
+        class="offline-classroom-card">
+
+      <div class="offline-classroom-icon">▣</div>
+
+      <div class="offline-classroom-info">
+       <h4>HSC</h4>
+       <p>College</p>
+      </div>
+
+      <span class="offline-classroom-arrow">›</span>
+
+     </a>
+
+    </div>
 
    </div>
 
@@ -729,5 +860,4 @@ body{
 <script defer src="js/router.js"></script>
 
 </body>
-   </html>
-        
+</html>
