@@ -1,3 +1,4 @@
+
 @font-face{
  font-family:'Blogger Sans Bold';
  src:url('https://static.wfonts.com/data/2016/05/26/blogger-sans/Blogger_Sans-Bold.otf') format('opentype');
@@ -9,12 +10,12 @@
  --bg:#073746;
  --deep:#052D3B;
  --panel:#08494B;
- --card:#103E4C;
- --border:#245563;
+ --card:#10414D;
+ --border:#28616A;
  --green:#08C99A;
- --mint:#68DDB9;
+ --mint:#78E0C2;
  --white:#fff;
- --muted:#A8C0CE;
+ --muted:#B5CBD3;
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -29,7 +30,6 @@ body{
  -webkit-font-smoothing:antialiased;
 }
 
-/* BLOGGER SANS HEADINGS */
 h1,h2,h3,h4,h5,h6,
 .section-heading h2,
 .batch-title,
@@ -52,7 +52,7 @@ img{max-width:100%;display:block}
  position:sticky;
  top:0;
  z-index:100;
- box-shadow:0 2px 14px #0001;
+ box-shadow:0 2px 14px rgba(5,45,59,.09);
 }
 
 .header-inner{
@@ -100,13 +100,13 @@ img{max-width:100%;display:block}
 }
 
 .desktop-nav a{transition:color .2s ease}
-.desktop-nav a:hover{color:#08A982}
+.desktop-nav a:hover{color:#079F7C}
 
 .mobile-menu{
  display:none;
  background:#fff;
  padding:12px 5% 20px;
- border-top:1px solid #edf0f3;
+ border-top:1px solid #E3F0EC;
 }
 
 .mobile-menu.open{display:grid;gap:13px}
@@ -139,7 +139,7 @@ section{padding:27px 0}
  display:inline-block;
  padding:7px 16px;
  border-radius:30px;
- background:#04cd9d26;
+ background:rgba(8,201,154,.14);
  color:var(--mint);
  font-size:12px;
  font-weight:500;
@@ -155,7 +155,7 @@ section{padding:27px 0}
  overflow:hidden;
  border-radius:24px;
  background:#123E50;
- box-shadow:0 18px 45px #0003;
+ box-shadow:0 18px 45px rgba(0,0,0,.18);
  aspect-ratio:16/8;
 }
 
@@ -223,7 +223,7 @@ section{padding:27px 0}
 /* BATCHES */
 .batch-section{
  background:linear-gradient(140deg,#06474B,#084348);
- border:1px solid #12635F;
+ border:1px solid #1A6B63;
  border-radius:24px;
  padding:32px;
  margin-bottom:30px;
@@ -245,7 +245,7 @@ section{padding:27px 0}
 .batch-list{display:grid;gap:15px}
 
 .batch-card{
- background:#113A48C9;
+ background:rgba(16,65,77,.88);
  border:1px solid var(--border);
  border-radius:17px;
  padding:20px;
@@ -287,7 +287,7 @@ section{padding:27px 0}
 /* STATS */
 .batch-arrow{
  margin-left:auto;
- color:#9BC8D3;
+ color:var(--mint);
  font-size:21px;
 }
 
@@ -298,8 +298,8 @@ section{padding:27px 0}
 }
 
 .stat-card{
- background:#104454;
- border:1px solid #245C69;
+ background:var(--card);
+ border:1px solid var(--border);
  border-radius:16px;
  padding:21px 12px;
  text-align:center;
@@ -323,8 +323,8 @@ section{padding:27px 0}
 }
 
 .path-card{
- background:#104454;
- border:1px solid #245C69;
+ background:var(--card);
+ border:1px solid var(--border);
  border-radius:18px;
  padding:22px;
  transition:.2s;
@@ -347,7 +347,7 @@ section{padding:27px 0}
 /* OFFLINE */
 .offline-section{
  background:linear-gradient(140deg,#06474B,#084348);
- border:1px solid #12635F;
+ border:1px solid #1A6B63;
  border-radius:22px;
  padding:26px;
  margin:18px 0;
@@ -465,7 +465,7 @@ section{padding:27px 0}
  width:40px;
  height:40px;
  border-radius:11px;
- background:#08C99A26;
+ background:rgba(8,201,154,.14);
  color:var(--mint);
  display:grid;
  place-items:center;
@@ -631,7 +631,7 @@ section{padding:27px 0}
 
 .empty-note{
  padding:22px;
- border:1px dashed #4c7880;
+ border:1px dashed #6A969A;
  border-radius:14px;
  color:var(--muted);
  text-align:center;
@@ -740,7 +740,7 @@ section{padding:27px 0}
  border-radius:50%;
  display:grid;
  place-items:center;
- background:#fff;
+ background:#EAF7F3;
  color:#073746;
  font-weight:500;
  font-size:13px;
@@ -772,6 +772,7 @@ section{padding:27px 0}
  font-size:14px;
  overflow-wrap:anywhere;
 }
+
 /* COURSE POSTS */
 .course-list{
  display:grid;
@@ -855,7 +856,7 @@ section{padding:27px 0}
 }
 
 .exam-video-card{
- background:#0b3544;
+ background:#0B3544;
  border:1px solid var(--border);
  border-radius:15px;
  overflow:hidden;
@@ -924,13 +925,12 @@ section{padding:27px 0}
  flex-direction:column;
  gap:0;
  background:linear-gradient(140deg,#06474B,#084348);
- border:1px solid #12635F;
+ border:1px solid #1A6B63;
  border-radius:20px;
  padding:21px;
  overflow:hidden;
 }
 
-/* COURSE HEADER */
 .exam-showcase-top{
  display:flex;
  align-items:center;
@@ -957,7 +957,6 @@ section{padding:27px 0}
 
 .exam-learn-more:hover{color:#fff}
 
-/* SSC / HSC CAROUSEL */
 .exam-featured-track{
  display:flex;
  width:100%;
@@ -971,7 +970,6 @@ section{padding:27px 0}
 
 .exam-featured-track::-webkit-scrollbar{display:none}
 
-/* SLIDES - NO EXTRA OUTER CARD */
 .exam-featured-card{
  flex:0 0 100%;
  min-width:0;
@@ -994,7 +992,7 @@ section{padding:27px 0}
 
 .exam-featured-tag{
  display:inline-block;
- background:#08C99A26;
+ background:rgba(8,201,154,.15);
  color:var(--mint);
  border-radius:30px;
  padding:5px 11px;
@@ -1011,7 +1009,6 @@ section{padding:27px 0}
  margin-top:6px;
 }
 
-/* SLIDER FOOTER */
 .exam-slider-footer{
  display:flex;
  align-items:center;
@@ -1041,7 +1038,6 @@ section{padding:27px 0}
  margin-left:5px;
 }
 
-/* PDF NOTES & PRACTICE MATERIALS */
 .exam-resource-row{
  width:100%;
  min-height:88px;
@@ -1057,7 +1053,7 @@ section{padding:27px 0}
 }
 
 .exam-resource-row:hover{
- background:#ffffff08;
+ background:rgba(255,255,255,.04);
 }
 
 .exam-resource-icon{
@@ -1067,7 +1063,7 @@ section{padding:27px 0}
  display:grid;
  place-items:center;
  border-radius:13px;
- background:#08C99A26;
+ background:rgba(8,201,154,.15);
  color:var(--mint);
  font-size:21px;
 }
@@ -1126,15 +1122,15 @@ section{padding:27px 0}
  flex-wrap:wrap;
  gap:17px;
  margin:17px 0;
- color:#C5D9E3;
+ color:#D0E2E8;
  font-size:13px;
 }
 
 .footer-bottom{
- border-top:1px solid #244455;
+ border-top:1px solid #28505B;
  padding-top:16px;
  margin-top:18px;
- color:#829EAD;
+ color:#9CB5BF;
  font-size:12px;
 }
 
@@ -1300,7 +1296,6 @@ section{padding:27px 0}
  .review-card{flex-basis:260px}
  .review-card p{font-size:13px}
 
- /* EXAM PREPARATION */
  .exam-showcase{padding:15px}
 
  .exam-showcase-top{
@@ -1370,58 +1365,52 @@ section{padding:27px 0}
    PREMIUM TYPOGRAPHY SYSTEM
 ================================= */
 
-/* MAIN FONT */
 body{
-  font-family:'Nunito Sans',sans-serif;
-  font-size:15px;
-  font-weight:400;
-  line-height:1.7;
-  letter-spacing:0;
-  word-spacing:0;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
+ font-family:'Nunito Sans',sans-serif;
+ font-size:15px;
+ font-weight:400;
+ line-height:1.7;
+ letter-spacing:0;
+ word-spacing:0;
+ -webkit-font-smoothing:antialiased;
+ text-rendering:optimizeLegibility;
 }
 
-/* ALL HEADINGS */
 h1,h2,h3,h4,h5,h6,
 .section-heading h2,
 .batch-title,
 .page-intro h1,
 .brand-intro h2,
 .exam-video-title{
-  font-family:'Blogger Sans Bold',sans-serif;
-  font-weight:700;
-  line-height:1.35;
-  letter-spacing:0;
-  word-spacing:0.5px;
-  text-wrap:balance;
-  overflow-wrap:break-word;
+ font-family:'Blogger Sans Bold',sans-serif;
+ font-weight:700;
+ line-height:1.35;
+ letter-spacing:0;
+ word-spacing:0.5px;
+ text-wrap:balance;
+ overflow-wrap:break-word;
 }
 
-/* MAIN PAGE TITLE */
 h1,
 .page-intro h1{
-  font-size:clamp(25px,3.2vw,32px);
-  line-height:1.3;
-  max-width:720px;
-  margin-bottom:8px;
+ font-size:clamp(25px,3.2vw,32px);
+ line-height:1.3;
+ max-width:720px;
+ margin-bottom:8px;
 }
 
-/* SECTION HEADINGS */
 .section-heading h2{
-  font-size:clamp(21px,2.6vw,26px);
-  line-height:1.35;
-  max-width:680px;
+ font-size:clamp(21px,2.6vw,26px);
+ line-height:1.35;
+ max-width:680px;
 }
 
-/* BATCH SECTION TITLE */
 .batch-title{
-  font-size:clamp(23px,3vw,29px);
-  line-height:1.35;
-  max-width:680px;
+ font-size:clamp(23px,3vw,29px);
+ line-height:1.35;
+ max-width:680px;
 }
 
-/* CARD HEADINGS */
 .batch-card h3,
 .path-card h3,
 .offline-card h3,
@@ -1432,20 +1421,18 @@ h1,
 .course-card h3,
 .exam-featured-info h3,
 .review-card h3{
-  line-height:1.4;
-  letter-spacing:0;
-  word-spacing:0;
-  text-wrap:pretty;
+ line-height:1.4;
+ letter-spacing:0;
+ word-spacing:0;
+ text-wrap:pretty;
 }
 
-/* BRAND INTRO */
 .brand-intro h2{
-  font-size:20px;
-  line-height:1.4;
-  max-width:550px;
+ font-size:20px;
+ line-height:1.4;
+ max-width:550px;
 }
 
-/* BODY TEXT WIDTH & READABILITY */
 .section-heading p,
 .batch-subtitle,
 .batch-card p,
@@ -1459,20 +1446,18 @@ h1,
 .exam-featured-info p,
 .review-card p,
 .detail-box p{
-  line-height:1.7;
-  letter-spacing:0;
-  overflow-wrap:break-word;
+ line-height:1.7;
+ letter-spacing:0;
+ overflow-wrap:break-word;
 }
 
-/* SMALL LABELS */
 .section-label,
 .exam-featured-tag,
 .company-item small{
-  letter-spacing:0.3px;
-  line-height:1.4;
+ letter-spacing:0.3px;
+ line-height:1.4;
 }
 
-/* BUTTONS & NAVIGATION */
 button,
 .desktop-nav,
 .mobile-menu a,
@@ -1480,78 +1465,77 @@ button,
 .purchase-button,
 .channel-link,
 .exam-learn-more{
-  line-height:1.4;
-  letter-spacing:0;
+ line-height:1.4;
+ letter-spacing:0;
 }
 
-/* MOBILE TYPOGRAPHY */
 @media(max-width:700px){
 
-  body{
-    font-size:14px;
-    line-height:1.7;
-  }
+ body{
+  font-size:14px;
+  line-height:1.7;
+ }
 
-  h1,
-  .page-intro h1{
-    font-size:25px;
-    line-height:1.35;
-    max-width:100%;
-  }
+ h1,
+ .page-intro h1{
+  font-size:25px;
+  line-height:1.35;
+  max-width:100%;
+ }
 
-  .section-heading h2{
-    font-size:21px;
-    line-height:1.4;
-    max-width:100%;
-  }
+ .section-heading h2{
+  font-size:21px;
+  line-height:1.4;
+  max-width:100%;
+ }
 
-  .batch-title{
-    font-size:23px;
-    line-height:1.4;
-    max-width:100%;
-  }
+ .batch-title{
+  font-size:23px;
+  line-height:1.4;
+  max-width:100%;
+ }
 
-  .brand-intro h2{
-    font-size:19px;
-    line-height:1.4;
-  }
+ .brand-intro h2{
+  font-size:19px;
+  line-height:1.4;
+ }
 
-  .batch-card h3,
-  .path-card h3,
-  .offline-card h3,
-  .video-info h3,
-  .post-content h2,
-  .course-card h3,
-  .exam-featured-info h3{
-    line-height:1.4;
-  }
+ .batch-card h3,
+ .path-card h3,
+ .offline-card h3,
+ .video-info h3,
+ .post-content h2,
+ .course-card h3,
+ .exam-featured-info h3{
+  line-height:1.4;
+ }
 
-  .section-heading p,
-  .batch-card p,
-  .path-card p,
-  .offline-card p,
-  .page-intro p,
-  .post-content p,
-  .brand-intro p,
-  .course-card p,
-  .review-card p{
-    line-height:1.65;
-  }
+ .section-heading p,
+ .batch-card p,
+ .path-card p,
+ .offline-card p,
+ .page-intro p,
+ .post-content p,
+ .brand-intro p,
+ .course-card p,
+ .review-card p{
+  line-height:1.65;
+ }
 }
 
 h1,h2,h3,h4,h5,h6{
-  line-height:1.55;
-  letter-spacing:0.3px;
-  word-spacing:2px;
-  text-wrap:balance;
+ line-height:1.55;
+ letter-spacing:0.3px;
+ word-spacing:2px;
+ text-wrap:balance;
 }
 
 .section-heading h2,
 .batch-title,
 .page-intro h1{
-  max-width:650px;
-  line-height:1.5;
-  text-wrap:balance;
+ max-width:650px;
+ line-height:1.5;
+ text-wrap:balance;
 }
 
 /* =================================
@@ -1559,35 +1543,32 @@ h1,h2,h3,h4,h5,h6{
    LOGO SIZE + CONTACT BUTTON FIX
 ================================= */
 
-/* HIDE FIXED GREEN CONTACT BUTTON */
 .whatsapp{
-  display:none !important;
+ display:none !important;
 }
 
-/* DESKTOP LOGO */
 .brand img{
-  width:190px;
-  height:76px;
-  object-fit:contain;
-  object-position:left center;
+ width:190px;
+ height:76px;
+ object-fit:contain;
+ object-position:left center;
 }
 
-/* HEADER HEIGHT */
 .header-inner{
-  min-height:84px;
+ min-height:84px;
 }
 
-/* MOBILE LOGO */
 @media(max-width:700px){
 
-  .header-inner{
-    min-height:76px;
-  }
-
-  .brand img{
-    width:150px;
-    height:62px;
-    object-fit:contain;
-    object-position:left center;
-  }
+ .header-inner{
+  min-height:76px;
  }
+
+ .brand img{
+  width:150px;
+  height:62px;
+  object-fit:contain;
+  object-position:left center;
+ }
+ }
+ 
