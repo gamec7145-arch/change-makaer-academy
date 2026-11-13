@@ -283,25 +283,8 @@ function renderSubjectParts(program, group, subjectKey, mode) {
 
 
 // ==================================================
-// ONLINE EXAMINATION: SEARCHABLE EXAM POSTS
+// ONLINE EXAMINATION: GET EXAM POSTS
 // ==================================================
-
-// Future Admin Panel / Database data source:
-// window.onlineExamPosts = [
-//   {
-//     id: "exam-1",
-//     program: "ssc",
-//     group: "science",
-//     subject: "physics",
-//     part: 1,
-//     title: "Chapter 7 Examination",
-//     chapter: "7",
-//     chapterName: "Waves",
-//     caption: "Test your knowledge",
-//     duration: 20,
-//     mcqCount: 20
-//   }
-// ];
 
 function getOnlineExamPostData(program, group, subjectKey, partIndex) {
 
@@ -334,8 +317,6 @@ function getOnlineExamPostData(program, group, subjectKey, partIndex) {
 
 function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
 
- // FIXED: Subject Key must be passed as the third argument.
-
  const subject = getSubject(group, program, subjectKey);
 
  if (!subject) {
@@ -354,6 +335,7 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
   demoImages[group],
   "?page=" + backPage
  );
+
 
  // ==================================================
  // SEARCH BAR
@@ -403,14 +385,14 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  const resultMessage = document.createElement("p");
 
  resultMessage.style.textAlign = "center";
- resultMessage.style.padding = "20px 12px";
+ resultMessage.style.padding = "12px";
  resultMessage.style.color = "#B5CBD3";
 
  pageContent.appendChild(resultMessage);
 
 
  // ==================================================
- // GET POSTS FOR EXACT SUBJECT AND PAPER
+ // GET POSTS
  // ==================================================
 
  const posts = getOnlineExamPostData(
@@ -422,7 +404,7 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
 
 
  // ==================================================
- // RENDER / FILTER POSTS
+ // RENDER EXAM CARDS
  // ==================================================
 
  function renderFilteredPosts(searchText = "") {
@@ -438,7 +420,10 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
     post.chapter,
     post.chapterNumber,
     post.chapterName,
-    post.caption
+    post.caption,
+    post.subject,
+    post.program,
+    post.group
    ].join(" ").toLowerCase();
 
    return searchableText.includes(query);
@@ -460,34 +445,191 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
 
   filteredPosts.forEach(post => {
 
-   const postTitle = post.title || "Online Examination";
+   // CARD
+   const postCard = document.createElement("article");
 
-   const chapterText = post.chapterName
-    ? "Chapter " + (post.chapter || post.chapterNumber || "") +
-      " | " + post.chapterName
-    : post.chapter
-    ? "Chapter " + post.chapter
-    : "";
+   postCard.style.width = "100%";
+   postCard.style.boxSizing = "border-box";
+   postCard.style.marginBottom = "20px";
+   postCard.style.background = "#10414D";
+   postCard.style.border = "1px solid #28616A";
+   postCard.style.borderRadius = "18px";
+   postCard.style.overflow = "hidden";
 
-   const caption = post.caption || "";
 
-   const description = [
-    chapterText,
-    caption,
-    post.duration ? post.duration + " Minutes" : "",
-    post.mcqCount ? post.mcqCount + " MCQs" : ""
-   ].filter(Boolean).join(" • ");
+   // IMAGE
+   const image = document.createElement("img");
 
-   const postId = encodeURIComponent(post.id || "");
+   image.src = post.image || demoImages.classroom;
+   image.alt = post.title || "Online Examination";
 
-   const destination = "?page=online-exam-info-" + postId;
+   image.style.width = "100%";
+   image.style.height = "190px";
+   image.style.display = "block";
+   image.style.objectFit = "cover";
 
-   const postCard = makeCard(
-    postTitle,
-    description,
-    destination,
-    "▤"
-   );
+   image.onerror = function() {
+    this.onerror = null;
+    this.src = demoImages.classroom;
+   };
+
+   postCard.appendChild(image);
+
+
+   // CARD INFORMATION
+   const info = document.createElement("div");
+
+   info.style.padding = "16px";
+
+
+   // SUBJECT LABEL
+   const subjectLabel = document.createElement("div");
+
+   subjectLabel.textContent =
+    program.toUpperCase() + "  •  " +
+    groupNames[group] + "  •  " +
+    subject[0] +
+    (partIndex !== null ? "  •  " + (getSubjectParts(group, program, subjectKey)[partIndex - 1] || "") : "");
+
+   subjectLabel.style.color = "#78E0C2";
+   subjectLabel.style.fontSize = "12px";
+   subjectLabel.style.fontWeight = "700";
+   subjectLabel.style.marginBottom = "9px";
+
+   info.appendChild(subjectLabel);
+
+
+   // TITLE
+   const title = document.createElement("h3");
+
+   title.textContent = post.title || "Online Examination";
+
+   title.style.color = "#FFFFFF";
+   title.style.fontSize = "19px";
+   title.style.fontWeight = "800";
+   title.style.margin = "0 0 10px";
+   title.style.lineHeight = "1.4";
+
+   info.appendChild(title);
+
+
+   // CHAPTER
+   const chapter = document.createElement("p");
+
+   const chapterNumber = post.chapter || post.chapterNumber || "";
+
+   chapter.textContent = post.chapterName
+    ? "Chapter " + chapterNumber + " | " + post.chapterName
+    : chapterNumber
+    ? "Chapter " + chapterNumber
+    : "Chapter Practice";
+
+   chapter.style.color = "#B5CBD3";
+   chapter.style.fontSize = "14px";
+   chapter.style.margin = "0 0 9px";
+
+   info.appendChild(chapter);
+
+
+   // CAPTION
+   if (post.caption) {
+
+    const caption = document.createElement("p");
+
+    caption.textContent = post.caption;
+
+    caption.style.color = "#B5CBD3";
+    caption.style.fontSize = "14px";
+    caption.style.lineHeight = "1.6";
+    caption.style.margin = "0 0 15px";
+
+    info.appendChild(caption);
+   }
+
+
+   // EXAM DETAILS
+   const details = document.createElement("div");
+
+   details.style.display = "grid";
+   details.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
+   details.style.gap = "8px";
+   details.style.margin = "15px 0 18px";
+
+
+   const mcqCount = Number(post.mcqCount || (post.questions || []).length || 0);
+   const duration = Number(post.duration || 0);
+   const marksPerQuestion = Number(post.marksPerQuestion || 1);
+   const totalMarks = post.totalMarks !== undefined
+    ? Number(post.totalMarks)
+    : mcqCount * marksPerQuestion;
+
+
+   function addDetail(label, value) {
+
+    const item = document.createElement("div");
+
+    item.style.background = "#08494B";
+    item.style.border = "1px solid #28616A";
+    item.style.borderRadius = "10px";
+    item.style.padding = "10px 5px";
+    item.style.textAlign = "center";
+    item.style.minWidth = "0";
+
+    const valueText = document.createElement("div");
+
+    valueText.textContent = value;
+
+    valueText.style.color = "#FFFFFF";
+    valueText.style.fontSize = "16px";
+    valueText.style.fontWeight = "800";
+
+    const labelText = document.createElement("div");
+
+    labelText.textContent = label;
+
+    labelText.style.color = "#B5CBD3";
+    labelText.style.fontSize = "11px";
+    labelText.style.marginTop = "4px";
+
+    item.appendChild(valueText);
+    item.appendChild(labelText);
+
+    details.appendChild(item);
+   }
+
+
+   addDetail("DURATION", duration + " min");
+   addDetail("MCQ", String(mcqCount));
+   addDetail("TOTAL MARKS", String(totalMarks));
+
+   info.appendChild(details);
+
+
+   // PROVE YOURSELF BUTTON
+   const button = document.createElement("a");
+
+   button.textContent = "PROVE YOURSELF";
+
+   button.href =
+    "?page=online-exam-start-" +
+    encodeURIComponent(String(post.id || ""));
+
+   button.style.display = "block";
+   button.style.width = "100%";
+   button.style.boxSizing = "border-box";
+   button.style.padding = "14px 16px";
+   button.style.background = "#08C99A";
+   button.style.color = "#052D3B";
+   button.style.textAlign = "center";
+   button.style.textDecoration = "none";
+   button.style.fontSize = "14px";
+   button.style.fontWeight = "900";
+   button.style.letterSpacing = "0.7px";
+   button.style.borderRadius = "11px";
+
+   info.appendChild(button);
+
+   postCard.appendChild(info);
 
    postsContainer.appendChild(postCard);
   });
@@ -499,9 +641,7 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  // ==================================================
 
  searchInput.addEventListener("input", function() {
-
   renderFilteredPosts(searchInput.value);
-
  });
 
 
