@@ -1,10 +1,47 @@
 
  // ==================================================
  // CHANGE MAKER ACADEMY
- // PAGE ROUTER
+ // AUTOMATIC HEADER CONTROL SYSTEM
  // ==================================================
 
+function updatePageHeaders(page) {
+
+ const topHeader = document.querySelector(".header");
+ const secondHeader = document.querySelector(".cma-bottom-nav");
+
+ const showTop = (
+  !page ||
+  page === "community" ||
+  page.startsWith("community-") ||
+  page === "teachers" ||
+  page.startsWith("teachers-")
+ );
+
+ const showSecond = (
+  !page ||
+  page === "community" ||
+  page.startsWith("community-")
+ );
+
+ if (topHeader) {
+  topHeader.style.display = showTop ? "" : "none";
+ }
+
+ if (secondHeader) {
+  secondHeader.style.display = showSecond ? "" : "none";
+ }
+
+}
+
+
+// ==================================================
+// CHANGE MAKER ACADEMY
+// PAGE ROUTER
+// ==================================================
+
 function openPage(page) {
+
+ updatePageHeaders(page);
 
  homePage.style.display = "none";
  innerPage.classList.add("active");
@@ -36,7 +73,6 @@ function openPage(page) {
   let group;
   let subjectKey;
 
-  // ONLINE EXAMINATION
   if (page.startsWith("subject-parts-online-exam-")) {
 
    const prefix = "subject-parts-online-exam-";
@@ -50,7 +86,6 @@ function openPage(page) {
 
   }
 
-  // OTHER MODES
   else {
 
    const parts = page.split("-");
@@ -567,6 +602,8 @@ function renderRoute() {
 
  } else {
 
+  updatePageHeaders(null);
+
   clearContent();
 
   innerPage.classList.remove("active");
@@ -623,6 +660,8 @@ document.addEventListener("click", event => {
 
   clearContent();
 
+  updatePageHeaders(null);
+
   innerPage.classList.remove("active");
   homePage.style.display = "block";
 
@@ -670,4 +709,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-                          
