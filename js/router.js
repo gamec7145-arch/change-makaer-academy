@@ -95,77 +95,6 @@ function openPage(page) {
 
 
  // ==================================================
- // ONLINE EXAMINATION: LEARN MORE -> SSC / HSC
- // ==================================================
-
- else if (page === "online-exam-choose") {
-
-  renderOnlineExamLevels();
-
- }
-
-
- // ==================================================
- // ONLINE EXAMINATION: SSC / HSC -> GROUP
- // ==================================================
-
- else if (
-  page === "online-exam-ssc" ||
-  page === "online-exam-hsc"
- ) {
-
-  renderGroups(
-   page.replace("online-exam-", ""),
-   "online-exam"
-  );
-
- }
-
-
- // ==================================================
- // ONLINE EXAMINATION: GROUP -> SUBJECT
- // ==================================================
-
- else if (page.startsWith("online-exam-group-")) {
-
-  const parts = page.split("-");
-
-  renderSubjectChoices(
-   parts[3],
-   parts[4],
-   "online-exam"
-  );
-
- }
-
-
- // ==================================================
- // ONLINE EXAMINATION: SUBJECT -> EXAM POSTS
- // ==================================================
-
- else if (page.startsWith("online-exam-posts-")) {
-
-  const selected = page.match(/-part-(\d+)$/);
-  const partIndex = selected ? Number(selected[1]) : null;
-
-  const cleanPage = page.replace(/-part-\d+$/, "");
-  const parts = cleanPage.split("-");
-
-  const program = parts[3];
-  const group = parts[4];
-  const subjectKey = parts.slice(5).join("-");
-
-  renderOnlineExamPosts(
-   program,
-   group,
-   subjectKey,
-   partIndex
-  );
-
- }
-
-
- // ==================================================
  // ONLINE: PROGRAM -> GROUP
  // ==================================================
 
@@ -624,3 +553,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+   
