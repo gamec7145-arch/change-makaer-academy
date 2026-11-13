@@ -6,6 +6,38 @@
 
 
 // ==================================================
+// ONLINE EXAMINATION: SSC / HSC
+// ==================================================
+
+function renderOnlineExamLevels() {
+
+ setPage(
+  "Online Examination",
+  "Prove Yourself",
+  "Choose your academic program to continue.",
+  demoImages.classroom,
+  "?#home"
+ );
+
+ const grid = makeGrid();
+
+ ["ssc", "hsc"].forEach(program => {
+
+  grid.appendChild(makeCard(
+   program.toUpperCase(),
+   "Online Examination | " + program.toUpperCase(),
+   "?page=online-exam-" + program,
+   "✎"
+  ));
+
+ });
+
+ pageContent.appendChild(grid);
+
+}
+
+
+// ==================================================
 // RENDER GROUPS
 // ==================================================
 
@@ -15,6 +47,8 @@ function renderGroups(program, mode) {
   ? "Offline Batches"
   : mode === "exam"
   ? "Exam Preparation Course"
+  : mode === "online-exam"
+  ? "Online Examination"
   : "Online Batches";
 
  setPage(
@@ -23,7 +57,9 @@ function renderGroups(program, mode) {
   "Select your group to continue.",
   demoImages.classroom,
   mode === "offline" ? "?#offline" :
-  mode === "exam" ? "?#exam" : "?#batches"
+  mode === "exam" ? "?#exam" :
+  mode === "online-exam" ? "?page=online-exam-choose" :
+  "?#batches"
  );
 
  const grid = makeGrid();
@@ -34,6 +70,8 @@ function renderGroups(program, mode) {
    ? "offline-group-" + program + "-" + group
    : mode === "exam"
    ? "exam-group-" + program + "-" + group
+   : mode === "online-exam"
+   ? "online-exam-group-" + program + "-" + group
    : "online-group-" + program + "-" + group;
 
   grid.appendChild(makeCard(
@@ -71,6 +109,10 @@ function getSubjectDestination(program, group, subjectKey, mode, partIndex = nul
   destination = "online-lessons-" + program + "-" + group + "-" + subjectKey;
  }
 
+ if (mode === "online-exam") {
+  destination = "online-exam-posts-" + program + "-" + group + "-" + subjectKey;
+ }
+
  if (partIndex !== null) {
   destination += "-part-" + partIndex;
  }
@@ -97,6 +139,8 @@ function renderSubjectChoices(program, group, mode) {
   ? "Offline Batch"
   : mode === "exam"
   ? "Exam Preparation Course"
+  : mode === "online-exam"
+  ? "Online Examination"
   : "Online Lessons";
 
  setPage(
@@ -107,6 +151,7 @@ function renderSubjectChoices(program, group, mode) {
   "?page=" + (
    mode === "offline" ? "offline-" + program :
    mode === "exam" ? "exam-" + program :
+   mode === "online-exam" ? "online-exam-" + program :
    "online-" + program
   )
  );
@@ -197,6 +242,8 @@ function renderSubjectParts(program, group, subjectKey, mode) {
   ? "Offline Batch"
   : mode === "exam"
   ? "Exam Preparation Course"
+  : mode === "online-exam"
+  ? "Online Examination"
   : "Online Lessons";
 
  setPage(
@@ -209,6 +256,8 @@ function renderSubjectParts(program, group, subjectKey, mode) {
     ? "offline-group-" + program + "-" + group
     : mode === "exam"
     ? "exam-group-" + program + "-" + group
+    : mode === "online-exam"
+    ? "online-exam-group-" + program + "-" + group
     : "online-group-" + program + "-" + group
   )
  );
@@ -235,5 +284,43 @@ function renderSubjectParts(program, group, subjectKey, mode) {
  });
 
  pageContent.appendChild(grid);
+
+}
+
+
+// ==================================================
+// ONLINE EXAMINATION: EXAM POSTS
+// ==================================================
+
+function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
+
+ const subject = getSubject(group, program, subjectKey);
+
+ if (!subject) {
+  showNotFound();
+  return;
+ }
+
+ const backPage = partIndex !== null
+  ? "subject-parts-online-exam-" + program + "-" + group + "-" + subjectKey
+  : "online-exam-group-" + program + "-" + group;
+
+ setPage(
+  subject[0] + " | Online Examination",
+  "Available Examinations",
+  "Choose an examination to prove yourself.",
+  demoImages[group],
+  "?page=" + backPage
+ );
+
+ const message = document.createElement("p");
+
+ message.textContent =
+  "No examinations have been published yet. Please check again later.";
+
+ message.style.textAlign = "center";
+ message.style.padding = "24px 12px";
+
+ pageContent.appendChild(message);
 
 }
