@@ -1967,3 +1967,57 @@ iframe{
 
  }
   
+/* =================================
+   MOBILE HOMEPAGE SIZE REFINEMENT
+================================= */
+
+@media(max-width:700px){
+
+  .batch-section{
+    padding:17px 13px;
+    border-radius:16px;
+  }
+
+  .batch-title{
+    font-size:20px;
+    line-height:1.35;
+  }
+
+  .batch-subtitle{
+    font-size:13px;
+    margin:7px 0 14px;
+  }
+
+  .batch-list{
+    gap:9px;
+  }
+
+  .batch-card{
+    min-height:64px;
+    padding:10px;
+    gap:10px;
+  }
+
+  .batch-icon{
+    width:40px;
+    height:40px;
+    font-size:17px;
+  }
+
+  .batch-card h3{
+    font-size:14px;
+  }
+
+  .batch-card p{
+    font-size:12px;
+  }
+
+  .section-heading h2{
+    font-size:20px;
+  }
+
+  .section-heading{
+    margin-bottom:14px;
+  }
+}
+
