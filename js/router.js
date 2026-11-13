@@ -9,7 +9,14 @@ function updatePageHeaders(page) {
  const topHeader = document.querySelector(".header");
  const secondHeader = document.querySelector(".cma-bottom-nav");
 
- const showTop = (
+ // Demo AI: No headers
+ const isDemoAI = (
+  page === "demo-ai" ||
+  (page && page.startsWith("demo-ai-"))
+ );
+
+ // Home, Community, Teachers: Both headers
+ const showBoth = (
   !page ||
   page === "community" ||
   page.startsWith("community-") ||
@@ -17,18 +24,15 @@ function updatePageHeaders(page) {
   page.startsWith("teachers-")
  );
 
- const showSecond = (
-  !page ||
-  page === "community" ||
-  page.startsWith("community-")
- );
-
+ // Top Header: Every page except Demo AI
  if (topHeader) {
-  topHeader.style.display = showTop ? "" : "none";
+  topHeader.style.display = isDemoAI ? "none" : "";
  }
 
+ // Bottom Navigation: Only Home, Community, Teachers
  if (secondHeader) {
-  secondHeader.style.display = showSecond ? "" : "none";
+  secondHeader.style.display =
+   (!isDemoAI && showBoth) ? "" : "none";
  }
 
 }
@@ -709,3 +713,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+  
