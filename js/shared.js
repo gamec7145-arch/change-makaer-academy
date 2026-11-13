@@ -4,70 +4,183 @@
 // SHARED DATA & FUNCTIONS
 // ==================================================
 
+
+// ==================================================
 // SUBJECT DATABASE
+// Bangladesh General Education Board
+// SSC & HSC
+// ==================================================
+
 const learningSubjects = {
+
  science: {
-  ssc: [
-   ["Physics","physics"],
-   ["Chemistry","chemistry"],
-   ["Biology","biology"],
-   ["Higher Mathematics","higher-math"],
-   ["General Mathematics","general-math"]
-  ],
-  hsc: [
-   ["Physics","physics"],
-   ["Chemistry","chemistry"],
-   ["Biology","biology"],
-   ["Higher Mathematics","higher-math"],
-   ["ICT","ict"]
-  ]
- },
- arts: {
+
   ssc: [
    ["Bangla","bangla"],
    ["English","english"],
    ["General Mathematics","general-math"],
+   ["Religion and Moral Education","religion"],
    ["ICT","ict"],
    ["Bangladesh and Global Studies","bangladesh-global-studies"],
+
+   ["Physics","physics"],
+   ["Chemistry","chemistry"],
+   ["Biology","biology"],
+   ["Higher Mathematics","higher-math"],
+
+   ["Agriculture Studies","agriculture"],
+   ["Home Science","home-science"],
+   ["Career Education","career-education"],
+   ["Physical Education, Health Science and Sports","physical-education"],
+   ["Arts and Crafts","arts-crafts"]
+  ],
+
+  hsc: [
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["ICT","ict"],
+
+   ["Physics","physics"],
+   ["Chemistry","chemistry"],
+   ["Biology","biology"],
+   ["Higher Mathematics","higher-math"],
+   ["Statistics","statistics"],
+   ["Agriculture Studies","agriculture"],
+   ["Geography","geography"],
+   ["Psychology","psychology"]
+  ]
+ },
+
+
+ arts: {
+
+  ssc: [
+   ["Bangla","bangla"],
+   ["English","english"],
+   ["General Mathematics","general-math"],
+   ["Religion and Moral Education","religion"],
+   ["ICT","ict"],
+   ["Bangladesh and Global Studies","bangladesh-global-studies"],
+
+   ["General Science","general-science"],
    ["History of Bangladesh and World Civilization","history"],
    ["Geography and Environment","geography"],
    ["Civics and Citizenship","civics"],
-   ["Economics","economics"]
+   ["Economics","economics"],
+
+   ["Agriculture Studies","agriculture"],
+   ["Home Science","home-science"],
+   ["Career Education","career-education"],
+   ["Physical Education, Health Science and Sports","physical-education"],
+   ["Arts and Crafts","arts-crafts"]
   ],
+
   hsc: [
    ["Bangla","bangla"],
    ["English","english"],
    ["ICT","ict"],
-   ["Civics","civics"],
+
    ["Economics","economics"],
+   ["Civics and Good Governance","civics"],
    ["Logic","logic"],
    ["History","history"],
    ["Islamic History and Culture","islamic-history"],
+   ["Islamic Studies","islamic-studies"],
+   ["Sociology","sociology"],
+   ["Social Work","social-work"],
    ["Geography","geography"],
-   ["Sociology","sociology"]
+   ["Psychology","psychology"],
+   ["Statistics","statistics"]
   ]
  },
+
+
  commerce: {
+
   ssc: [
    ["Bangla","bangla"],
    ["English","english"],
    ["General Mathematics","general-math"],
+   ["Religion and Moral Education","religion"],
    ["ICT","ict"],
+   ["Bangladesh and Global Studies","bangladesh-global-studies"],
+
    ["Accounting","accounting"],
    ["Finance and Banking","finance-banking"],
-   ["Business Entrepreneurship","business-entrepreneurship"]
+   ["Business Entrepreneurship","business-entrepreneurship"],
+   ["General Science","general-science"],
+
+   ["Agriculture Studies","agriculture"],
+   ["Home Science","home-science"],
+   ["Career Education","career-education"],
+   ["Physical Education, Health Science and Sports","physical-education"],
+   ["Arts and Crafts","arts-crafts"]
   ],
+
   hsc: [
    ["Bangla","bangla"],
    ["English","english"],
    ["ICT","ict"],
+
    ["Accounting","accounting"],
    ["Finance, Banking and Insurance","finance-banking"],
    ["Business Organization and Management","business-management"],
-   ["Production Management and Marketing","production-marketing"]
+   ["Production Management and Marketing","production-marketing"],
+   ["Economics","economics"],
+   ["Geography","geography"],
+   ["Statistics","statistics"]
   ]
  }
+
 };
+
+
+// ==================================================
+// SUBJECT PAPER / PART DATABASE
+// Empty array = No paper selection required
+// ==================================================
+
+const subjectParts = {
+
+ ssc: {
+  bangla: ["1st Paper","2nd Paper"],
+  english: ["1st Paper","2nd Paper"]
+ },
+
+ hsc: {
+  bangla: ["1st Paper","2nd Paper"],
+  english: ["1st Paper","2nd Paper"],
+
+  physics: ["1st Paper","2nd Paper"],
+  chemistry: ["1st Paper","2nd Paper"],
+  biology: ["1st Paper","2nd Paper"],
+  "higher-math": ["1st Paper","2nd Paper"],
+
+  economics: ["1st Paper","2nd Paper"],
+  civics: ["1st Paper","2nd Paper"],
+  logic: ["1st Paper","2nd Paper"],
+  history: ["1st Paper","2nd Paper"],
+  "islamic-history": ["1st Paper","2nd Paper"],
+  "islamic-studies": ["1st Paper","2nd Paper"],
+  sociology: ["1st Paper","2nd Paper"],
+  "social-work": ["1st Paper","2nd Paper"],
+  geography: ["1st Paper","2nd Paper"],
+  psychology: ["1st Paper","2nd Paper"],
+  statistics: ["1st Paper","2nd Paper"],
+
+  accounting: ["1st Paper","2nd Paper"],
+  "finance-banking": ["1st Paper","2nd Paper"],
+  "business-management": ["1st Paper","2nd Paper"],
+  "production-marketing": ["1st Paper","2nd Paper"],
+  agriculture: ["1st Paper","2nd Paper"]
+ }
+
+};
+
+
+// ==================================================
+// GROUP NAMES
+// ==================================================
 
 const groupNames = {
  science: "Science",
@@ -75,16 +188,29 @@ const groupNames = {
  commerce: "Commerce"
 };
 
+
+// ==================================================
+// DEMO IMAGES
+// ==================================================
+
 const demoImages = {
  science: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=85",
+
  arts: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
+
  commerce: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=85",
+
  biology: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=1200&q=85",
+
  physics: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&w=1200&q=85",
+
  chemistry: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=85",
+
  ict: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85",
+
  classroom: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1200&q=85"
 };
+
 
 // ==================================================
 // ONLINE VIDEO DATA
@@ -96,6 +222,7 @@ const youtubeVideos = {
  //  {title:"Physics Chapter 1",url:"https://youtu.be/VIDEO_ID",image:""}
  // ]
 };
+
 
 // ==================================================
 // EXAM COURSE DATA
@@ -119,6 +246,7 @@ const examCourses = [
   videos: []
  }
 ];
+
 
 // ==================================================
 // UNIVERSAL YOUTUBE VIDEO PLAYER
@@ -208,6 +336,7 @@ document.addEventListener("visibilitychange", () => {
  }
 });
 
+
 // ==================================================
 // PAGE ELEMENTS
 // ==================================================
@@ -220,6 +349,7 @@ const pageLabel = document.getElementById("pageLabel");
 const pageDescription = document.getElementById("pageDescription");
 const pageContent = document.getElementById("pageContent");
 const backLink = document.getElementById("backLink");
+
 
 // ==================================================
 // SHARED PAGE FUNCTIONS
@@ -276,16 +406,56 @@ function makeEmpty(text) {
  return note;
 }
 
+
+// ==================================================
+// GET SUBJECTS
+// ==================================================
+
 function getSubjects(group, level) {
  if (!learningSubjects[group]) return [];
 
  const actualLevel = level === "admission" ? "hsc" : level;
+
  return learningSubjects[group][actualLevel] || [];
 }
+
+
+// ==================================================
+// GET SINGLE SUBJECT
+// ==================================================
 
 function getSubject(group, level, key) {
  return getSubjects(group, level).find(item => item[1] === key);
 }
+
+
+// ==================================================
+// GET SUBJECT PAPERS / PARTS
+// ==================================================
+
+function getSubjectParts(group, level, key) {
+ const actualLevel = level === "admission" ? "hsc" : level;
+
+ const subject = getSubject(group, actualLevel, key);
+
+ if (!subject) return [];
+
+ return subjectParts[actualLevel]?.[key] || [];
+}
+
+
+// ==================================================
+// CHECK IF SUBJECT HAS MULTIPLE PAPERS
+// ==================================================
+
+function hasSubjectParts(group, level, key) {
+ return getSubjectParts(group, level, key).length > 0;
+}
+
+
+// ==================================================
+// PAGE NOT FOUND
+// ==================================================
 
 function showNotFound() {
  setPage(
