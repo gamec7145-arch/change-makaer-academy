@@ -4,92 +4,6 @@
 // PAGE ROUTER
 // ==================================================
 
-
-// ==================================================
-// ONLINE EXAMINATION: EXAM POST DETAILS
-// ==================================================
-
-function renderOnlineExamInfo(postId) {
-
- const posts = Array.isArray(window.onlineExamPosts)
-  ? window.onlineExamPosts
-  : [];
-
- const post = posts.find(item =>
-  String(item.id) === String(postId)
- );
-
- if (!post) {
-  showNotFound();
-  return;
- }
-
- const subject = getSubject(
-  post.group,
-  post.program,
-  post.subject
- );
-
- const subjectName = subject ? subject[0] : post.subject;
-
- const backPage =
-  "online-exam-posts-" +
-  post.program + "-" +
-  post.group + "-" +
-  post.subject +
-  (post.part ? "-part-" + post.part : "");
-
- setPage(
-  post.title || "Online Examination",
-  subjectName + " | Exam Information",
-  post.caption || "Prepare yourself for this examination.",
-  demoImages[post.group] || demoImages.classroom,
-  "?page=" + backPage
- );
-
- const info = document.createElement("div");
-
- info.style.padding = "18px";
- info.style.background = "#08494B";
- info.style.border = "1px solid #28616A";
- info.style.borderRadius = "14px";
- info.style.color = "#FFFFFF";
- info.style.lineHeight = "1.8";
-
- const details = [
-  ["Chapter", post.chapterName || post.chapter || post.chapterNumber || "Not specified"],
-  ["Duration", post.duration ? post.duration + " Minutes" : "Not specified"],
-  ["Total MCQ", post.mcqCount || "Not specified"]
- ];
-
- details.forEach(item => {
-
-  const line = document.createElement("p");
-  line.style.margin = "8px 0";
-  line.textContent = item[0] + ": " + item[1];
-
-  info.appendChild(line);
-
- });
-
- const message = document.createElement("p");
-
- message.textContent =
-  "The examination interface will be available in the next development step.";
-
- message.style.marginTop = "18px";
- message.style.color = "#B5CBD3";
-
- info.appendChild(message);
-
- pageContent.appendChild(info);
-}
-
-
-// ==================================================
-// MAIN PAGE ROUTER
-// ==================================================
-
 function openPage(page) {
 
  homePage.style.display = "none";
@@ -105,30 +19,10 @@ function openPage(page) {
 
   const parts = page.split("-");
 
-  let mode;
-  let program;
-  let group;
-  let subjectKey;
-
-  // ONLINE EXAMINATION
-  if (page.startsWith("subject-parts-online-exam-")) {
-
-   mode = "online-exam";
-   program = parts[4];
-   group = parts[5];
-   subjectKey = parts.slice(6).join("-");
-
-  }
-
-  // OTHER MODES
-  else {
-
-   mode = parts[2];
-   program = parts[3];
-   group = parts[4];
-   subjectKey = parts.slice(5).join("-");
-
-  }
+  const mode = parts[2];
+  const program = parts[3];
+  const group = parts[4];
+  const subjectKey = parts.slice(5).join("-");
 
   renderSubjectParts(
    program,
@@ -236,12 +130,9 @@ function openPage(page) {
 
   const parts = page.split("-");
 
-  const program = parts[3];
-  const group = parts[4];
-
   renderSubjectChoices(
-   program,
-   group,
+   parts[3],
+   parts[4],
    "online-exam"
   );
 
@@ -270,19 +161,6 @@ function openPage(page) {
    subjectKey,
    partIndex
   );
-
- }
-
-
- // ==================================================
- // ONLINE EXAMINATION: POST -> EXAM INFORMATION
- // ==================================================
-
- else if (page.startsWith("online-exam-info-")) {
-
-  const postId = page.slice("online-exam-info-".length);
-
-  renderOnlineExamInfo(postId);
 
  }
 
@@ -621,6 +499,7 @@ function openPage(page) {
  }
 
  window.scrollTo(0, 0);
+
 }
 
 
@@ -745,4 +624,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
- 
