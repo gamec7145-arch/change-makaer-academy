@@ -1246,7 +1246,181 @@ section{padding:27px 0}
 @media(min-width:701px){
  .menu-btn{display:none}
 }
-/* HEADING SPACING & LINE BREAK */
+
+/* =================================
+   CHANGE MAKER ACADEMY
+   PREMIUM TYPOGRAPHY SYSTEM
+================================= */
+
+/* MAIN FONT */
+body{
+  font-family:'Nunito Sans',sans-serif;
+  font-size:15px;
+  font-weight:400;
+  line-height:1.7;
+  letter-spacing:0;
+  word-spacing:0;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ALL HEADINGS */
+h1,h2,h3,h4,h5,h6,
+.section-heading h2,
+.batch-title,
+.page-intro h1,
+.brand-intro h2,
+.exam-video-title{
+  font-family:'Blogger Sans Bold',sans-serif;
+  font-weight:700;
+  line-height:1.35;
+  letter-spacing:0;
+  word-spacing:0.5px;
+  text-wrap:balance;
+  overflow-wrap:break-word;
+}
+
+/* MAIN PAGE TITLE */
+h1,
+.page-intro h1{
+  font-size:clamp(25px,3.2vw,32px);
+  line-height:1.3;
+  max-width:720px;
+  margin-bottom:8px;
+}
+
+/* SECTION HEADINGS */
+.section-heading h2{
+  font-size:clamp(21px,2.6vw,26px);
+  line-height:1.35;
+  max-width:680px;
+}
+
+/* BATCH SECTION TITLE */
+.batch-title{
+  font-size:clamp(23px,3vw,29px);
+  line-height:1.35;
+  max-width:680px;
+}
+
+/* CARD HEADINGS */
+.batch-card h3,
+.path-card h3,
+.offline-card h3,
+.video-info h3,
+.choice-card strong,
+.video-lesson h3,
+.post-content h2,
+.course-card h3,
+.exam-featured-info h3,
+.review-card h3{
+  line-height:1.4;
+  letter-spacing:0;
+  word-spacing:0;
+  text-wrap:pretty;
+}
+
+/* BRAND INTRO */
+.brand-intro h2{
+  font-size:20px;
+  line-height:1.4;
+  max-width:550px;
+}
+
+/* BODY TEXT WIDTH & READABILITY */
+.section-heading p,
+.batch-subtitle,
+.batch-card p,
+.path-card p,
+.offline-card p,
+.video-info p,
+.page-intro p,
+.post-content p,
+.brand-intro p,
+.course-card p,
+.exam-featured-info p,
+.review-card p,
+.detail-box p{
+  line-height:1.7;
+  letter-spacing:0;
+  overflow-wrap:break-word;
+}
+
+/* SMALL LABELS */
+.section-label,
+.exam-featured-tag,
+.company-item small{
+  letter-spacing:0.3px;
+  line-height:1.4;
+}
+
+/* BUTTONS & NAVIGATION */
+button,
+.desktop-nav,
+.mobile-menu a,
+.action-link,
+.purchase-button,
+.channel-link,
+.exam-learn-more{
+  line-height:1.4;
+  letter-spacing:0;
+}
+
+/* MOBILE TYPOGRAPHY */
+@media(max-width:700px){
+
+  body{
+    font-size:14px;
+    line-height:1.7;
+  }
+
+  h1,
+  .page-intro h1{
+    font-size:25px;
+    line-height:1.35;
+    max-width:100%;
+  }
+
+  .section-heading h2{
+    font-size:21px;
+    line-height:1.4;
+    max-width:100%;
+  }
+
+  .batch-title{
+    font-size:23px;
+    line-height:1.4;
+    max-width:100%;
+  }
+
+  .brand-intro h2{
+    font-size:19px;
+    line-height:1.4;
+  }
+
+  .batch-card h3,
+  .path-card h3,
+  .offline-card h3,
+  .video-info h3,
+  .post-content h2,
+  .course-card h3,
+  .exam-featured-info h3{
+    line-height:1.4;
+  }
+
+  .section-heading p,
+  .batch-card p,
+  .path-card p,
+  .offline-card p,
+  .page-intro p,
+  .post-content p,
+  .brand-intro p,
+  .course-card p,
+  .review-card p{
+    line-height:1.65;
+  }
+}
+
 h1,h2,h3,h4,h5,h6{
   line-height:1.55;
   letter-spacing:0.3px;
