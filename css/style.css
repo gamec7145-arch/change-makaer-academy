@@ -799,9 +799,10 @@ section{padding:27px 0}
  text-align:center;
  font-size:14px;
 }
+
 .channel-link{
  display:inline-block;
- margin-top:14px;
+  margin-top:14px;
  padding:10px 15px;
  background:linear-gradient(135deg,#278CFF,#62B0FF);
  color:#071225;
