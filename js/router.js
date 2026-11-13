@@ -17,12 +17,36 @@ function openPage(page) {
 
  if (page.startsWith("subject-parts-")) {
 
-  const parts = page.split("-");
+  let mode;
+  let program;
+  let group;
+  let subjectKey;
 
-  const mode = parts[2];
-  const program = parts[3];
-  const group = parts[4];
-  const subjectKey = parts.slice(5).join("-");
+  // ONLINE EXAMINATION
+  if (page.startsWith("subject-parts-online-exam-")) {
+
+   const prefix = "subject-parts-online-exam-";
+   const route = page.slice(prefix.length);
+   const parts = route.split("-");
+
+   mode = "online-exam";
+   program = parts[0];
+   group = parts[1];
+   subjectKey = parts.slice(2).join("-");
+
+  }
+
+  // OTHER MODES
+  else {
+
+   const parts = page.split("-");
+
+   mode = parts[2];
+   program = parts[3];
+   group = parts[4];
+   subjectKey = parts.slice(5).join("-");
+
+  }
 
   renderSubjectParts(
    program,
@@ -128,11 +152,16 @@ function openPage(page) {
 
  else if (page.startsWith("online-exam-group-")) {
 
-  const parts = page.split("-");
+  const prefix = "online-exam-group-";
+  const route = page.slice(prefix.length);
+  const parts = route.split("-");
+
+  const program = parts[0];
+  const group = parts[1];
 
   renderSubjectChoices(
-   parts[3],
-   parts[4],
+   program,
+   group,
    "online-exam"
   );
 
@@ -145,15 +174,18 @@ function openPage(page) {
 
  else if (page.startsWith("online-exam-posts-")) {
 
-  const selected = page.match(/-part-(\d+)$/);
+  const prefix = "online-exam-posts-";
+  const route = page.slice(prefix.length);
+
+  const selected = route.match(/-part-(\d+)$/);
   const partIndex = selected ? Number(selected[1]) : null;
 
-  const cleanPage = page.replace(/-part-\d+$/, "");
-  const parts = cleanPage.split("-");
+  const cleanRoute = route.replace(/-part-\d+$/, "");
+  const parts = cleanRoute.split("-");
 
-  const program = parts[3];
-  const group = parts[4];
-  const subjectKey = parts.slice(5).join("-");
+  const program = parts[0];
+  const group = parts[1];
+  const subjectKey = parts.slice(2).join("-");
 
   renderOnlineExamPosts(
    program,
