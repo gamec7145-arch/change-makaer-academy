@@ -9,13 +9,11 @@ function updatePageHeaders(page) {
  const topHeader = document.querySelector(".header");
  const secondHeader = document.querySelector(".cma-bottom-nav");
 
- // Demo AI: No headers
  const isDemoAI = (
   page === "demo-ai" ||
   (page && page.startsWith("demo-ai-"))
  );
 
- // Home, Community, Teachers: Both headers
  const showBoth = (
   !page ||
   page === "community" ||
@@ -24,16 +22,80 @@ function updatePageHeaders(page) {
   page.startsWith("teachers-")
  );
 
- // Top Header: Every page except Demo AI
  if (topHeader) {
   topHeader.style.display = isDemoAI ? "none" : "";
  }
 
- // Bottom Navigation: Only Home, Community, Teachers
  if (secondHeader) {
   secondHeader.style.display =
    (!isDemoAI && showBoth) ? "" : "none";
  }
+
+}
+
+
+// ==================================================
+// CLASSROOM LEARNING
+// ADMISSION PROGRAM SELECTION
+// ==================================================
+
+function renderAdmissionPrograms() {
+
+ setPage(
+  "Choose Your Program",
+  "Classroom Learning",
+  "Select your academic program to explore admission opportunities.",
+  demoImages.classroom,
+  "?"
+ );
+
+ const grid = document.createElement("div");
+ grid.className = "offline-grid";
+
+ const programs = [
+  {
+   name: "SSC",
+   description: "Class 9 & 10",
+   icon: "▤",
+   page: "admission-ssc"
+  },
+  {
+   name: "HSC",
+   description: "College",
+   icon: "▣",
+   page: "admission-hsc"
+  }
+ ];
+
+ programs.forEach(program => {
+
+  const card = document.createElement("a");
+  card.href = "?page=" + program.page;
+  card.className = "offline-card";
+
+  const icon = document.createElement("div");
+  icon.className = "offline-icon";
+  icon.textContent = program.icon;
+
+  const content = document.createElement("div");
+
+  const heading = document.createElement("h3");
+  heading.textContent = program.name;
+
+  const description = document.createElement("p");
+  description.textContent = program.description;
+
+  const arrow = document.createElement("span");
+  arrow.textContent = "›";
+
+  content.append(heading, description);
+  card.append(icon, content, arrow);
+
+  grid.appendChild(card);
+
+ });
+
+ pageContent.appendChild(grid);
 
 }
 
@@ -62,6 +124,17 @@ function openPage(page) {
   const postId = page.slice(prefix.length);
 
   renderOnlineExamStart(postId);
+
+ }
+
+
+ // ==================================================
+ // CLASSROOM LEARNING: ADMISSION PROGRAMS
+ // ==================================================
+
+ else if (page === "admission-programs") {
+
+  renderAdmissionPrograms();
 
  }
 
@@ -713,4 +786,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-  
