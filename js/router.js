@@ -19,10 +19,30 @@ function openPage(page) {
 
   const parts = page.split("-");
 
-  const mode = parts[2];
-  const program = parts[3];
-  const group = parts[4];
-  const subjectKey = parts.slice(5).join("-");
+  let mode;
+  let program;
+  let group;
+  let subjectKey;
+
+  // ONLINE EXAMINATION
+  if (page.startsWith("subject-parts-online-exam-")) {
+
+   mode = "online-exam";
+   program = parts[4];
+   group = parts[5];
+   subjectKey = parts.slice(6).join("-");
+
+  }
+
+  // OTHER MODES
+  else {
+
+   mode = parts[2];
+   program = parts[3];
+   group = parts[4];
+   subjectKey = parts.slice(5).join("-");
+
+  }
 
   renderSubjectParts(
    program,
@@ -130,9 +150,12 @@ function openPage(page) {
 
   const parts = page.split("-");
 
+  const program = parts[3];
+  const group = parts[4];
+
   renderSubjectChoices(
-   parts[3],
-   parts[4],
+   program,
+   group,
    "online-exam"
   );
 
