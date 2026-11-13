@@ -682,4 +682,52 @@ function showNotFound() {
  );
 
  }
+
+// ==================================================
+// ONLINE EXAMINATION: DEMO EXAM POSTS
+// Future Admin Panel compatible data structure
+// ==================================================
+
+window.onlineExamPosts = [
+ {
+  id: "demo-english-01",
+  program: "ssc",
+  group: "science",
+  subject: "english",
+  part: 1,
+
+  title: "Grammar Practice Examination",
+  chapter: "1",
+  chapterName: "Grammar Practice",
+  caption: "Test your English grammar knowledge.",
+
+  image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=85",
+
+  duration: 20,
+  mcqCount: 10,
+
+  questions: []
+ },
+
+ {
+  id: "demo-english-02",
+  program: "ssc",
+  group: "science",
+  subject: "english",
+  part: 1,
+
+  title: "Reading Practice Examination",
+  chapter: "2",
+  chapterName: "Reading Practice",
+  caption: "Challenge yourself with English reading questions.",
+
+  image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=85",
+
+  duration: 15,
+  mcqCount: 10,
+
+  questions: []
+ }
+];
+
      
