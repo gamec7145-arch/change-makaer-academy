@@ -229,44 +229,55 @@ body{
 }
 
 /* =================================
-   BE A PRO — FOUR RESOURCE CARDS
+   BE A PRO — ONE MAIN CARD
 ================================= */
 
-.be-pro-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:13px;
+.be-pro-main-card{
   margin-top:18px;
-}
-
-.be-pro-card{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  gap:10px;
-  padding:16px;
+  padding:17px;
   border:1px solid var(--border);
   border-radius:17px;
   background:var(--card);
   color:var(--white);
+}
+
+.be-pro-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:11px;
+}
+
+.be-pro-card{
+  min-width:0;
+  min-height:105px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:13px 8px;
+  border:1px solid rgba(104,221,185,.16);
+  border-radius:13px;
+  background:#08494B;
+  color:#FFFFFF;
   text-decoration:none;
-  transition:transform .2s ease,border-color .2s ease;
+  text-align:center;
+  transition:transform .2s ease,background .2s ease;
 }
 
 .be-pro-card:active{
-  transform:scale(.97);
+  transform:scale(.96);
+  background:#0A5555;
 }
 
 .be-pro-icon{
-  width:44px;
-  height:44px;
+  width:42px;
+  height:42px;
   display:flex;
   align-items:center;
   justify-content:center;
-  flex-shrink:0;
   border-radius:12px;
-  background:#08494B;
+  background:rgba(104,221,185,.13);
   color:#68DDB9;
   font-size:23px;
   font-weight:900;
@@ -277,30 +288,26 @@ body{
 }
 
 .be-pro-info h3{
-  margin:0 0 3px;
-  color:var(--white);
-  font-size:16px;
+  margin:0;
+  color:#FFFFFF;
+  font-size:15px;
   font-weight:900;
 }
 
 .be-pro-info p{
-  margin:0;
-  color:var(--muted);
-  font-size:11px;
-  line-height:1.5;
-}
-
-.be-pro-arrow{
-  align-self:flex-end;
-  color:var(--mint);
-  font-size:21px;
-  line-height:1;
-  font-weight:900;
+  margin:3px 0 0;
+  color:#A8C0CE;
+  font-size:10px;
+  line-height:1.4;
 }
 
 @media(min-width:768px){
-  .be-pro-card{
+  .be-pro-main-card{
     padding:20px;
+  }
+
+  .be-pro-card{
+    min-height:120px;
   }
 }
 
@@ -479,67 +486,63 @@ body{
     <p>Learn, practice and build your knowledge.</p>
    </div>
 
-   <div class="be-pro-grid">
+   <div class="be-pro-main-card">
 
-    <!-- COURSE -->
+    <div class="be-pro-grid">
 
-    <a href="?page=exam-choose" class="be-pro-card">
+     <!-- COURSE -->
 
-     <div class="be-pro-icon">▤</div>
+     <a href="?page=exam-choose" class="be-pro-card">
 
-     <div class="be-pro-info">
-      <h3>Course</h3>
-      <p>Explore courses and lessons</p>
-     </div>
+      <div class="be-pro-icon">▤</div>
 
-     <span class="be-pro-arrow">›</span>
+      <div class="be-pro-info">
+       <h3>Course</h3>
+       <p>Explore courses and lessons</p>
+      </div>
 
-    </a>
+     </a>
 
-    <!-- PDF -->
+     <!-- PDF -->
 
-    <a href="?page=materials-pdf" class="be-pro-card">
+     <a href="?page=materials-pdf" class="be-pro-card">
 
-     <div class="be-pro-icon">▧</div>
+      <div class="be-pro-icon">▧</div>
 
-     <div class="be-pro-info">
-      <h3>PDF</h3>
-      <p>Subject-wise study notes</p>
-     </div>
+      <div class="be-pro-info">
+       <h3>PDF</h3>
+       <p>Subject-wise study notes</p>
+      </div>
 
-     <span class="be-pro-arrow">›</span>
+     </a>
 
-    </a>
+     <!-- PRACTICE -->
 
-    <!-- PRACTICE -->
+     <a href="?page=materials-practice" class="be-pro-card">
 
-    <a href="?page=materials-practice" class="be-pro-card">
+      <div class="be-pro-icon">✎</div>
 
-     <div class="be-pro-icon">✎</div>
+      <div class="be-pro-info">
+       <h3>Practice</h3>
+       <p>Questions and practice sets</p>
+      </div>
 
-     <div class="be-pro-info">
-      <h3>Practice</h3>
-      <p>Questions and practice sets</p>
-     </div>
+     </a>
 
-     <span class="be-pro-arrow">›</span>
+     <!-- FORMULA -->
 
-    </a>
+     <a href="?page=materials-formula" class="be-pro-card">
 
-    <!-- FORMULA -->
+      <div class="be-pro-icon">ƒ</div>
 
-    <a href="?page=materials-formula" class="be-pro-card">
+      <div class="be-pro-info">
+       <h3>Formula</h3>
+       <p>Important formulas and rules</p>
+      </div>
 
-     <div class="be-pro-icon">ƒ</div>
+     </a>
 
-     <div class="be-pro-info">
-      <h3>Formula</h3>
-      <p>Important formulas and rules</p>
-     </div>
-
-     <span class="be-pro-arrow">›</span>
-
-    </a>
+    </div>
 
    </div>
 
