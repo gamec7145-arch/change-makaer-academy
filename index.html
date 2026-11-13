@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +46,7 @@
 }
 
 /* =================================
-   BOTTOM NAVIGATION
+   BOTTOM NAVIGATION — FIRST REFERENCE
 ================================= */
 
 body{
@@ -66,7 +65,10 @@ body{
   align-items:center;
   background:#EAF7F3;
   border-top:1px solid #CDE9DF;
-  padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+
+  /* Reduced outer vertical padding */
+  padding:0px 5px calc(3px + env(safe-area-inset-bottom));
+
   box-shadow:0 -5px 24px rgba(5,45,59,.12);
 }
 
@@ -569,4 +571,4 @@ body{
 <script defer src="js/router.js"></script>
 
 </body>
-</html>
+        </html>
