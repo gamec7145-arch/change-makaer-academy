@@ -334,7 +334,9 @@ function getOnlineExamPostData(program, group, subjectKey, partIndex) {
 
 function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
 
- const subject = getSubject(group, program);
+ // FIXED: Subject Key must be passed as the third argument.
+
+ const subject = getSubject(group, program, subjectKey);
 
  if (!subject) {
   showNotFound();
@@ -353,7 +355,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
   "?page=" + backPage
  );
 
- // Search Bar
+ // ==================================================
+ // SEARCH BAR
+ // ==================================================
 
  const searchWrapper = document.createElement("div");
 
@@ -381,7 +385,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  pageContent.appendChild(searchWrapper);
 
 
- // Exam Post Container
+ // ==================================================
+ // EXAM POST CONTAINER
+ // ==================================================
 
  const postsContainer = document.createElement("div");
 
@@ -390,7 +396,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  pageContent.appendChild(postsContainer);
 
 
- // Search Result Message
+ // ==================================================
+ // SEARCH RESULT MESSAGE
+ // ==================================================
 
  const resultMessage = document.createElement("p");
 
@@ -401,7 +409,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  pageContent.appendChild(resultMessage);
 
 
- // Get posts for this exact subject and paper
+ // ==================================================
+ // GET POSTS FOR EXACT SUBJECT AND PAPER
+ // ==================================================
 
  const posts = getOnlineExamPostData(
   program,
@@ -411,7 +421,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  );
 
 
- // Render / Filter Posts
+ // ==================================================
+ // RENDER / FILTER POSTS
+ // ==================================================
 
  function renderFilteredPosts(searchText = "") {
 
@@ -482,7 +494,9 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  }
 
 
- // Search works while typing
+ // ==================================================
+ // SEARCH WHILE TYPING
+ // ==================================================
 
  searchInput.addEventListener("input", function() {
 
@@ -491,9 +505,10 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  });
 
 
- // Initial render
+ // ==================================================
+ // INITIAL RENDER
+ // ==================================================
 
  renderFilteredPosts();
 
 }
- 
