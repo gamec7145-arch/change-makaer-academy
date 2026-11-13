@@ -1,4 +1,3 @@
-
 @font-face{
  font-family:'Blogger Sans Bold';
  src:url('https://static.wfonts.com/data/2016/05/26/blogger-sans/Blogger_Sans-Bold.otf') format('opentype');
@@ -773,7 +772,6 @@ section{padding:27px 0}
  font-size:14px;
  overflow-wrap:anywhere;
 }
-
 /* COURSE POSTS */
 .course-list{
  display:grid;
@@ -915,14 +913,24 @@ section{padding:27px 0}
  background:#001923;
 }
 
-/* EXAM PREPARATION SHOWCASE */
+/* =================================
+   EXAM PREPARATION
+   SINGLE MAIN CARD
+================================= */
+
 .exam-showcase{
+ width:100%;
+ display:flex;
+ flex-direction:column;
+ gap:0;
  background:linear-gradient(140deg,#06474B,#084348);
  border:1px solid #12635F;
  border-radius:20px;
  padding:21px;
+ overflow:hidden;
 }
 
+/* COURSE HEADER */
 .exam-showcase-top{
  display:flex;
  align-items:center;
@@ -932,8 +940,9 @@ section{padding:27px 0}
 }
 
 .exam-showcase-top p{
- color:var(--muted);
- font-size:13px;
+ color:var(--white);
+ font-size:16px;
+ font-weight:700;
 }
 
 .exam-learn-more{
@@ -948,8 +957,10 @@ section{padding:27px 0}
 
 .exam-learn-more:hover{color:#fff}
 
+/* SSC / HSC CAROUSEL */
 .exam-featured-track{
  display:flex;
+ width:100%;
  overflow-x:auto;
  gap:13px;
  scroll-snap-type:x mandatory;
@@ -960,14 +971,15 @@ section{padding:27px 0}
 
 .exam-featured-track::-webkit-scrollbar{display:none}
 
+/* SLIDES - NO EXTRA OUTER CARD */
 .exam-featured-card{
  flex:0 0 100%;
  min-width:0;
  overflow:hidden;
  scroll-snap-align:center;
- background:var(--card);
- border:1px solid var(--border);
- border-radius:17px;
+ background:transparent;
+ border:0;
+ border-radius:0;
 }
 
 .exam-featured-image{
@@ -975,9 +987,10 @@ section{padding:27px 0}
  aspect-ratio:16/8;
  object-fit:cover;
  background:#123E50;
+ border-radius:13px;
 }
 
-.exam-featured-info{padding:17px}
+.exam-featured-info{padding:14px 0}
 
 .exam-featured-tag{
  display:inline-block;
@@ -998,12 +1011,14 @@ section{padding:27px 0}
  margin-top:6px;
 }
 
+/* SLIDER FOOTER */
 .exam-slider-footer{
  display:flex;
  align-items:center;
  justify-content:center;
  gap:9px;
- margin-top:14px;
+ margin-top:10px;
+ margin-bottom:16px;
 }
 
 .exam-slider-dot{
@@ -1024,6 +1039,69 @@ section{padding:27px 0}
  color:var(--muted);
  font-size:12px;
  margin-left:5px;
+}
+
+/* PDF NOTES & PRACTICE MATERIALS */
+.exam-resource-row{
+ width:100%;
+ min-height:88px;
+ display:flex;
+ align-items:center;
+ gap:15px;
+ padding:17px 5px;
+ text-decoration:none;
+ color:var(--white);
+ border-top:1px solid var(--border);
+ box-sizing:border-box;
+ transition:background .2s ease;
+}
+
+.exam-resource-row:hover{
+ background:#ffffff08;
+}
+
+.exam-resource-icon{
+ width:46px;
+ height:46px;
+ flex-shrink:0;
+ display:grid;
+ place-items:center;
+ border-radius:13px;
+ background:#08C99A26;
+ color:var(--mint);
+ font-size:21px;
+}
+
+.exam-resource-info{
+ flex:1;
+ min-width:0;
+}
+
+.exam-resource-info h3{
+ margin:0 0 4px;
+ color:var(--white);
+ font-size:16px;
+ font-weight:700;
+ line-height:1.4;
+}
+
+.exam-resource-info p{
+ margin:0;
+ color:var(--muted);
+ font-size:13px;
+ line-height:1.6;
+}
+
+.exam-resource-arrow{
+ flex-shrink:0;
+ color:var(--mint);
+ font-size:22px;
+ font-weight:700;
+ transition:transform .2s ease;
+}
+
+.exam-resource-row:hover .exam-resource-arrow{
+ transform:translateX(5px);
 }
 
 /* FOOTER */
@@ -1222,12 +1300,52 @@ section{padding:27px 0}
  .review-card{flex-basis:260px}
  .review-card p{font-size:13px}
 
+ /* EXAM PREPARATION */
  .exam-showcase{padding:15px}
- .exam-showcase-top{align-items:flex-start}
- .exam-featured-image{aspect-ratio:16/9}
- .exam-featured-info{padding:14px}
+
+ .exam-showcase-top{
+  align-items:flex-start;
+ }
+
+ .exam-showcase-top p{
+  font-size:15px;
+ }
+
+ .exam-featured-image{
+  aspect-ratio:16/9;
+ }
+
+ .exam-featured-info{
+  padding:12px 0;
+ }
+
  .exam-featured-info h3{font-size:15px}
  .exam-featured-info p{font-size:13px}
+
+ .exam-slider-footer{
+  margin-top:10px;
+  margin-bottom:13px;
+ }
+
+ .exam-resource-row{
+  min-height:80px;
+  gap:12px;
+  padding:15px 2px;
+ }
+
+ .exam-resource-icon{
+  width:42px;
+  height:42px;
+  font-size:19px;
+ }
+
+ .exam-resource-info h3{
+  font-size:15px;
+ }
+
+ .exam-resource-info p{
+  font-size:12px;
+ }
 
  .course-card-body{padding:14px}
  .course-card h3{font-size:15px}
@@ -1472,4 +1590,4 @@ h1,h2,h3,h4,h5,h6{
     object-fit:contain;
     object-position:left center;
   }
-}
+ }
