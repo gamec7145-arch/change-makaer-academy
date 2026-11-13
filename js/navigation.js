@@ -33,7 +33,6 @@ function renderOnlineExamLevels() {
  });
 
  pageContent.appendChild(grid);
-
 }
 
 
@@ -85,7 +84,6 @@ function renderGroups(program, mode) {
  });
 
  pageContent.appendChild(grid);
-
 }
 
 
@@ -118,7 +116,6 @@ function getSubjectDestination(program, group, subjectKey, mode, partIndex = nul
  }
 
  return destination;
-
 }
 
 
@@ -202,7 +199,6 @@ function renderSubjectChoices(program, group, mode) {
  });
 
  pageContent.appendChild(grid);
-
 }
 
 
@@ -235,7 +231,6 @@ function renderSubjectParts(program, group, subjectKey, mode) {
   );
 
   return;
-
  }
 
  const modeTitle = mode === "offline"
@@ -284,17 +279,62 @@ function renderSubjectParts(program, group, subjectKey, mode) {
  });
 
  pageContent.appendChild(grid);
-
 }
 
 
 // ==================================================
-// ONLINE EXAMINATION: EXAM POSTS
+// ONLINE EXAMINATION: SEARCHABLE EXAM POSTS
+// ==================================================
+
+// Future Admin Panel / Database data source:
+// window.onlineExamPosts = [
+//   {
+//     id: "exam-1",
+//     program: "ssc",
+//     group: "science",
+//     subject: "physics",
+//     part: 1,
+//     title: "Chapter 7 Examination",
+//     chapter: "7",
+//     chapterName: "Waves",
+//     caption: "Test your knowledge",
+//     duration: 20,
+//     mcqCount: 20
+//   }
+// ];
+
+function getOnlineExamPostData(program, group, subjectKey, partIndex) {
+
+ const allPosts = Array.isArray(window.onlineExamPosts)
+  ? window.onlineExamPosts
+  : [];
+
+ return allPosts.filter(post => {
+
+  const postProgram = String(post.program || "").toLowerCase();
+  const postGroup = String(post.group || "").toLowerCase();
+  const postSubject = String(post.subject || "").toLowerCase();
+
+  const sameProgram = postProgram === String(program).toLowerCase();
+  const sameGroup = postGroup === String(group).toLowerCase();
+  const sameSubject = postSubject === String(subjectKey).toLowerCase();
+
+  const samePart = partIndex === null
+   ? post.part === null || post.part === undefined || post.part === ""
+   : Number(post.part) === Number(partIndex);
+
+  return sameProgram && sameGroup && sameSubject && samePart;
+ });
+}
+
+
+// ==================================================
+// RENDER ONLINE EXAMINATION POSTS
 // ==================================================
 
 function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
 
- const subject = getSubject(group, program, subjectKey);
+ const subject = getSubject(group, program);
 
  if (!subject) {
   showNotFound();
@@ -313,14 +353,147 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
   "?page=" + backPage
  );
 
- const message = document.createElement("p");
+ // Search Bar
 
- message.textContent =
-  "No examinations have been published yet. Please check again later.";
+ const searchWrapper = document.createElement("div");
 
- message.style.textAlign = "center";
- message.style.padding = "24px 12px";
+ searchWrapper.style.width = "100%";
+ searchWrapper.style.margin = "0 0 20px";
+ searchWrapper.style.boxSizing = "border-box";
 
- pageContent.appendChild(message);
+ const searchInput = document.createElement("input");
+
+ searchInput.type = "search";
+ searchInput.placeholder = "Search Chapter Number, Name, Exam Title...";
+ searchInput.setAttribute("aria-label", "Search examinations");
+
+ searchInput.style.width = "100%";
+ searchInput.style.boxSizing = "border-box";
+ searchInput.style.padding = "14px 16px";
+ searchInput.style.borderRadius = "12px";
+ searchInput.style.border = "1px solid #28616A";
+ searchInput.style.background = "#08494B";
+ searchInput.style.color = "#FFFFFF";
+ searchInput.style.fontSize = "15px";
+ searchInput.style.outline = "none";
+
+ searchWrapper.appendChild(searchInput);
+ pageContent.appendChild(searchWrapper);
+
+
+ // Exam Post Container
+
+ const postsContainer = document.createElement("div");
+
+ postsContainer.style.width = "100%";
+
+ pageContent.appendChild(postsContainer);
+
+
+ // Search Result Message
+
+ const resultMessage = document.createElement("p");
+
+ resultMessage.style.textAlign = "center";
+ resultMessage.style.padding = "20px 12px";
+ resultMessage.style.color = "#B5CBD3";
+
+ pageContent.appendChild(resultMessage);
+
+
+ // Get posts for this exact subject and paper
+
+ const posts = getOnlineExamPostData(
+  program,
+  group,
+  subjectKey,
+  partIndex
+ );
+
+
+ // Render / Filter Posts
+
+ function renderFilteredPosts(searchText = "") {
+
+  postsContainer.innerHTML = "";
+
+  const query = searchText.trim().toLowerCase();
+
+  const filteredPosts = posts.filter(post => {
+
+   const searchableText = [
+    post.title,
+    post.chapter,
+    post.chapterNumber,
+    post.chapterName,
+    post.caption
+   ].join(" ").toLowerCase();
+
+   return searchableText.includes(query);
+  });
+
+
+  if (filteredPosts.length === 0) {
+
+   resultMessage.textContent = query
+    ? "No matching examinations found."
+    : "No examinations have been published yet. Please check again later.";
+
+   return;
+  }
+
+  resultMessage.textContent =
+   filteredPosts.length + " examination(s) found.";
+
+
+  filteredPosts.forEach(post => {
+
+   const postTitle = post.title || "Online Examination";
+
+   const chapterText = post.chapterName
+    ? "Chapter " + (post.chapter || post.chapterNumber || "") +
+      " | " + post.chapterName
+    : post.chapter
+    ? "Chapter " + post.chapter
+    : "";
+
+   const caption = post.caption || "";
+
+   const description = [
+    chapterText,
+    caption,
+    post.duration ? post.duration + " Minutes" : "",
+    post.mcqCount ? post.mcqCount + " MCQs" : ""
+   ].filter(Boolean).join(" • ");
+
+   const postId = encodeURIComponent(post.id || "");
+
+   const destination = "?page=online-exam-info-" + postId;
+
+   const postCard = makeCard(
+    postTitle,
+    description,
+    destination,
+    "▤"
+   );
+
+   postsContainer.appendChild(postCard);
+  });
+ }
+
+
+ // Search works while typing
+
+ searchInput.addEventListener("input", function() {
+
+  renderFilteredPosts(searchInput.value);
+
+ });
+
+
+ // Initial render
+
+ renderFilteredPosts();
 
 }
+ 
