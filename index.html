@@ -126,111 +126,6 @@ body{
 
 }
 
-/* =================================
-   ONLINE EXAMINATION CARD
-   Same card structure as Exam Preparation
-================================= */
-
-.online-exam-showcase{
-  margin-top:28px;
-  overflow:hidden;
-}
-
-.online-exam-card-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:15px 16px;
-}
-
-.online-exam-card-top h2{
-  margin:0;
-  color:#FFFFFF;
-  font-family:'Nunito Sans',sans-serif;
-  font-size:17px;
-  font-weight:900;
-}
-
-.online-exam-new{
-  color:#78E0C2;
-  background:rgba(8,201,154,.12);
-  border:1px solid rgba(120,224,194,.25);
-  border-radius:20px;
-  padding:4px 10px;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.7px;
-}
-
-.online-exam-card-image{
-  display:block;
-  width:100%;
-  height:190px;
-  object-fit:cover;
-}
-
-.online-exam-card-content{
-  padding:16px;
-}
-
-.online-exam-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.online-exam-card-label{
-  color:#08C99A;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:1px;
-}
-
-.online-exam-learn-more{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  color:#08C99A;
-  font-size:12px;
-  font-weight:900;
-  text-decoration:none;
-  white-space:nowrap;
-}
-
-.online-exam-learn-more span{
-  font-size:16px;
-}
-
-.online-exam-card-content h3{
-  margin:0 0 7px;
-  color:#FFFFFF;
-  font-size:19px;
-  font-weight:900;
-  line-height:1.35;
-}
-
-.online-exam-card-content p{
-  margin:0;
-  color:#B5CBD3;
-  font-size:13px;
-  line-height:1.7;
-}
-
-@media(min-width:768px){
-
-  .online-exam-card-image{
-    height:250px;
-  }
-
-  .online-exam-card-content{
-    padding:20px;
-  }
-
-}
-
 </style>
 </head>
 
@@ -376,6 +271,8 @@ body{
 
   </section>
 
+  <!-- EXAM PREPARATION -->
+
   <section id="exam">
 
    <div id="materials"></div>
@@ -400,12 +297,12 @@ body{
 
       <img class="exam-featured-image"
        src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"
-       alt="SSC exam preparation">
+       alt="Exam preparation">
 
       <div class="exam-featured-info">
-       <span class="exam-featured-tag">SSC PREPARATION</span>
-       <h3>SSC Complete Preparation</h3>
-       <p>Explore subject-wise courses, lessons and exam preparation resources for Class 9 and 10.</p>
+       <span class="exam-featured-tag">EXAM PREPARATION</span>
+       <h3>Practice Makes a Man Perfect</h3>
+       <p>Explore courses, lessons and preparation resources to improve your knowledge and get ready for your exams.</p>
       </div>
 
      </article>
@@ -414,12 +311,12 @@ body{
 
       <img class="exam-featured-image"
        src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85"
-       alt="HSC exam preparation">
+       alt="Academic preparation">
 
       <div class="exam-featured-info">
-       <span class="exam-featured-tag">HSC PREPARATION</span>
-       <h3>HSC Complete Preparation</h3>
-       <p>Explore subject-wise courses, lessons and preparation resources for college students.</p>
+       <span class="exam-featured-tag">EXAM PREPARATION</span>
+       <h3>Prepare for Every Challenge</h3>
+       <p>Build your confidence with organized learning resources and practice opportunities for different examinations.</p>
       </div>
 
      </article>
@@ -463,43 +360,38 @@ body{
     <p>Challenge yourself with chapter-wise MCQ exams.</p>
    </div>
 
-   <div class="exam-showcase online-exam-showcase">
+   <div class="exam-showcase">
 
-    <div class="online-exam-card-top">
-     <h2>Online Examination</h2>
-     <span class="online-exam-new">NEW</span>
+    <div class="exam-showcase-top">
+     <p>Online Examination</p>
+     <a href="?page=online-exam-choose" class="exam-learn-more">
+      Learn More <span>→</span>
+     </a>
     </div>
 
-    <img
-     class="online-exam-card-image"
-     src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"
-     alt="Students preparing for an examination">
+    <div class="exam-featured-track">
 
-    <div class="online-exam-card-content">
+     <article class="exam-featured-card">
 
-     <div class="online-exam-card-meta">
+      <img class="exam-featured-image"
+       src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"
+       alt="Online examination">
 
-      <span class="online-exam-card-label">
-       ONLINE EXAMINATION
-      </span>
+      <div class="exam-featured-info">
+       <span class="exam-featured-tag">EXAM PREPARATION</span>
+       <h3>Practice Makes a Man Perfect</h3>
+       <p>Practice chapter-wise MCQ examinations, test your knowledge and improve your preparation through online exams.</p>
+      </div>
 
-      <a href="?page=online-exam-choose" class="online-exam-learn-more">
-       Learn More <span>→</span>
-      </a>
-
-     </div>
-
-     <h3>Test Your Knowledge, Prove Your Skills!</h3>
-
-     <p>
-      Practice chapter-wise MCQ exams and check your preparation through online examinations.
-     </p>
+     </article>
 
     </div>
 
    </div>
 
   </section>
+
+  <!-- OUR ACHIEVEMENTS -->
 
   <section>
 
@@ -528,6 +420,8 @@ body{
    </div>
 
   </section>
+
+  <!-- STUDENT REVIEWS -->
 
   <section id="reviews">
 
@@ -574,6 +468,8 @@ body{
 
   </section>
 
+  <!-- ABOUT CHANGE MAKER ACADEMY -->
+
   <section id="brandIntro">
 
    <div class="brand-intro">
@@ -604,6 +500,8 @@ body{
 
 </main>
 
+<!-- INNER PAGE -->
+
 <main id="innerPage" class="inner-page">
 
  <div class="container">
@@ -623,6 +521,8 @@ body{
  </div>
 
 </main>
+
+<!-- FOOTER -->
 
 <footer class="footer" id="contact">
 
@@ -650,6 +550,8 @@ body{
 </footer>
 
 <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
+
+<!-- BOTTOM NAVIGATION -->
 
 <nav class="cma-bottom-nav" aria-label="Main navigation">
 
