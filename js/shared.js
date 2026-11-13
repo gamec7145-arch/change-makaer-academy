@@ -9,7 +9,6 @@
 // SUBJECT DATABASE
 // Bangladesh General Education Board
 // SSC & HSC
-// Based on NCTB subject structure
 // ==================================================
 
 const learningSubjects = {
@@ -193,78 +192,110 @@ const learningSubjects = {
 
 
 // ==================================================
-// SUBJECT PAPER DATABASE
-//
-// SSC:
-// Bangla and English have two papers.
-//
-// HSC:
-// ICT has one paper.
-// Other listed HSC subjects have two papers.
-//
-// Empty array = no paper selection required.
+// CENTRAL SUBJECT PAPER CONFIGURATION
 // ==================================================
 
-const subjectParts = {
+// Default paper structure for each level
+// New subjects automatically follow these defaults.
+
+const subjectPaperDefaults = {
+
+ ssc: [],
+
+ hsc: [
+  "1st Paper",
+  "2nd Paper"
+ ]
+
+};
+
+
+// ==================================================
+// SUBJECT-SPECIFIC PAPER OVERRIDES
+// ==================================================
+
+// These rules override the default paper structure.
+
+const subjectPaperOverrides = {
 
  ssc: {
 
-  bangla: ["1st Paper","2nd Paper"],
-  english: ["1st Paper","2nd Paper"]
+  bangla: [
+   "1st Paper",
+   "2nd Paper"
+  ],
+
+  english: [
+   "1st Paper",
+   "2nd Paper"
+  ]
 
  },
 
-
  hsc: {
 
-  // Compulsory subjects
-  bangla: ["1st Paper","2nd Paper"],
-  english: ["1st Paper","2nd Paper"],
-
-  // Science subjects
-  physics: ["1st Paper","2nd Paper"],
-  chemistry: ["1st Paper","2nd Paper"],
-  biology: ["1st Paper","2nd Paper"],
-  "higher-math": ["1st Paper","2nd Paper"],
-
-  // Science optional subjects
-  agriculture: ["1st Paper","2nd Paper"],
-  geography: ["1st Paper","2nd Paper"],
-  psychology: ["1st Paper","2nd Paper"],
-  statistics: ["1st Paper","2nd Paper"],
-  "soil-science": ["1st Paper","2nd Paper"],
-  "engineering-drawing": ["1st Paper","2nd Paper"],
-  sports: ["1st Paper","2nd Paper"],
-
-  // Humanities subjects
-  history: ["1st Paper","2nd Paper"],
-  "islamic-history": ["1st Paper","2nd Paper"],
-  civics: ["1st Paper","2nd Paper"],
-  economics: ["1st Paper","2nd Paper"],
-  logic: ["1st Paper","2nd Paper"],
-  sociology: ["1st Paper","2nd Paper"],
-  "social-work": ["1st Paper","2nd Paper"],
-  "islamic-studies": ["1st Paper","2nd Paper"],
-  "home-science": ["1st Paper","2nd Paper"],
-  "fine-arts": ["1st Paper","2nd Paper"],
-  arabic: ["1st Paper","2nd Paper"],
-  sanskrit: ["1st Paper","2nd Paper"],
-  pali: ["1st Paper","2nd Paper"],
-  anthropology: ["1st Paper","2nd Paper"],
-
-  // Business Studies subjects
-  accounting: ["1st Paper","2nd Paper"],
-  "finance-banking": ["1st Paper","2nd Paper"],
-  "business-management": ["1st Paper","2nd Paper"],
-  "production-marketing": ["1st Paper","2nd Paper"],
-
-  // Other optional subjects
-  "tourism-hospitality": ["1st Paper","2nd Paper"],
-  "human-resource": ["1st Paper","2nd Paper"]
+  // ICT does not use separate paper selection here.
+  ict: []
 
  }
 
 };
+
+
+// ==================================================
+// AUTOMATIC SUBJECT PAPER DATABASE GENERATOR
+// ==================================================
+
+function buildSubjectParts() {
+
+ const database = {
+  ssc: {},
+  hsc: {}
+ };
+
+ const groups = Object.keys(learningSubjects);
+
+ groups.forEach(group => {
+
+  ["ssc", "hsc"].forEach(level => {
+
+   const subjects =
+    learningSubjects[group][level] || [];
+
+   subjects.forEach(subject => {
+
+    const subjectKey = subject[1];
+
+    const overrides =
+     subjectPaperOverrides[level] || {};
+
+    const hasOverride =
+     Object.prototype.hasOwnProperty.call(
+      overrides,
+      subjectKey
+     );
+
+    const papers = hasOverride
+     ? overrides[subjectKey]
+     : subjectPaperDefaults[level];
+
+    database[level][subjectKey] = [
+     ...papers
+    ];
+
+   });
+
+  });
+
+ });
+
+ return database;
+
+}
+
+
+// Automatically generated paper database
+const subjectParts = buildSubjectParts();
 
 
 // ==================================================
@@ -650,5 +681,5 @@ function showNotFound() {
   )
  );
 
-  }
-   
+ }
+     
