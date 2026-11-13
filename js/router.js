@@ -14,21 +14,33 @@ function updatePageHeaders(page) {
   (page && page.startsWith("demo-ai-"))
  );
 
- const showBoth = (
-  !page ||
+ const isCommunity = (
   page === "community" ||
-  page.startsWith("community-") ||
-  page === "teachers" ||
-  page.startsWith("teachers-")
+  (page && page.startsWith("community-"))
  );
 
+ const showBoth = (
+  !page ||
+  page === "teachers" ||
+  (page && page.startsWith("teachers-"))
+ );
+
+ // Community active body class
+ document.body.classList.toggle(
+  "community-active",
+  !!isCommunity
+ );
+
+ // Top homepage header
  if (topHeader) {
-  topHeader.style.display = isDemoAI ? "none" : "";
+  topHeader.style.display =
+   (isDemoAI || isCommunity) ? "none" : "";
  }
 
+ // Homepage bottom navigation
  if (secondHeader) {
   secondHeader.style.display =
-   (!isDemoAI && showBoth) ? "" : "none";
+   (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
  }
 
 }
@@ -115,10 +127,33 @@ function openPage(page) {
 
 
  // ==================================================
+ // COMMUNITY
+ // ==================================================
+
+ if (page === "community") {
+
+  if (typeof window.renderCommunityPage === "function") {
+
+   window.renderCommunityPage();
+
+  } else {
+
+   console.error(
+    "Community renderer not found. Check community.js loading."
+   );
+
+   showNotFound();
+
+  }
+
+ }
+
+
+ // ==================================================
  // ONLINE EXAMINATION: START EXAM
  // ==================================================
 
- if (page.startsWith("online-exam-start-")) {
+ else if (page.startsWith("online-exam-start-")) {
 
   const prefix = "online-exam-start-";
   const postId = page.slice(prefix.length);
@@ -650,7 +685,9 @@ function openPage(page) {
  // PAGE NOT FOUND
  // ==================================================
 
- else {
+ else if (
+  page !== "community"
+ ) {
 
   showNotFound();
 
@@ -786,3 +823,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+ 
