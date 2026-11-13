@@ -17,7 +17,7 @@
 <style>
 
 /* =================================
-   BALANCED TOP HEADER
+   HEADER SIZE — REFERENCE MATCH
 ================================= */
 
 .header-inner{
@@ -33,18 +33,21 @@
 }
 
 @media(max-width:700px){
+
   .header-inner{
-    min-height:72px !important;
+    min-height:146px !important;
+    padding:12px 4%;
   }
 
   .brand img{
-    width:105px !important;
-    height:42px !important;
+    width:150px !important;
+    height:86px !important;
   }
+
 }
 
 /* =================================
-   BALANCED BOTTOM NAVIGATION
+   BOTTOM NAVIGATION
 ================================= */
 
 body{
@@ -102,6 +105,31 @@ body{
 .cma-bottom-nav a:active{
  transform:scale(.96);
 }
+
+/* Mobile navigation sizing */
+
+@media(max-width:700px){
+
+ .cma-bottom-nav{
+  min-height:118px;
+  padding:9px 5px calc(9px + env(safe-area-inset-bottom));
+ }
+
+ .cma-bottom-nav a{
+  gap:5px;
+  padding:9px 2px;
+  font-size:15px;
+ }
+
+ .cma-bottom-nav .nav-icon{
+  width:36px;
+  height:35px;
+  font-size:29px;
+ }
+
+}
+
+/* Desktop navigation remains unchanged */
 
 @media(min-width:768px){
 
@@ -563,4 +591,5 @@ body{
 <script defer src="js/router.js"></script>
 
 </body>
-</html>
+                   </html>
+      
