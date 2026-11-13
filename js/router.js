@@ -1,4 +1,9 @@
 
+// ==================================================
+// CHANGE MAKER ACADEMY
+// PAGE ROUTER
+// ==================================================
+
 function openPage(page) {
 
  homePage.style.display = "none";
@@ -227,7 +232,11 @@ function openPage(page) {
 
  else if (page.startsWith("exam-detail-")) {
 
-  const parts = page.split("-");
+  const selected = page.match(/-part-(\d+)$/);
+  const partIndex = selected ? Number(selected[1]) : null;
+
+  const cleanPage = page.replace(/-part-\d+$/, "");
+  const parts = cleanPage.split("-");
 
   const program = parts[2];
   const group = parts[3];
@@ -239,7 +248,8 @@ function openPage(page) {
    program,
    group,
    subjectKey,
-   courseId
+   courseId,
+   partIndex
   );
 
  }
@@ -505,4 +515,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-   
+                                 
