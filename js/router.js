@@ -1,8 +1,8 @@
 
-// ==================================================
-// CHANGE MAKER ACADEMY
-// PAGE ROUTER
-// ==================================================
+ // ==================================================
+ // CHANGE MAKER ACADEMY
+ // PAGE ROUTER
+ // ==================================================
 
 function openPage(page) {
 
@@ -12,10 +12,24 @@ function openPage(page) {
 
 
  // ==================================================
+ // ONLINE EXAMINATION: START EXAM
+ // ==================================================
+
+ if (page.startsWith("online-exam-start-")) {
+
+  const prefix = "online-exam-start-";
+  const postId = page.slice(prefix.length);
+
+  renderOnlineExamStart(postId);
+
+ }
+
+
+ // ==================================================
  // SUBJECT PAPER SELECTION
  // ==================================================
 
- if (page.startsWith("subject-parts-")) {
+ else if (page.startsWith("subject-parts-")) {
 
   let mode;
   let program;
@@ -656,3 +670,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+                          
