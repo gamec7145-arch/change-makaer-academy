@@ -1,5 +1,16 @@
 
+// ==================================================
+// CHANGE MAKER ACADEMY
+// STUDY MATERIALS
+// ==================================================
+
+
+// ==================================================
+// MATERIALS: LEVEL SELECTION
+// ==================================================
+
 function renderMaterialLevels(type){
+
  setPage(
   type==="pdf"?"PDF Notes":"Practice Materials",
   "Study Materials",
@@ -22,7 +33,13 @@ function renderMaterialLevels(type){
  pageContent.appendChild(grid);
 }
 
+
+// ==================================================
+// MATERIALS: GROUP SELECTION
+// ==================================================
+
 function renderMaterialGroups(type,level){
+
  setPage(
   level.toUpperCase()+" | Choose Group",
   type==="pdf"?"PDF Notes":"Practice",
@@ -45,7 +62,13 @@ function renderMaterialGroups(type,level){
  pageContent.appendChild(grid);
 }
 
+
+// ==================================================
+// MATERIALS: SUBJECT SELECTION
+// ==================================================
+
 function renderMaterialSubjects(type,level,group){
+
  setPage(
   groupNames[group]+" Subjects",
   type==="pdf"?"PDF Notes":"Practice Materials",
@@ -57,18 +80,38 @@ function renderMaterialSubjects(type,level,group){
  const grid=makeGrid();
 
  getSubjects(group,level).forEach(subject=>{
+
+  const subjectKey=subject[1];
+
+  const hasParts=hasSubjectParts(
+   group,level,subjectKey
+  );
+
+  const destination=hasParts
+   ?"?page=materials-parts-"+type+"-"+level+"-"+group+"-"+subjectKey
+   :"?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subjectKey;
+
   grid.appendChild(makeCard(
    subject[0],
-   "Open "+subject[0]+" chapters",
-   "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subject[1],
+   hasParts
+    ?"Select Paper for "+subject[0]
+    :"Open "+subject[0]+" chapters",
+   destination,
    "▤"
   ));
+
  });
 
  pageContent.appendChild(grid);
 }
 
-function renderMaterialChapters(type,level,group,subjectKey){
+
+// ==================================================
+// MATERIALS: PAPER SELECTION
+// ==================================================
+
+function renderMaterialParts(type,level,group,subjectKey){
+
  const subject=getSubject(group,level,subjectKey);
 
  if(!subject){
@@ -76,32 +119,130 @@ function renderMaterialChapters(type,level,group,subjectKey){
   return;
  }
 
+ const parts=getSubjectParts(group,level,subjectKey);
+
+ if(!parts.length){
+  renderMaterialChapters(
+   type,level,group,subjectKey
+  );
+  return;
+ }
+
  setPage(
-  subject[0]+" Chapters",
+  subject[0]+" | Select Paper",
+  type==="pdf"?"PDF Notes":"Practice Materials",
+  "Choose a paper to explore its chapters.",
+  demoImages[group],
+  "?page=materials-group-"+type+"-"+level+"-"+group
+ );
+
+ const grid=makeGrid();
+
+ parts.forEach((part,index)=>{
+
+  grid.appendChild(makeCard(
+   part,
+   "Open "+subject[0]+" "+part,
+   "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subjectKey+"-part-"+(index+1),
+   "▤"
+  ));
+
+ });
+
+ pageContent.appendChild(grid);
+}
+
+
+// ==================================================
+// MATERIALS: CHAPTER SELECTION
+// ==================================================
+
+function renderMaterialChapters(
+ type,
+ level,
+ group,
+ subjectKey,
+ partIndex=null
+){
+
+ const subject=getSubject(group,level,subjectKey);
+
+ if(!subject){
+  showNotFound();
+  return;
+ }
+
+ const availableParts=getSubjectParts(
+  group,level,subjectKey
+ );
+
+ let partName="";
+
+ if(partIndex!==null){
+
+  const index=Number(partIndex);
+
+  if(
+   !Number.isInteger(index)||
+   index<1||
+   index>availableParts.length
+  ){
+   showNotFound();
+   return;
+  }
+
+  partName=availableParts[index-1];
+ }
+
+ const subjectTitle=
+  subject[0]+(partName?" "+partName:"");
+
+ setPage(
+  subjectTitle+" Chapters",
   type==="pdf"?"PDF Notes":"Practice Materials",
   "Select a chapter to continue.",
   demoImages[group],
-  "?page=materials-group-"+type+"-"+level+"-"+group
+  "?page="+(
+   partName
+    ?"materials-parts-"+type+"-"+level+"-"+group+"-"+subjectKey
+    :"materials-group-"+type+"-"+level+"-"+group
+  )
  );
 
  const list=document.createElement("div");
  list.className="choice-grid";
 
  ["Chapter 1","Chapter 2","Chapter 3"].forEach((chapter,index)=>{
+
   const key="chapter-"+(index+1);
 
   list.appendChild(makeCard(
    chapter,
-   subject[0]+" | "+chapter,
-   "?page=materials-content-"+type+"-"+level+"-"+group+"-"+subjectKey+"-"+key,
+   subjectTitle+" | "+chapter,
+   "?page=materials-content-"+type+"-"+level+"-"+group+"-"+subjectKey+"-"+key+
+    (partIndex!==null?"-part-"+partIndex:""),
    "▤"
   ));
+
  });
 
  pageContent.appendChild(list);
 }
 
-function renderMaterialContent(type,level,group,subjectKey,chapter){
+
+// ==================================================
+// MATERIALS: CHAPTER CONTENT
+// ==================================================
+
+function renderMaterialContent(
+ type,
+ level,
+ group,
+ subjectKey,
+ chapter,
+ partIndex=null
+){
+
  const subject=getSubject(group,level,subjectKey);
 
  if(!subject){
@@ -109,12 +250,38 @@ function renderMaterialContent(type,level,group,subjectKey,chapter){
   return;
  }
 
+ const availableParts=getSubjectParts(
+  group,level,subjectKey
+ );
+
+ let partName="";
+
+ if(partIndex!==null){
+
+  const index=Number(partIndex);
+
+  if(
+   !Number.isInteger(index)||
+   index<1||
+   index>availableParts.length
+  ){
+   showNotFound();
+   return;
+  }
+
+  partName=availableParts[index-1];
+ }
+
+ const subjectTitle=
+  subject[0]+(partName?" "+partName:"");
+
  setPage(
-  subject[0]+" | "+chapter.replaceAll("-"," ").toUpperCase(),
+  subjectTitle+" | "+chapter.replaceAll("-"," ").toUpperCase(),
   type==="pdf"?"PDF Notes":"Practice Materials",
   "Available learning content for this chapter.",
   demoImages[group],
-  "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subjectKey
+  "?page=materials-subject-"+type+"-"+level+"-"+group+"-"+subjectKey+
+   (partIndex!==null?"-part-"+partIndex:"")
  );
 
  if(type==="pdf"){
@@ -127,18 +294,34 @@ function renderMaterialContent(type,level,group,subjectKey,chapter){
  const grid=makeGrid();
 
  ["CQ","MCQ"].forEach(kind=>{
+
   grid.appendChild(makeCard(
    kind,
    kind==="CQ"?"Creative Questions":"Multiple Choice Questions",
-   "?page=materials-practice-content-"+level+"-"+group+"-"+subjectKey+"-"+chapter+"-"+kind.toLowerCase(),
+   "?page=materials-practice-content-"+level+"-"+group+"-"+subjectKey+"-"+chapter+"-"+kind.toLowerCase()+
+    (partIndex!==null?"-part-"+partIndex:""),
    "✎"
   ));
+
  });
 
  pageContent.appendChild(grid);
 }
 
-function renderPracticeContent(level,group,subjectKey,chapter,kind){
+
+// ==================================================
+// PRACTICE: CQ / MCQ CONTENT
+// ==================================================
+
+function renderPracticeContent(
+ level,
+ group,
+ subjectKey,
+ chapter,
+ kind,
+ partIndex=null
+){
+
  const subject=getSubject(group,level,subjectKey);
 
  if(!subject){
@@ -146,12 +329,38 @@ function renderPracticeContent(level,group,subjectKey,chapter,kind){
   return;
  }
 
+ const availableParts=getSubjectParts(
+  group,level,subjectKey
+ );
+
+ let partName="";
+
+ if(partIndex!==null){
+
+  const index=Number(partIndex);
+
+  if(
+   !Number.isInteger(index)||
+   index<1||
+   index>availableParts.length
+  ){
+   showNotFound();
+   return;
+  }
+
+  partName=availableParts[index-1];
+ }
+
+ const subjectTitle=
+  subject[0]+(partName?" "+partName:"");
+
  setPage(
-  subject[0]+" "+kind.toUpperCase(),
+  subjectTitle+" "+kind.toUpperCase(),
   "Practice | "+chapter.replaceAll("-"," "),
   "Practice content for this chapter will be published here.",
   demoImages[group],
-  "?page=materials-content-practice-"+level+"-"+group+"-"+subjectKey+"-"+chapter
+  "?page=materials-content-practice-"+level+"-"+group+"-"+subjectKey+"-"+chapter+
+   (partIndex!==null?"-part-"+partIndex:"")
  );
 
  pageContent.appendChild(
@@ -159,4 +368,5 @@ function renderPracticeContent(level,group,subjectKey,chapter,kind){
    kind.toUpperCase()+" questions and practice materials will be added here soon."
   )
  );
-   }
+ }
+   
