@@ -14,34 +14,39 @@
 <link rel="stylesheet" href="css/style.css">
 
 <style>
-/* COMPACT TOP HEADER */
+/* =================================
+   BALANCED TOP HEADER
+================================= */
+
 .header-inner{
- min-height:62px !important;
- padding-top:3px;
- padding-bottom:3px;
+ min-height:72px !important;
+ padding:6px 4%;
 }
 
 .brand img{
- width:135px !important;
- height:54px !important;
+ width:155px !important;
+ height:62px !important;
  object-fit:contain;
  object-position:left center;
 }
 
 @media(max-width:700px){
  .header-inner{
-  min-height:58px !important;
+  min-height:68px !important;
  }
 
  .brand img{
-  width:120px !important;
-  height:48px !important;
+  width:140px !important;
+  height:56px !important;
  }
 }
 
-/* COMPACT BOTTOM NAVIGATION */
+/* =================================
+   BALANCED BOTTOM NAVIGATION
+================================= */
+
 body{
- padding-bottom:70px;
+ padding-bottom:78px;
 }
 
 .cma-bottom-nav{
@@ -55,8 +60,8 @@ body{
  align-items:center;
  background:#EAF7F3;
  border-top:1px solid #CDE9DF;
- padding:4px 5px calc(4px + env(safe-area-inset-bottom));
- box-shadow:0 -5px 24px rgba(5,45,59,0.13);
+ padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+ box-shadow:0 -5px 24px rgba(5,45,59,.12);
 }
 
 .cma-bottom-nav a{
@@ -64,25 +69,25 @@ body{
  flex-direction:column;
  align-items:center;
  justify-content:center;
- gap:2px;
+ gap:3px;
  min-width:0;
- padding:4px 2px;
- border-radius:11px;
+ padding:5px 2px;
+ border-radius:12px;
  color:#073746;
  text-decoration:none;
  font-family:'Nunito Sans',sans-serif;
- font-size:10px;
+ font-size:11px;
  font-weight:800;
- transition:0.2s ease;
+ transition:background .2s ease;
 }
 
 .cma-bottom-nav .nav-icon{
- width:23px;
- height:21px;
+ width:27px;
+ height:26px;
  display:flex;
  align-items:center;
  justify-content:center;
- font-size:18px;
+ font-size:22px;
  line-height:1;
 }
 
@@ -92,19 +97,19 @@ body{
 }
 
 .cma-bottom-nav a:active{
- transform:scale(0.94);
+ transform:scale(.96);
 }
 
 @media(min-width:768px){
  .cma-bottom-nav{
-  max-width:520px;
+  max-width:540px;
   left:50%;
   transform:translateX(-50%);
   bottom:12px;
   border:1px solid #CDE9DF;
-  border-radius:15px;
-  padding:5px 10px;
-  box-shadow:0 5px 30px rgba(5,45,59,0.15);
+  border-radius:16px;
+  padding:7px 10px;
+  box-shadow:0 5px 30px rgba(5,45,59,.15);
  }
 
  body{
