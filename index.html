@@ -17,7 +17,7 @@
 <style>
 
 /* =================================
-   HEADER SIZE — REFERENCE MATCH
+   HEADER — REFERENCE SIZE
 ================================= */
 
 .header-inner{
@@ -35,13 +35,13 @@
 @media(max-width:700px){
 
   .header-inner{
-    min-height:146px !important;
-    padding:12px 4%;
+    min-height:76px !important;
+    padding:5px 4%;
   }
 
   .brand img{
-    width:150px !important;
-    height:86px !important;
+    width:105px !important;
+    height:42px !important;
   }
 
 }
@@ -51,102 +51,80 @@
 ================================= */
 
 body{
- padding-bottom:78px;
+  padding-bottom:78px;
 }
 
 .cma-bottom-nav{
- box-sizing:border-box;
- position:fixed;
- bottom:0;
- left:0;
- width:100%;
- z-index:9999;
- display:grid;
- grid-template-columns:repeat(5,1fr);
- align-items:center;
- background:#EAF7F3;
- border-top:1px solid #CDE9DF;
- padding:6px 5px calc(6px + env(safe-area-inset-bottom));
- box-shadow:0 -5px 24px rgba(5,45,59,.12);
+  box-sizing:border-box;
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  z-index:9999;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  align-items:center;
+  background:#EAF7F3;
+  border-top:1px solid #CDE9DF;
+  padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+  box-shadow:0 -5px 24px rgba(5,45,59,.12);
 }
 
 .cma-bottom-nav a{
- display:flex;
- flex-direction:column;
- align-items:center;
- justify-content:center;
- gap:3px;
- min-width:0;
- padding:5px 2px;
- border-radius:12px;
- color:#073746;
- text-decoration:none;
- font-family:'Nunito Sans',sans-serif;
- font-size:11px;
- font-weight:800;
- transition:background .2s ease;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-width:0;
+  padding:5px 1px;
+  border-radius:12px;
+  color:#073746;
+  text-decoration:none;
+  font-family:'Nunito Sans',sans-serif;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  transition:background .2s ease;
 }
 
 .cma-bottom-nav .nav-icon{
- width:27px;
- height:26px;
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:22px;
- line-height:1;
+  width:27px;
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  line-height:1;
 }
 
 .cma-bottom-nav a.active{
- color:#079F7C;
- background:#D7F5EB;
+  color:#079F7C;
+  background:#D7F5EB;
 }
 
 .cma-bottom-nav a:active{
- transform:scale(.96);
+  transform:scale(.96);
 }
 
-/* Mobile navigation sizing */
-
-@media(max-width:700px){
-
- .cma-bottom-nav{
-  min-height:118px;
-  padding:9px 5px calc(9px + env(safe-area-inset-bottom));
- }
-
- .cma-bottom-nav a{
-  gap:5px;
-  padding:9px 2px;
-  font-size:15px;
- }
-
- .cma-bottom-nav .nav-icon{
-  width:36px;
-  height:35px;
-  font-size:29px;
- }
-
-}
-
-/* Desktop navigation remains unchanged */
+/* Desktop navigation */
 
 @media(min-width:768px){
 
- .cma-bottom-nav{
-  max-width:540px;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:12px;
-  border:1px solid #CDE9DF;
-  border-radius:16px;
-  padding:7px 10px;
-  box-shadow:0 5px 30px rgba(5,45,59,.15);
- }
+  .cma-bottom-nav{
+    max-width:540px;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:12px;
+    border:1px solid #CDE9DF;
+    border-radius:16px;
+    padding:7px 10px;
+    box-shadow:0 5px 30px rgba(5,45,59,.15);
+  }
 
- body{
-  padding-bottom:20px;
- }
+  body{
+    padding-bottom:20px;
+  }
 
 }
 
@@ -591,5 +569,4 @@ body{
 <script defer src="js/router.js"></script>
 
 </body>
-                   </html>
-      
+</html>
