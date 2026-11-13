@@ -305,12 +305,39 @@ function openPage(page) {
 
 
  // ==================================================
- // MATERIALS: SUBJECT
+ // MATERIALS: PAPER SELECTION
+ // ==================================================
+
+ else if (page.startsWith("materials-parts-")) {
+
+  const parts = page.split("-");
+
+  const type = parts[2];
+  const level = parts[3];
+  const group = parts[4];
+  const subjectKey = parts.slice(5).join("-");
+
+  renderMaterialParts(
+   type,
+   level,
+   group,
+   subjectKey
+  );
+
+ }
+
+
+ // ==================================================
+ // MATERIALS: SUBJECT -> CHAPTERS
  // ==================================================
 
  else if (page.startsWith("materials-subject-")) {
 
-  const parts = page.split("-");
+  const selected = page.match(/-part-(\d+)$/);
+  const partIndex = selected ? Number(selected[1]) : null;
+
+  const cleanPage = page.replace(/-part-\d+$/, "");
+  const parts = cleanPage.split("-");
 
   const type = parts[2];
   const level = parts[3];
@@ -321,7 +348,8 @@ function openPage(page) {
    type,
    level,
    group,
-   subjectKey
+   subjectKey,
+   partIndex
   );
 
  }
@@ -333,7 +361,11 @@ function openPage(page) {
 
  else if (page.startsWith("materials-content-")) {
 
-  const parts = page.split("-");
+  const selected = page.match(/-part-(\d+)$/);
+  const partIndex = selected ? Number(selected[1]) : null;
+
+  const cleanPage = page.replace(/-part-\d+$/, "");
+  const parts = cleanPage.split("-");
 
   const type = parts[2];
   const level = parts[3];
@@ -347,7 +379,8 @@ function openPage(page) {
    level,
    group,
    subjectKey,
-   chapter
+   chapter,
+   partIndex
   );
 
  }
@@ -359,7 +392,11 @@ function openPage(page) {
 
  else if (page.startsWith("materials-practice-content-")) {
 
-  const parts = page.split("-");
+  const selected = page.match(/-part-(\d+)$/);
+  const partIndex = selected ? Number(selected[1]) : null;
+
+  const cleanPage = page.replace(/-part-\d+$/, "");
+  const parts = cleanPage.split("-");
 
   const level = parts[3];
   const group = parts[4];
@@ -373,7 +410,8 @@ function openPage(page) {
    group,
    subjectKey,
    chapter,
-   kind
+   kind,
+   partIndex
   );
 
  }
@@ -515,4 +553,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-                                 
