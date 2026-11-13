@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -139,46 +140,21 @@
    </div>
   </section>
 
-  <!-- STUDY MATERIALS -->
-  <section id="materials" class="offline-section">
-   <span class="section-label">Learning Resources</span>
-
-   <div class="section-heading">
-    <h2>Study Materials</h2>
-    <p>Access learning resources and practice materials.</p>
-   </div>
-
-   <div class="offline-grid">
-    <a href="?page=materials-pdf" class="offline-card">
-     <div class="offline-icon">▤</div>
-     <div>
-      <h3>PDF Notes</h3>
-      <p>Subject-wise study notes</p>
-     </div>
-     <span>›</span>
-    </a>
-
-    <a href="?page=materials-practice" class="offline-card">
-     <div class="offline-icon">✎</div>
-     <div>
-      <h3>Practice</h3>
-      <p>Questions and practice sets</p>
-     </div>
-     <span>›</span>
-    </a>
-   </div>
-  </section>
-
-  <!-- EXAM PREPARATION COURSE -->
+  <!-- COMBINED EXAM PREPARATION -->
   <section id="exam">
+
+   <!-- Keep old materials anchor working -->
+   <div id="materials"></div>
+
    <div class="section-heading">
-    <h2>Exam Preparation Course</h2>
-    <p>Explore our featured exam preparation courses.</p>
+    <h2>Exam Preparation</h2>
+    <p>Choose your preferred way to prepare for your exams.</p>
    </div>
 
+   <!-- 1. EXAM PREPARATION COURSE -->
    <div class="exam-showcase">
     <div class="exam-showcase-top">
-     <p>Featured Courses</p>
+     <p>Exam Preparation Course</p>
      <a href="?page=exam-choose" class="exam-learn-more">
       Learn More <span>→</span>
      </a>
@@ -215,6 +191,29 @@
      <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>
      <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
     </div>
+   </div>
+
+   <!-- 2. PDF NOTES + 3. PRACTICE MATERIALS -->
+   <div class="offline-grid">
+
+    <a href="?page=materials-pdf" class="offline-card">
+     <div class="offline-icon">▤</div>
+     <div>
+      <h3>PDF Notes</h3>
+      <p>Subject-wise study notes</p>
+     </div>
+     <span>›</span>
+    </a>
+
+    <a href="?page=materials-practice" class="offline-card">
+     <div class="offline-icon">✎</div>
+     <div>
+      <h3>Practice Materials</h3>
+      <p>Questions and practice sets</p>
+     </div>
+     <span>›</span>
+    </a>
+
    </div>
   </section>
 
@@ -371,4 +370,4 @@
 <script defer src="js/router.js"></script>
 
 </body>
- </html>
+</html>
