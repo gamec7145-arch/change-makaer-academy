@@ -1,500 +1,402 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#071225">
-<title>Change Maker Academy | Learn. Grow. Lead.</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="css/style.css">
-
-<style>
-/* =================================
-   BALANCED TOP HEADER
-================================= */
-
-.header-inner{
- min-height:72px !important;
- padding:6px 4%;
-}
-
-.brand img{
- width:155px !important;
- height:62px !important;
- object-fit:contain;
- object-position:left center;
-}
-
-@media(max-width:700px){
- .header-inner{
-  min-height:68px !important;
- }
-
- .brand img{
-  width:140px !important;
-  height:56px !important;
- }
-}
-
-/* =================================
-   SMART SEARCH POSITION
-================================= */
-
-.smart-search-section{
- width:100%;
- position:relative;
- z-index:100;
-}
-
-/* =================================
-   BALANCED BOTTOM NAVIGATION
-================================= */
-
-body{
- padding-bottom:78px;
-}
-
-.cma-bottom-nav{
- position:fixed;
- bottom:0;
- left:0;
- width:100%;
- z-index:9999;
- display:grid;
- grid-template-columns:repeat(5,1fr);
- align-items:center;
- background:#0D1B31;
- border-top:1px solid #24466B;
- padding:6px 5px calc(6px + env(safe-area-inset-bottom));
- box-shadow:0 -5px 24px rgba(0,0,0,.25);
-}
-
-.cma-bottom-nav a{
- display:flex;
- flex-direction:column;
- align-items:center;
- justify-content:center;
- gap:3px;
- min-width:0;
- padding:5px 2px;
- border-radius:12px;
- color:#A8C0CE;
- text-decoration:none;
- font-family:'Nunito Sans',sans-serif;
- font-size:11px;
- font-weight:800;
- transition:background .2s ease;
-}
-
-.cma-bottom-nav .nav-icon{
- width:27px;
- height:26px;
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:22px;
- line-height:1;
-}
-
-.cma-bottom-nav a.active{
- color:#62B0FF;
- background:#102B4B;
-}
-
-.cma-bottom-nav a:active{
- transform:scale(.96);
-}
-
-@media(min-width:768px){
- .cma-bottom-nav{
-  max-width:540px;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:12px;
-  border:1px solid #24466B;
-  border-radius:16px;
-  padding:7px 10px;
-  box-shadow:0 5px 30px rgba(0,0,0,.3);
- }
-
- body{
-  padding-bottom:20px;
- }
-}
-</style>
-</head>
-
-<body>
-
-<header class="header">
- <div class="header-inner">
-  <a href="?" class="brand">
-   <img src="change-maker-logo.png" alt="Change Maker Academy Logo">
-  </a>
-
-  <nav class="desktop-nav">
-   <a href="?">Home</a>
-   <a href="#batches">Online Batches</a>
-   <a href="#offline">Offline Batches</a>
-   <a href="#materials">Study Materials</a>
-   <a href="#exam">Exam Preparation</a>
-   <a href="#reviews">Student Reviews</a>
-  </nav>
-
-  <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
- </div>
-
- <nav class="mobile-menu" id="mobileMenu">
-  <a href="?">Home</a>
-  <a href="#batches">Online Batches</a>
-  <a href="#offline">Offline Batches</a>
-  <a href="#materials">Study Materials</a>
-  <a href="#exam">Exam Preparation</a>
-  <a href="#reviews">Student Reviews</a>
-  <a href="#brandIntro">About Us</a>
- </nav>
-</header>
-
-<main id="homePage">
-
- <div class="container">
-
-  <!-- SMART SEARCH IS AUTOMATICALLY INSERTED HERE -->
-
-  <section class="hero">
-   <div class="banner" id="banner">
-    <div class="banner-slide active">
-     <img src="banner1.jpg" alt="Academy banner 1">
-    </div>
-    <div class="banner-slide">
-     <img src="banner2.jpg" alt="Academy banner 2">
-    </div>
-    <div class="banner-slide">
-     <img src="emergency-banner.jpg" alt="Emergency Banner">
-    </div>
-    <div class="banner-slide">
-     <img src="banner3.jpg" alt="Academy banner 3">
-    </div>
-
-    <button class="banner-arrow banner-prev" id="prevBanner" aria-label="Previous banner">←</button>
-    <button class="banner-arrow banner-next" id="nextBanner" aria-label="Next banner">→</button>
-   </div>
-   <div class="banner-dots" id="bannerDots"></div>
-  </section>
-
-  <section id="batches" class="batch-section">
-   <span class="section-label">Online Course</span>
-   <h1 class="batch-title">Online Batches are ongoing!</h1>
-   <p class="batch-subtitle">Book your seat now!</p>
-
-   <div class="batch-list">
-    <a href="?page=online-ssc" class="batch-card">
-     <div class="batch-icon">▤</div>
-     <div>
-      <h3>Class 9, 10</h3>
-      <p>SSC Preparation</p>
-     </div>
-     <span class="batch-arrow">›</span>
-    </a>
-
-    <a href="?page=online-hsc" class="batch-card">
-     <div class="batch-icon">▣</div>
-     <div>
-      <h3>College</h3>
-      <p>HSC Preparation</p>
-     </div>
-     <span class="batch-arrow">›</span>
-    </a>
-
-    <a href="?page=online-admission" class="batch-card">
-     <div class="batch-icon">♜</div>
-     <div>
-      <h3>Admission</h3>
-      <p>University Admission Preparation</p>
-     </div>
-     <span class="batch-arrow">›</span>
-    </a>
-   </div>
-  </section>
-
-  <section id="offline" class="offline-section">
-   <span class="section-label">Classroom Learning</span>
-
-   <div class="section-heading">
-    <h2>Offline Batches</h2>
-    <p>Join our classroom learning programs.</p>
-   </div>
-
-   <div class="offline-grid">
-    <a href="?page=offline-ssc" class="offline-card">
-     <div class="offline-icon">▤</div>
-     <div>
-      <h3>SSC</h3>
-      <p>Class 9 & 10</p>
-     </div>
-     <span>›</span>
-    </a>
-
-    <a href="?page=offline-hsc" class="offline-card">
-     <div class="offline-icon">▣</div>
-     <div>
-      <h3>HSC</h3>
-      <p>College</p>
-     </div>
-     <span>›</span>
-    </a>
-   </div>
-  </section>
-
-  <section id="exam">
-   <div id="materials"></div>
-
-   <div class="section-heading">
-    <h2>Exam Preparation</h2>
-    <p>Choose your preferred way to prepare for your exams.</p>
-   </div>
-
-   <div class="exam-showcase">
-    <div class="exam-showcase-top">
-     <p>Exam Preparation Course</p>
-     <a href="?page=exam-choose" class="exam-learn-more">
-      Learn More <span>→</span>
-     </a>
-    </div>
-
-    <div class="exam-featured-track" id="examFeaturedTrack">
-     <article class="exam-featured-card">
-      <img class="exam-featured-image"
-       src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"
-       alt="SSC exam preparation">
-      <div class="exam-featured-info">
-       <span class="exam-featured-tag">SSC PREPARATION</span>
-       <h3>SSC Complete Preparation</h3>
-       <p>Explore subject-wise courses, lessons and exam preparation resources for Class 9 and 10.</p>
-      </div>
-     </article>
-
-     <article class="exam-featured-card">
-      <img class="exam-featured-image"
-       src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85"
-       alt="HSC exam preparation">
-      <div class="exam-featured-info">
-       <span class="exam-featured-tag">HSC PREPARATION</span>
-       <h3>HSC Complete Preparation</h3>
-       <p>Explore subject-wise courses, lessons and preparation resources for college students.</p>
-      </div>
-     </article>
-    </div>
-
-    <div class="exam-slider-footer" id="examSliderDots">
-     <button class="exam-slider-dot active" type="button" aria-label="Show course 1"></button>
-     <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>
-     <span class="exam-slider-count" id="examSliderCount">1 / 2</span>
-    </div>
-
-    <a href="?page=materials-pdf" class="exam-resource-row">
-     <div class="exam-resource-icon">▤</div>
-     <div class="exam-resource-info">
-      <h3>PDF Notes</h3>
-      <p>Subject-wise study notes</p>
-     </div>
-     <span class="exam-resource-arrow">›</span>
-    </a>
-
-    <a href="?page=materials-practice" class="exam-resource-row">
-     <div class="exam-resource-icon">✎</div>
-     <div class="exam-resource-info">
-      <h3>Practice Materials</h3>
-      <p>Questions and practice sets</p>
-     </div>
-     <span class="exam-resource-arrow">›</span>
-    </a>
-   </div>
-  </section>
-
-  <section>
-   <div class="section-heading">
-    <h2>Our Achievements</h2>
-    <p>Growing together, achieving more.</p>
-   </div>
-
-   <div class="stats-grid">
-    <div class="stat-card">
-     <h3>1K+</h3>
-     <p>Students</p>
-    </div>
-    <div class="stat-card">
-     <h3>20+</h3>
-     <p>Courses</p>
-    </div>
-    <div class="stat-card">
-     <h3>10+</h3>
-     <p>Teachers</p>
-    </div>
-   </div>
-  </section>
-
-  <section id="reviews">
-   <div class="section-heading">
-    <h2>What Our Students Say</h2>
-    <p>Hear from our learning community.</p>
-   </div>
-
-   <div class="review-track">
-    <article class="review-card">
-     <div class="review-stars">★★★★★</div>
-     <p>“The lessons are well organized and easy to follow. I enjoy learning here.”</p>
-     <h3>Student Review 01</h3>
-     <small>Sample Review</small>
-    </article>
-
-    <article class="review-card">
-     <div class="review-stars">★★★★★</div>
-     <p>“The subject-wise learning system helps me stay focused on my studies.”</p>
-     <h3>Student Review 02</h3>
-     <small>Sample Review</small>
-    </article>
-
-    <article class="review-card">
-     <div class="review-stars">★★★★★</div>
-     <p>“A helpful platform for lessons, practice and exam preparation.”</p>
-     <h3>Student Review 03</h3>
-     <small>Sample Review</small>
-    </article>
-
-    <article class="review-card">
-     <div class="review-stars">★★★★★</div>
-     <p>“I like having learning resources and subject guidance in one place.”</p>
-     <h3>Student Review 04</h3>
-     <small>Sample Review</small>
-    </article>
-   </div>
-
-   <p class="sample-note">
-    Note: These are sample review texts. Replace them with genuine student feedback before publishing as testimonials.
-   </p>
-  </section>
-
-  <section id="brandIntro">
-   <div class="brand-intro">
-    <img src="change-maker-logo.png" alt="Change Maker Academy Logo">
-    <div>
-     <h2>CHANGE MAKER ACADEMY</h2>
-     <p>
-      Change Maker Academy is an educational platform dedicated to making quality learning accessible to students. We aim to support learners through structured academic programs, engaging lessons, useful study materials, and exam preparation resources. Our goal is to help students build knowledge, develop confidence, and move towards a brighter future.
-     </p>
-     <div class="social-links">
-      <a href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G" target="_blank" rel="noopener" aria-label="YouTube">YT</a>
-      <span aria-label="Facebook link to be added">f</span>
-      <span aria-label="Google link to be added">G</span>
-     </div>
-    </div>
-   </div>
-  </section>
-
- </div>
-</main>
-
-<main id="innerPage" class="inner-page">
- <div class="container">
-  <a href="?" id="backLink" class="back-home">← Back to Homepage</a>
-  <img id="pageBanner" class="page-banner" src="" alt="Program banner">
-
-  <div class="page-intro">
-   <span class="section-label" id="pageLabel">Learning Program</span>
-   <h1 id="pageTitle">Program</h1>
-   <p id="pageDescription"></p>
-  </div>
-
-  <div id="pageContent"></div>
- </div>
-</main>
-
-<footer class="footer" id="contact">
- <div class="container">
-  <p>Academic & Admission Program</p>
-  <p>Helping learners build a brighter future.</p>
-
-  <div class="footer-links">
-   <a href="?">Home</a>
-   <a href="#batches">Online Batches</a>
-   <a href="#offline">Offline Batches</a>
-   <a href="#materials">Study Materials</a>
-   <a href="#exam">Exam Preparation</a>
-   <a href="#reviews">Student Reviews</a>
-   <a href="#brandIntro">About Us</a>
-  </div>
-
-  <div class="footer-bottom">
-   © 2026 Change Maker Academy. All rights reserved.
-  </div>
- </div>
-</footer>
-
-<a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
-
-<nav class="cma-bottom-nav" aria-label="Main navigation">
- <a href="?" data-nav="home" class="active">
-  <span class="nav-icon">⌂</span>
-  <span>Home</span>
- </a>
- <a href="?page=demo-ai" data-nav="demo-ai">
-  <span class="nav-icon">✦</span>
-  <span>Demo AI</span>
- </a>
- <a href="?page=community" data-nav="community">
-  <span class="nav-icon">♧</span>
-  <span>Community</span>
- </a>
- <a href="?page=teachers" data-nav="teachers">
-  <span class="nav-icon">🎓</span>
-  <span>Teachers</span>
- </a>
- <a href="?page=account" data-nav="account">
-  <span class="nav-icon">♙</span>
-  <span>Account</span>
- </a>
-</nav>
-
-<script>
-(function () {
- const params = new URLSearchParams(window.location.search);
- const page = params.get("page");
- const links = document.querySelectorAll(".cma-bottom-nav a");
-
- links.forEach(function (link) {
-  link.classList.remove("active");
- });
-
- let active = "home";
-
- if (page === "demo-ai") active = "demo-ai";
- if (page === "community") active = "community";
- if (page === "teachers") active = "teachers";
- if (page === "account") active = "account";
-
- const activeLink = document.querySelector(
-  '.cma-bottom-nav a[data-nav="' + active + '"]'
- );
-
- if (activeLink) activeLink.classList.add("active");
-})();
-</script>
-
-<script defer src="js/shared.js"></script>
-<script defer src="js/home.js"></script>
-<script defer src="js/navigation.js"></script>
-<script defer src="js/offline-batches.js"></script>
-<script defer src="js/online-batches.js"></script>
-<script defer src="js/exam-preparation.js"></script>
-<script defer src="js/study-materials.js"></script>
-<script defer src="js/router.js"></script>
-<script defer src="js/smart-search.js"></script>
-
-</body>
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<meta name="theme-color" content="#073746">  
+<title>Change Maker Academy | Learn. Grow. Lead.</title>  <link rel="preconnect" href="https://fonts.googleapis.com">  
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">  <link rel="stylesheet" href="css/style.css">  <style>  
+/* =================================  
+   BALANCED TOP HEADER  
+================================= */  
+  
+.header-inner{  
+ min-height:72px !important;  
+ padding:6px 4%;  
+}  
+  
+.brand img{  
+ width:155px !important;  
+ height:62px !important;  
+ object-fit:contain;  
+ object-position:left center;  
+}  
+  
+@media(max-width:700px){  
+ .header-inner{  
+  min-height:68px !important;  
+ }  
+  
+ .brand img{  
+  width:140px !important;  
+  height:56px !important;  
+ }  
+}  
+  
+/* =================================  
+   BALANCED BOTTOM NAVIGATION  
+================================= */  
+  
+body{  
+ padding-bottom:78px;  
+}  
+  
+.cma-bottom-nav{  
+ position:fixed;  
+ bottom:0;  
+ left:0;  
+ width:100%;  
+ z-index:9999;  
+ display:grid;  
+ grid-template-columns:repeat(5,1fr);  
+ align-items:center;  
+ background:#EAF7F3;  
+ border-top:1px solid #CDE9DF;  
+ padding:6px 5px calc(6px + env(safe-area-inset-bottom));  
+ box-shadow:0 -5px 24px rgba(5,45,59,.12);  
+}  
+  
+.cma-bottom-nav a{  
+ display:flex;  
+ flex-direction:column;  
+ align-items:center;  
+ justify-content:center;  
+ gap:3px;  
+ min-width:0;  
+ padding:5px 2px;  
+ border-radius:12px;  
+ color:#073746;  
+ text-decoration:none;  
+ font-family:'Nunito Sans',sans-serif;  
+ font-size:11px;  
+ font-weight:800;  
+ transition:background .2s ease;  
+}  
+  
+.cma-bottom-nav .nav-icon{  
+ width:27px;  
+ height:26px;  
+ display:flex;  
+ align-items:center;  
+ justify-content:center;  
+ font-size:22px;  
+ line-height:1;  
+}  
+  
+.cma-bottom-nav a.active{  
+ color:#079F7C;  
+ background:#D7F5EB;  
+}  
+  
+.cma-bottom-nav a:active{  
+ transform:scale(.96);  
+}  
+  
+@media(min-width:768px){  
+ .cma-bottom-nav{  
+  max-width:540px;  
+  left:50%;  
+  transform:translateX(-50%);  
+  bottom:12px;  
+  border:1px solid #CDE9DF;  
+  border-radius:16px;  
+  padding:7px 10px;  
+  box-shadow:0 5px 30px rgba(5,45,59,.15);  
+ }  
+  
+ body{  
+  padding-bottom:20px;  
+ }  
+}  
+</style>  </head>  <body>  <header class="header">  
+ <div class="header-inner">  
+  <a href="?" class="brand">  
+   <img src="change-maker-logo.png" alt="Change Maker Academy Logo">  
+  </a>    <nav class="desktop-nav">  
+   <a href="?">Home</a>  
+   <a href="#batches">Online Batches</a>  
+   <a href="#offline">Offline Batches</a>  
+   <a href="#materials">Study Materials</a>  
+   <a href="#exam">Exam Preparation</a>  
+   <a href="#reviews">Student Reviews</a>  
+  </nav>  <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+
+ </div>   <nav class="mobile-menu" id="mobileMenu">  
+  <a href="?">Home</a>  
+  <a href="#batches">Online Batches</a>  
+  <a href="#offline">Offline Batches</a>  
+  <a href="#materials">Study Materials</a>  
+  <a href="#exam">Exam Preparation</a>  
+  <a href="#reviews">Student Reviews</a>  
+  <a href="#brandIntro">About Us</a>  
+ </nav>  
+</header>  <main id="homePage">  
+ <div class="container">    <section class="hero">  
+   <div class="banner" id="banner">  
+    <div class="banner-slide active">  
+     <img src="banner1.jpg" alt="Academy banner 1">  
+    </div>  
+    <div class="banner-slide">  
+     <img src="banner2.jpg" alt="Academy banner 2">  
+    </div>  
+    <div class="banner-slide">  
+     <img src="emergency-banner.jpg" alt="Emergency Banner">  
+    </div>  
+    <div class="banner-slide">  
+     <img src="banner3.jpg" alt="Academy banner 3">  
+    </div>  <button class="banner-arrow banner-prev" id="prevBanner" aria-label="Previous banner">←</button>  
+<button class="banner-arrow banner-next" id="nextBanner" aria-label="Next banner">→</button>
+
+   </div>  
+   <div class="banner-dots" id="bannerDots"></div>  
+  </section>    <section id="batches" class="batch-section">  
+   <span class="section-label">Online Course</span>  
+   <h1 class="batch-title">Online Batches are ongoing!</h1>  
+   <p class="batch-subtitle">Book your seat now!</p>     <div class="batch-list">  
+    <a href="?page=online-ssc" class="batch-card">  
+     <div class="batch-icon">▤</div>  
+     <div>  
+      <h3>Class 9, 10</h3>  
+      <p>SSC Preparation</p>  
+     </div>  
+     <span class="batch-arrow">›</span>  
+    </a>  <a href="?page=online-hsc" class="batch-card">  
+ <div class="batch-icon">▣</div>  
+ <div>  
+  <h3>College</h3>  
+  <p>HSC Preparation</p>  
+ </div>  
+ <span class="batch-arrow">›</span>  
+</a>  
+
+<a href="?page=online-admission" class="batch-card">  
+ <div class="batch-icon">♜</div>  
+ <div>  
+  <h3>Admission</h3>  
+  <p>University Admission Preparation</p>  
+ </div>  
+ <span class="batch-arrow">›</span>  
+</a>
+
+   </div>  
+  </section>    <section id="offline" class="offline-section">  
+   <span class="section-label">Classroom Learning</span>     <div class="section-heading">  
+    <h2>Offline Batches</h2>  
+    <p>Join our classroom learning programs.</p>  
+   </div>     <div class="offline-grid">  
+    <a href="?page=offline-ssc" class="offline-card">  
+     <div class="offline-icon">▤</div>  
+     <div>  
+      <h3>SSC</h3>  
+      <p>Class 9 & 10</p>  
+     </div>  
+     <span>›</span>  
+    </a>  <a href="?page=offline-hsc" class="offline-card">  
+ <div class="offline-icon">▣</div>  
+ <div>  
+  <h3>HSC</h3>  
+  <p>College</p>  
+ </div>  
+ <span>›</span>  
+</a>
+
+   </div>  
+  </section>    <section id="exam">  
+   <div id="materials"></div>     <div class="section-heading">  
+    <h2>Exam Preparation</h2>  
+    <p>Choose your preferred way to prepare for your exams.</p>  
+   </div>     <div class="exam-showcase">  
+    <div class="exam-showcase-top">  
+     <p>Exam Preparation Course</p>  
+     <a href="?page=exam-choose" class="exam-learn-more">  
+      Learn More <span>→</span>  
+     </a>  
+    </div>  <div class="exam-featured-track" id="examFeaturedTrack">  
+ <article class="exam-featured-card">  
+  <img class="exam-featured-image"  
+   src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85"  
+   alt="SSC exam preparation">  
+  <div class="exam-featured-info">  
+   <span class="exam-featured-tag">SSC PREPARATION</span>  
+   <h3>SSC Complete Preparation</h3>  
+   <p>Explore subject-wise courses, lessons and exam preparation resources for Class 9 and 10.</p>  
+  </div>  
+ </article>  
+
+ <article class="exam-featured-card">  
+  <img class="exam-featured-image"  
+   src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85"  
+   alt="HSC exam preparation">  
+  <div class="exam-featured-info">  
+   <span class="exam-featured-tag">HSC PREPARATION</span>  
+   <h3>HSC Complete Preparation</h3>  
+   <p>Explore subject-wise courses, lessons and preparation resources for college students.</p>  
+  </div>  
+ </article>  
+</div>  
+
+<div class="exam-slider-footer" id="examSliderDots">  
+ <button class="exam-slider-dot active" type="button" aria-label="Show course 1"></button>  
+ <button class="exam-slider-dot" type="button" aria-label="Show course 2"></button>  
+ <span class="exam-slider-count" id="examSliderCount">1 / 2</span>  
+</div>  
+
+<a href="?page=materials-pdf" class="exam-resource-row">  
+ <div class="exam-resource-icon">▤</div>  
+ <div class="exam-resource-info">  
+  <h3>PDF Notes</h3>  
+  <p>Subject-wise study notes</p>  
+ </div>  
+ <span class="exam-resource-arrow">›</span>  
+</a>  
+
+<a href="?page=materials-practice" class="exam-resource-row">  
+ <div class="exam-resource-icon">✎</div>  
+ <div class="exam-resource-info">  
+  <h3>Practice Materials</h3>  
+  <p>Questions and practice sets</p>  
+ </div>  
+ <span class="exam-resource-arrow">›</span>  
+</a>
+
+   </div>  
+  </section>    <section>  
+   <div class="section-heading">  
+    <h2>Our Achievements</h2>  
+    <p>Growing together, achieving more.</p>  
+   </div>     <div class="stats-grid">  
+    <div class="stat-card">  
+     <h3>1K+</h3>  
+     <p>Students</p>  
+    </div>  
+    <div class="stat-card">  
+     <h3>20+</h3>  
+     <p>Courses</p>  
+    </div>  
+    <div class="stat-card">  
+     <h3>10+</h3>  
+     <p>Teachers</p>  
+    </div>  
+   </div>  
+  </section>    <section id="reviews">  
+   <div class="section-heading">  
+    <h2>What Our Students Say</h2>  
+    <p>Hear from our learning community.</p>  
+   </div>     <div class="review-track">  
+    <article class="review-card">  
+     <div class="review-stars">★★★★★</div>  
+     <p>“The lessons are well organized and easy to follow. I enjoy learning here.”</p>  
+     <h3>Student Review 01</h3>  
+     <small>Sample Review</small>  
+    </article>  <article class="review-card">  
+ <div class="review-stars">★★★★★</div>  
+ <p>“The subject-wise learning system helps me stay focused on my studies.”</p>  
+ <h3>Student Review 02</h3>  
+ <small>Sample Review</small>  
+</article>  
+
+<article class="review-card">  
+ <div class="review-stars">★★★★★</div>  
+ <p>“A helpful platform for lessons, practice and exam preparation.”</p>  
+ <h3>Student Review 03</h3>  
+ <small>Sample Review</small>  
+</article>  
+
+<article class="review-card">  
+ <div class="review-stars">★★★★★</div>  
+ <p>“I like having learning resources and subject guidance in one place.”</p>  
+ <h3>Student Review 04</h3>  
+ <small>Sample Review</small>  
+</article>
+
+   </div>     <p class="sample-note">  
+    Note: These are sample review texts. Replace them with genuine student feedback before publishing as testimonials.  
+   </p>  
+  </section>    <section id="brandIntro">  
+   <div class="brand-intro">  
+    <img src="change-maker-logo.png" alt="Change Maker Academy Logo">  
+    <div>  
+     <h2>CHANGE MAKER ACADEMY</h2>  
+     <p>  
+      Change Maker Academy is an educational platform dedicated to making quality learning accessible to students. We aim to support learners through structured academic programs, engaging lessons, useful study materials, and exam preparation resources. Our goal is to help students build knowledge, develop confidence, and move towards a brighter future.  
+     </p>  
+     <div class="social-links">  
+      <a href="https://youtube.com/@changemakeracademy?si=5nmz_GdwfYKGLF6G" target="_blank" rel="noopener" aria-label="YouTube">YT</a>  
+      <span aria-label="Facebook link to be added">f</span>  
+      <span aria-label="Google link to be added">G</span>  
+     </div>  
+    </div>  
+   </div>  
+  </section>   </div>  
+</main>  <main id="innerPage" class="inner-page">  
+ <div class="container">  
+  <a href="?" id="backLink" class="back-home">← Back to Homepage</a>  
+  <img id="pageBanner" class="page-banner" src="" alt="Program banner">    <div class="page-intro">  
+   <span class="section-label" id="pageLabel">Learning Program</span>  
+   <h1 id="pageTitle">Program</h1>  
+   <p id="pageDescription"></p>  
+  </div>    <div id="pageContent"></div>  
+ </div>  
+</main>  <footer class="footer" id="contact">  
+ <div class="container">  
+  <p>Academic & Admission Program</p>  
+  <p>Helping learners build a brighter future.</p>    <div class="footer-links">  
+   <a href="?">Home</a>  
+   <a href="#batches">Online Batches</a>  
+   <a href="#offline">Offline Batches</a>  
+   <a href="#materials">Study Materials</a>  
+   <a href="#exam">Exam Preparation</a>  
+   <a href="#reviews">Student Reviews</a>  
+   <a href="#brandIntro">About Us</a>  
+  </div>    <div class="footer-bottom">  
+   © 2026 Change Maker Academy. All rights reserved.  
+  </div>  
+ </div>  
+</footer>  <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
+
+<nav class="cma-bottom-nav" aria-label="Main navigation">  
+ <a href="?" data-nav="home" class="active">  
+  <span class="nav-icon">⌂</span>  
+  <span>Home</span>  
+ </a>  
+ <a href="?page=demo-ai" data-nav="demo-ai">  
+  <span class="nav-icon">✦</span>  
+  <span>Demo AI</span>  
+ </a>  
+ <a href="?page=community" data-nav="community">  
+  <span class="nav-icon">♧</span>  
+  <span>Community</span>  
+ </a>  
+ <a href="?page=teachers" data-nav="teachers">  
+  <span class="nav-icon">🎓</span>  
+  <span>Teachers</span>  
+ </a>  
+ <a href="?page=account" data-nav="account">  
+  <span class="nav-icon">♙</span>  
+  <span>Account</span>  
+ </a>  
+</nav>  <script>  
+(function () {  
+ const params = new URLSearchParams(window.location.search);  
+ const page = params.get("page");  
+ const links = document.querySelectorAll(".cma-bottom-nav a");  
+  
+ links.forEach(function (link) {  
+  link.classList.remove("active");  
+ });  
+  
+ let active = "home";  
+  
+ if (page === "demo-ai") active = "demo-ai";  
+ if (page === "community") active = "community";  
+ if (page === "teachers") active = "teachers";  
+ if (page === "account") active = "account";  
+  
+ const activeLink = document.querySelector(  
+  '.cma-bottom-nav a[data-nav="' + active + '"]'  
+ );  
+  
+ if (activeLink) activeLink.classList.add("active");  
+})();  
+</script>  <script defer src="js/shared.js"></script>  <script defer src="js/home.js"></script>  <script defer src="js/navigation.js"></script>  <script defer src="js/offline-batches.js"></script>  <script defer src="js/online-batches.js"></script>  <script defer src="js/exam-preparation.js"></script>  <script defer src="js/study-materials.js"></script>  <script defer src="js/router.js"></script>  </body>  
 </html>
