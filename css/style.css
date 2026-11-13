@@ -1246,3 +1246,18 @@ section{padding:27px 0}
 @media(min-width:701px){
  .menu-btn{display:none}
 }
+/* HEADING SPACING & LINE BREAK */
+h1,h2,h3,h4,h5,h6{
+  line-height:1.55;
+  letter-spacing:0.3px;
+  word-spacing:2px;
+  text-wrap:balance;
+}
+
+.section-heading h2,
+.batch-title,
+.page-intro h1{
+  max-width:650px;
+  line-height:1.5;
+  text-wrap:balance;
+}
