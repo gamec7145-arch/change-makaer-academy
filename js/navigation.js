@@ -652,3 +652,631 @@ function renderOnlineExamPosts(program, group, subjectKey, partIndex = null) {
  renderFilteredPosts();
 
 }
+
+// ==================================================
+// CHANGE MAKER ACADEMY
+// ONLINE EXAMINATION SYSTEM
+// ==================================================
+
+
+// ==================================================
+// DEMO QUESTIONS
+// ==================================================
+
+const onlineExamDemoQuestions = {
+
+ "demo-english-01": [
+  {
+   question: "Choose the correct form: He _____ to school every day.",
+   options: ["go", "goes", "going", "gone"],
+   answer: 1
+  },
+  {
+   question: "What is the plural form of 'Child'?",
+   options: ["Childs", "Childes", "Children", "Childrens"],
+   answer: 2
+  },
+  {
+   question: "Choose the correct article: He is _____ honest man.",
+   options: ["a", "an", "the", "no article"],
+   answer: 1
+  },
+  {
+   question: "What is the past form of 'Write'?",
+   options: ["Writed", "Written", "Wrote", "Writing"],
+   answer: 2
+  },
+  {
+   question: "Choose the correct preposition: He is good _____ English.",
+   options: ["in", "at", "on", "for"],
+   answer: 1
+  },
+  {
+   question: "Choose the correct sentence.",
+   options: [
+    "She do not like tea.",
+    "She does not likes tea.",
+    "She does not like tea.",
+    "She not like tea."
+   ],
+   answer: 2
+  },
+  {
+   question: "What is the opposite of 'Ancient'?",
+   options: ["Old", "Modern", "Past", "Historic"],
+   answer: 1
+  },
+  {
+   question: "Choose the correct verb: They _____ playing football.",
+   options: ["is", "am", "are", "was"],
+   answer: 2
+  },
+  {
+   question: "What is the noun form of 'Beautiful'?",
+   options: ["Beauty", "Beautifully", "Beautify", "Beautified"],
+   answer: 0
+  },
+  {
+   question: "Choose the correct question tag: He is a student, _____?",
+   options: ["is he", "isn't he", "does he", "doesn't he"],
+   answer: 1
+  }
+ ],
+
+ "demo-english-02": [
+  {
+   question: "Which word is a synonym of 'Happy'?",
+   options: ["Sad", "Angry", "Joyful", "Tired"],
+   answer: 2
+  },
+  {
+   question: "What is the opposite of 'Difficult'?",
+   options: ["Hard", "Easy", "Complex", "Tough"],
+   answer: 1
+  },
+  {
+   question: "Choose the correct spelling.",
+   options: ["Enviroment", "Environment", "Envirnment", "Environmant"],
+   answer: 1
+  },
+  {
+   question: "Which one is a pronoun?",
+   options: ["Book", "Beautiful", "They", "Quickly"],
+   answer: 2
+  },
+  {
+   question: "Choose the correct sentence.",
+   options: [
+    "I have seen him yesterday.",
+    "I saw him yesterday.",
+    "I see him yesterday.",
+    "I seeing him yesterday."
+   ],
+   answer: 1
+  },
+  {
+   question: "What is the comparative form of 'Good'?",
+   options: ["Gooder", "Best", "Better", "More good"],
+   answer: 2
+  },
+  {
+   question: "Which one is an adjective?",
+   options: ["Slowly", "Beautiful", "Run", "Happiness"],
+   answer: 1
+  },
+  {
+   question: "Choose the correct preposition: She is interested _____ music.",
+   options: ["on", "at", "in", "for"],
+   answer: 2
+  },
+  {
+   question: "What is the past participle of 'Eat'?",
+   options: ["Ate", "Eating", "Eaten", "Eats"],
+   answer: 2
+  },
+  {
+   question: "Which one is a conjunction?",
+   options: ["And", "Beautiful", "Quickly", "Under"],
+   answer: 0
+  }
+ ]
+
+};
+
+
+// ==================================================
+// START ONLINE EXAMINATION
+// ==================================================
+
+function renderOnlineExamStart(postId) {
+
+ // Stop any previous timer
+ if (window.onlineExamTimer) {
+  clearInterval(window.onlineExamTimer);
+  window.onlineExamTimer = null;
+ }
+
+ const posts = Array.isArray(window.onlineExamPosts)
+  ? window.onlineExamPosts
+  : [];
+
+ const post = posts.find(item =>
+  String(item.id) === String(postId)
+ );
+
+ if (!post) {
+  showNotFound();
+  return;
+ }
+
+ const questions = Array.isArray(post.questions) &&
+  post.questions.length > 0
+   ? post.questions
+   : onlineExamDemoQuestions[postId] || [];
+
+ if (!questions.length) {
+  showNotFound();
+  return;
+ }
+
+ const duration = Math.max(1, Number(post.duration || 20));
+ const totalSeconds = duration * 60;
+
+ let remainingSeconds = totalSeconds;
+ let submitted = false;
+ let selectedAnswers = {};
+
+
+ // ==================================================
+ // PAGE SETUP
+ // ==================================================
+
+ setPage(
+  post.title || "Online Examination",
+  "Examination in Progress",
+  "Answer all questions before submitting.",
+  post.image || demoImages.classroom,
+  "?page=online-exam-posts-" +
+   post.program + "-" +
+   post.group + "-" +
+   post.subject +
+   (post.part ? "-part-" + post.part : "")
+ );
+
+
+ // ==================================================
+ // TIMER DISPLAY
+ // ==================================================
+
+ const timerBox = document.createElement("div");
+
+ timerBox.style.background = "#08494B";
+ timerBox.style.border = "1px solid #08C99A";
+ timerBox.style.borderRadius = "14px";
+ timerBox.style.padding = "14px";
+ timerBox.style.marginBottom = "20px";
+ timerBox.style.textAlign = "center";
+
+ const timerLabel = document.createElement("div");
+
+ timerLabel.textContent = "TIME REMAINING";
+ timerLabel.style.color = "#78E0C2";
+ timerLabel.style.fontSize = "12px";
+ timerLabel.style.fontWeight = "800";
+
+ const timerValue = document.createElement("div");
+
+ timerValue.style.color = "#FFFFFF";
+ timerValue.style.fontSize = "28px";
+ timerValue.style.fontWeight = "900";
+ timerValue.style.marginTop = "5px";
+
+ timerBox.appendChild(timerLabel);
+ timerBox.appendChild(timerValue);
+
+ pageContent.appendChild(timerBox);
+
+
+ // ==================================================
+ // EXAM INFORMATION
+ // ==================================================
+
+ const info = document.createElement("div");
+
+ info.style.background = "#10414D";
+ info.style.border = "1px solid #28616A";
+ info.style.borderRadius = "14px";
+ info.style.padding = "14px";
+ info.style.marginBottom = "20px";
+
+ const examTitle = document.createElement("h3");
+
+ examTitle.textContent = post.title || "Online Examination";
+ examTitle.style.color = "#FFFFFF";
+ examTitle.style.margin = "0 0 8px";
+ examTitle.style.fontSize = "18px";
+
+ const examDetails = document.createElement("p");
+
+ examDetails.textContent =
+  questions.length + " Questions  •  " +
+  duration + " Minutes";
+
+ examDetails.style.color = "#B5CBD3";
+ examDetails.style.fontSize = "13px";
+ examDetails.style.margin = "0";
+
+ info.appendChild(examTitle);
+ info.appendChild(examDetails);
+
+ pageContent.appendChild(info);
+
+
+ // ==================================================
+ // QUESTION CONTAINER
+ // ==================================================
+
+ const questionContainer = document.createElement("div");
+
+ questionContainer.style.width = "100%";
+
+ pageContent.appendChild(questionContainer);
+
+
+ // ==================================================
+ // RENDER QUESTIONS
+ // ==================================================
+
+ questions.forEach((question, index) => {
+
+  const card = document.createElement("div");
+
+  card.style.background = "#10414D";
+  card.style.border = "1px solid #28616A";
+  card.style.borderRadius = "14px";
+  card.style.padding = "16px";
+  card.style.marginBottom = "16px";
+
+
+  const number = document.createElement("div");
+
+  number.textContent = "QUESTION " + (index + 1);
+
+  number.style.color = "#78E0C2";
+  number.style.fontSize = "12px";
+  number.style.fontWeight = "800";
+  number.style.marginBottom = "10px";
+
+
+  const questionText = document.createElement("h3");
+
+  questionText.textContent = question.question;
+
+  questionText.style.color = "#FFFFFF";
+  questionText.style.fontSize = "16px";
+  questionText.style.lineHeight = "1.6";
+  questionText.style.margin = "0 0 16px";
+
+
+  card.appendChild(number);
+  card.appendChild(questionText);
+
+
+  question.options.forEach((option, optionIndex) => {
+
+   const label = document.createElement("label");
+
+   label.style.display = "flex";
+   label.style.alignItems = "center";
+   label.style.gap = "10px";
+   label.style.padding = "12px";
+   label.style.marginBottom = "9px";
+   label.style.background = "#08494B";
+   label.style.border = "1px solid #28616A";
+   label.style.borderRadius = "10px";
+   label.style.color = "#FFFFFF";
+   label.style.fontSize = "14px";
+   label.style.cursor = "pointer";
+
+
+   const radio = document.createElement("input");
+
+   radio.type = "radio";
+   radio.name = "exam-question-" + index;
+   radio.value = optionIndex;
+
+   radio.style.accentColor = "#08C99A";
+   radio.style.width = "17px";
+   radio.style.height = "17px";
+   radio.style.flexShrink = "0";
+
+
+   radio.addEventListener("change", function() {
+
+    if (submitted) return;
+
+    selectedAnswers[index] = optionIndex;
+
+   });
+
+
+   const optionText = document.createElement("span");
+
+   optionText.textContent = option;
+
+   label.appendChild(radio);
+   label.appendChild(optionText);
+
+   card.appendChild(label);
+
+  });
+
+
+  questionContainer.appendChild(card);
+
+ });
+
+
+ // ==================================================
+ // RESULT BUTTON
+ // ==================================================
+
+ const resultButton = document.createElement("button");
+
+ resultButton.type = "button";
+ resultButton.textContent = "RESULT";
+
+ resultButton.style.width = "100%";
+ resultButton.style.padding = "15px";
+ resultButton.style.border = "none";
+ resultButton.style.borderRadius = "12px";
+ resultButton.style.background = "#08C99A";
+ resultButton.style.color = "#052D3B";
+ resultButton.style.fontSize = "15px";
+ resultButton.style.fontWeight = "900";
+ resultButton.style.cursor = "pointer";
+ resultButton.style.marginBottom = "25px";
+
+ pageContent.appendChild(resultButton);
+
+
+ // ==================================================
+ // TIMER FORMAT
+ // ==================================================
+
+ function formatExamTime(seconds) {
+
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+
+  return String(minutes).padStart(2, "0") +
+   ":" +
+   String(remaining).padStart(2, "0");
+ }
+
+
+ // ==================================================
+ // SHOW RESULT
+ // ==================================================
+
+ function showExamResult() {
+
+  if (submitted) return;
+
+  submitted = true;
+
+  clearInterval(window.onlineExamTimer);
+  window.onlineExamTimer = null;
+
+  let right = 0;
+
+  questions.forEach((question, index) => {
+
+   if (
+    selectedAnswers[index] !== undefined &&
+    Number(selectedAnswers[index]) === Number(question.answer)
+   ) {
+    right++;
+   }
+
+  });
+
+  const wrong = questions.length - right;
+
+  const elapsedSeconds = totalSeconds - remainingSeconds;
+
+  const elapsedTime = formatExamTime(elapsedSeconds);
+
+
+  // Clear examination page
+  clearContent();
+
+  homePage.style.display = "none";
+  innerPage.classList.add("active");
+
+
+  // RESULT PAGE
+  setPage(
+   "EXAMINATION RESULT",
+   post.title || "Online Examination",
+   "Your examination has been completed.",
+   post.image || demoImages.classroom,
+   "?page=online-exam-posts-" +
+    post.program + "-" +
+    post.group + "-" +
+    post.subject +
+    (post.part ? "-part-" + post.part : "")
+  );
+
+
+  // RESULT CARD
+  const resultCard = document.createElement("div");
+
+  resultCard.style.background = "#10414D";
+  resultCard.style.border = "1px solid #28616A";
+  resultCard.style.borderRadius = "18px";
+  resultCard.style.padding = "20px";
+  resultCard.style.marginTop = "15px";
+
+
+  const heading = document.createElement("h2");
+
+  heading.textContent = "EXAMINATION RESULT";
+
+  heading.style.color = "#FFFFFF";
+  heading.style.textAlign = "center";
+  heading.style.fontSize = "21px";
+  heading.style.margin = "0 0 22px";
+
+  resultCard.appendChild(heading);
+
+
+  // RIGHT AND WRONG
+  const scoreGrid = document.createElement("div");
+
+  scoreGrid.style.display = "grid";
+  scoreGrid.style.gridTemplateColumns = "1fr 1fr";
+  scoreGrid.style.gap = "12px";
+
+
+  function addResultBox(label, value, color) {
+
+   const box = document.createElement("div");
+
+   box.style.background = "#08494B";
+   box.style.borderRadius = "12px";
+   box.style.padding = "18px 8px";
+   box.style.textAlign = "center";
+
+   const number = document.createElement("div");
+
+   number.textContent = value;
+   number.style.color = color;
+   number.style.fontSize = "30px";
+   number.style.fontWeight = "900";
+
+   const text = document.createElement("div");
+
+   text.textContent = label;
+   text.style.color = "#FFFFFF";
+   text.style.fontSize = "12px";
+   text.style.fontWeight = "800";
+   text.style.marginTop = "5px";
+
+   box.appendChild(number);
+   box.appendChild(text);
+
+   scoreGrid.appendChild(box);
+  }
+
+
+  addResultBox("RIGHT", right, "#08C99A");
+  addResultBox("WRONG", wrong, "#FF7777");
+
+  resultCard.appendChild(scoreGrid);
+
+
+  // TIME
+  const timeBox = document.createElement("div");
+
+  timeBox.style.background = "#08494B";
+  timeBox.style.borderRadius = "12px";
+  timeBox.style.padding = "18px";
+  timeBox.style.marginTop = "12px";
+  timeBox.style.textAlign = "center";
+
+  const timeValue = document.createElement("div");
+
+  timeValue.textContent = elapsedTime;
+
+  timeValue.style.color = "#FFFFFF";
+  timeValue.style.fontSize = "28px";
+  timeValue.style.fontWeight = "900";
+
+  const timeLabel = document.createElement("div");
+
+  timeLabel.textContent = "TIME TAKEN";
+
+  timeLabel.style.color = "#B5CBD3";
+  timeLabel.style.fontSize = "12px";
+  timeLabel.style.fontWeight = "800";
+  timeLabel.style.marginTop = "5px";
+
+  timeBox.appendChild(timeValue);
+  timeBox.appendChild(timeLabel);
+
+  resultCard.appendChild(timeBox);
+
+
+  // TRY AGAIN BUTTON
+  const retryButton = document.createElement("button");
+
+  retryButton.type = "button";
+  retryButton.textContent = "GOOD LUCK, TRY AGAIN";
+
+  retryButton.style.width = "100%";
+  retryButton.style.padding = "15px 10px";
+  retryButton.style.marginTop = "18px";
+  retryButton.style.background = "#08C99A";
+  retryButton.style.color = "#052D3B";
+  retryButton.style.border = "none";
+  retryButton.style.borderRadius = "12px";
+  retryButton.style.fontSize = "14px";
+  retryButton.style.fontWeight = "900";
+  retryButton.style.cursor = "pointer";
+
+
+  retryButton.addEventListener("click", function() {
+
+   renderOnlineExamStart(postId);
+
+   window.scrollTo(0, 0);
+
+  });
+
+
+  resultCard.appendChild(retryButton);
+
+  pageContent.appendChild(resultCard);
+
+  window.scrollTo(0, 0);
+
+ }
+
+
+ // ==================================================
+ // RESULT BUTTON CLICK
+ // ==================================================
+
+ resultButton.addEventListener("click", showExamResult);
+
+
+ // ==================================================
+ // START TIMER IMMEDIATELY
+ // ==================================================
+
+ function updateTimer() {
+
+  timerValue.textContent = formatExamTime(remainingSeconds);
+
+  if (remainingSeconds <= 0) {
+
+   remainingSeconds = 0;
+
+   timerValue.textContent = "00:00";
+
+   showExamResult();
+
+   return;
+  }
+
+  remainingSeconds--;
+
+ }
+
+ updateTimer();
+
+ window.onlineExamTimer = setInterval(updateTimer, 1000);
+
+             }
+                         
