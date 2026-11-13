@@ -1,3 +1,4 @@
+
 // ==================================================
 // CHANGE MAKER ACADEMY
 // COMMUNITY — FRONTEND SYSTEM
@@ -41,12 +42,26 @@
 
  function renderCommunityPage(){
 
+  // GET THE EXISTING PAGE CONTENT CONTAINER
+
+  const pageContent = document.getElementById("pageContent");
+
+  if(!pageContent){
+   console.error("Community error: #pageContent was not found.");
+   return;
+  }
+
   document.body.classList.add("community-active");
 
-  const root = document.createElement("div");
-  root.className = "community-page";
+  const root = createElement(
+   "div",
+   "community-page"
+  );
 
+
+  // ================================================
   // HEADER
+  // ================================================
 
   const header = createElement(
    "header",
@@ -63,6 +78,26 @@
 
   header.appendChild(brand);
 
+
+  // SEARCH
+
+  const searchArea = createElement(
+   "div",
+   "community-search-area"
+  );
+
+  const searchButton = createElement(
+   "button",
+   "community-search-btn",
+   "⌕"
+  );
+
+  searchButton.type = "button";
+  searchButton.setAttribute(
+   "aria-label",
+   "Open search"
+  );
+
   const search = createElement(
    "div",
    "community-search"
@@ -77,30 +112,35 @@
    "Search community posts"
   );
 
+  searchInput.style.display = "none";
+
   search.appendChild(searchInput);
-  header.appendChild(search);
 
-  const actions = createElement(
-   "div",
-   "community-header-actions"
-  );
+  searchArea.appendChild(searchButton);
+  searchArea.appendChild(search);
 
-  const notificationButton = createElement(
-   "button",
-   "community-icon-btn",
-   "♧"
-  );
+  header.appendChild(searchArea);
 
-  notificationButton.type = "button";
-  notificationButton.setAttribute(
-   "aria-label",
-   "Notifications"
-  );
+  searchButton.addEventListener("click",()=>{
 
-  actions.appendChild(notificationButton);
-  header.appendChild(actions);
+   const isHidden = searchInput.style.display === "none";
 
+   searchInput.style.display = isHidden ? "block" : "none";
+
+   if(isHidden){
+    searchInput.focus();
+   }else{
+    searchInput.value = "";
+    currentFilter = "";
+    renderFeed();
+   }
+
+  });
+
+
+  // ================================================
   // NAVIGATION
+  // ================================================
 
   const nav = createElement(
    "nav",
@@ -108,21 +148,65 @@
   );
 
   const navItems = [
-   ["Home","home"],
-   ["Me","me"],
-   ["Creator Panel","creator"],
-   ["Notifications","notifications"]
+   ["🏠","Home","home"],
+   ["👤","Me","me"],
+   ["✍️","Creator Panel","creator"],
+   ["🔔","Notification","notifications"]
   ];
 
   navItems.forEach((item,index)=>{
 
    const button = createElement(
     "button",
-    index === 0 ? "active" : "",
-    item[0]
+    index === 0 ? "active" : ""
    );
 
    button.type = "button";
+
+   button.setAttribute(
+    "aria-label",
+    item[1]
+   );
+
+   const iconWrap = createElement(
+    "span",
+    "community-nav-icon-wrap"
+   );
+
+   const icon = createElement(
+    "span",
+    "community-nav-icon",
+    item[0]
+   );
+
+   iconWrap.appendChild(icon);
+
+   // RED DOT IN THE CENTER OF THE BELL EMOJI
+
+   if(item[2] === "notifications"){
+
+    const dot = createElement(
+     "span",
+     "community-notification-dot"
+    );
+
+    dot.setAttribute(
+     "aria-label",
+     "New notifications"
+    );
+
+    iconWrap.appendChild(dot);
+
+   }
+
+   const label = createElement(
+    "span",
+    "community-nav-label",
+    item[1]
+   );
+
+   button.appendChild(iconWrap);
+   button.appendChild(label);
 
    button.addEventListener("click",()=>{
 
@@ -132,26 +216,34 @@
 
     button.classList.add("active");
 
-    if(item[1] === "home"){
+    if(item[2] === "home"){
+
      showNotice("Welcome to the Community feed.");
+
     }
 
-    if(item[1] === "me"){
+    if(item[2] === "me"){
+
      showNotice(
       "My Profile will be connected with your Account in a future update."
      );
+
     }
 
-    if(item[1] === "creator"){
+    if(item[2] === "creator"){
+
      showNotice(
       "Creator Panel is planned for a future update."
      );
+
     }
 
-    if(item[1] === "notifications"){
+    if(item[2] === "notifications"){
+
      showNotice(
       "Notifications will be connected after the account and backend system is ready."
      );
+
     }
 
    });
@@ -164,7 +256,9 @@
   root.appendChild(header);
 
 
+  // ================================================
   // MAIN
+  // ================================================
 
   const main = createElement(
    "main",
@@ -179,7 +273,9 @@
   main.appendChild(notice);
 
 
+  // ================================================
   // CREATE POST
+  // ================================================
 
   const composer = createElement(
    "section",
@@ -203,19 +299,27 @@
 
   composer.appendChild(textarea);
 
+
+  // IMAGE PREVIEW
+
   const preview = createElement(
    "img",
    "community-preview"
   );
 
   preview.alt = "Selected post image preview";
+  preview.style.display = "none";
 
   composer.appendChild(preview);
+
 
   const composerBottom = createElement(
    "div",
    "community-composer-bottom"
   );
+
+
+  // PHOTO UPLOAD
 
   const photoLabel = createElement(
    "label",
@@ -230,10 +334,14 @@
 
   photoLabel.appendChild(fileInput);
 
+
   const fileName = createElement(
    "div",
    "community-selected-file"
   );
+
+
+  // PUBLISH BUTTON
 
   const publishButton = createElement(
    "button",
@@ -252,7 +360,9 @@
   main.appendChild(composer);
 
 
-  // FEED
+  // ================================================
+  // COMMUNITY FEED
+  // ================================================
 
   const feedTitle = createElement(
    "h3",
@@ -274,7 +384,9 @@
   pageContent.appendChild(root);
 
 
+  // ================================================
   // IMAGE PREVIEW
+  // ================================================
 
   fileInput.addEventListener("change",()=>{
 
@@ -283,22 +395,40 @@
    selectedImage = "";
 
    if(!file){
+
     preview.style.display = "none";
     fileName.textContent = "";
+
     return;
+
    }
+
 
    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+
     fileInput.value = "";
-    showNotice("Please choose a JPG, PNG or WEBP image.");
+
+    showNotice(
+     "Please choose a JPG, PNG or WEBP image."
+    );
+
     return;
+
    }
 
+
    if(file.size > 5 * 1024 * 1024){
+
     fileInput.value = "";
-    showNotice("Image size must be 5 MB or less.");
+
+    showNotice(
+     "Image size must be 5 MB or less."
+    );
+
     return;
+
    }
+
 
    const reader = new FileReader();
 
@@ -318,38 +448,55 @@
   });
 
 
+  // ================================================
   // CREATE TEMPORARY POST
+  // ================================================
 
   publishButton.addEventListener("click",()=>{
 
    const caption = textarea.value.trim();
 
    if(!caption && !selectedImage){
-    showNotice("Write something or add a photo first.");
+
+    showNotice(
+     "Write something or add a photo first."
+    );
+
     return;
+
    }
+
 
    temporaryPosts.unshift({
 
     id: "temporary-" + Date.now(),
+
     isDemo: false,
     isTemporary: true,
+
     author: "You",
     avatar: "Y",
+
     time: "Just now",
+
     caption: caption,
     image: selectedImage,
+
     reactions: ["👍","❤️"],
     comments: []
 
    });
 
+
    textarea.value = "";
    fileInput.value = "";
    fileName.textContent = "";
+
    preview.removeAttribute("src");
    preview.style.display = "none";
+
    selectedImage = "";
+
 
    showNotice(
     "Temporary preview post created. It is not saved to an account or database."
@@ -360,7 +507,9 @@
   });
 
 
-  // SEARCH
+  // ================================================
+  // SEARCH POSTS
+  // ================================================
 
   searchInput.addEventListener("input",()=>{
 
@@ -373,7 +522,9 @@
   });
 
 
+  // ================================================
   // RENDER FEED
+  // ================================================
 
   function renderFeed(){
 
@@ -388,14 +539,18 @@
     ...demoPosts
    ];
 
+
    const filteredPosts = allPosts.filter(post=>{
 
     const searchable = [
+
      post.author,
      post.caption,
+
      ...(post.comments || []).map(comment =>
       comment.author + " " + comment.text
      )
+
     ].join(" ").toLowerCase();
 
     return searchable.includes(currentFilter);
@@ -414,6 +569,7 @@
     );
 
     return;
+
    }
 
 
@@ -438,6 +594,7 @@
      post.avatar || "U"
     );
 
+
     const authorInfo = createElement(
      "div",
      "community-author-info"
@@ -459,6 +616,7 @@
      )
     );
 
+
     if(post.isDemo){
 
      authorInfo.appendChild(
@@ -471,6 +629,7 @@
 
     }
 
+
     if(post.isTemporary){
 
      authorInfo.appendChild(
@@ -482,6 +641,7 @@
      );
 
     }
+
 
     top.appendChild(avatar);
     top.appendChild(authorInfo);
@@ -530,7 +690,7 @@
     }
 
 
-    // REACTION ICONS — NO COUNTS OR NAMES
+    // REACTIONS
 
     const reactions = createElement(
      "div",
@@ -540,6 +700,7 @@
     const postReactions = Array.isArray(post.reactions)
      ? post.reactions
      : [];
+
 
     postReactions.forEach(emoji=>{
 
@@ -553,8 +714,8 @@
 
     });
 
-    // Demo-only local reaction selection.
-    // This does not send notifications or save data.
+
+    // LOCAL REACTION SELECTION
 
     reactionOptions.forEach(emoji=>{
 
@@ -565,6 +726,7 @@
      );
 
      button.type = "button";
+
      button.setAttribute(
       "aria-label",
       "Select reaction " + emoji
@@ -583,7 +745,9 @@
     card.appendChild(reactions);
 
 
-    // PUBLIC COMMENTS
+    // ================================================
+    // COMMENTS
+    // ================================================
 
     const commentsBox = createElement(
      "div",
@@ -598,9 +762,11 @@
      )
     );
 
+
     const comments = Array.isArray(post.comments)
      ? post.comments
      : [];
+
 
     if(!comments.length){
 
@@ -624,12 +790,15 @@
       const name = createElement(
        "strong",
        "",
-       comment.author + ":"
+       comment.author || "Community Member"
       );
 
       commentLine.appendChild(name);
+
       commentLine.appendChild(
-       document.createTextNode(" " + comment.text)
+       document.createTextNode(
+        ": " + (comment.text || "")
+       )
       );
 
       commentsBox.appendChild(commentLine);
@@ -637,6 +806,7 @@
      });
 
     }
+
 
     card.appendChild(commentsBox);
 
@@ -646,17 +816,24 @@
 
   }
 
+
+  // FIRST FEED RENDER
+
   renderFeed();
 
  }
 
 
+ // ================================================
  // GLOBAL ROUTE FUNCTION
+ // ================================================
 
  window.renderCommunityPage = renderCommunityPage;
 
 
- // Restore normal page mode when leaving Community.
+ // ================================================
+ // RESTORE NORMAL PAGE MODE WHEN LEAVING
+ // ================================================
 
  window.addEventListener("popstate",()=>{
 
@@ -665,7 +842,11 @@
   );
 
   if(params.get("page") !== "community"){
-   document.body.classList.remove("community-active");
+
+   document.body.classList.remove(
+    "community-active"
+   );
+
   }
 
  });
