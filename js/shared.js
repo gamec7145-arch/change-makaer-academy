@@ -71,7 +71,7 @@ const learningSubjects = {
 
 const groupNames = {
  science: "Science",
- arts: "Arts",
+ arts: "Humanities",
  commerce: "Commerce"
 };
 
@@ -299,5 +299,4 @@ function showNotFound() {
  pageContent.appendChild(
   makeEmpty("Please return to the homepage and choose a valid section.")
  );
-                     }
-  
+}
