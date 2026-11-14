@@ -2,6 +2,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FEED MODULE
+   SVG ICONS + EXISTING ACTIONS
 ========================================= */
 
 (function () {
@@ -14,10 +15,63 @@
     return;
   }
 
+  // Professional outline SVG icons
+  const Icons = {
+
+    home: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m3 10 9-7 9 7"></path>
+        <path d="M5 9v12h14V9"></path>
+        <path d="M9 21v-7h6v7"></path>
+      </svg>
+    `,
+
+    profile: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4 21a8 8 0 0 1 16 0"></path>
+      </svg>
+    `,
+
+    friends: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    `,
+
+    creator: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="8" height="8" rx="1.5"></rect>
+        <rect x="13" y="3" width="8" height="5" rx="1.5"></rect>
+        <rect x="13" y="10" width="8" height="11" rx="1.5"></rect>
+        <rect x="3" y="13" width="8" height="8" rx="1.5"></rect>
+      </svg>
+    `,
+
+    notification: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M10 21h4"></path>
+      </svg>
+    `,
+
+    search: `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.8" cy="10.8" r="6.8"></circle>
+        <path d="m16 16 5 5"></path>
+      </svg>
+    `
+  };
+
+
   const Feed = {
 
     // Homepage render
     async renderHome(root) {
+
       if (!root) root = Core.getRoot();
       if (!root) return;
 
@@ -26,6 +80,7 @@
 
           <!-- HEADER -->
           <header class="cma-header">
+
             <div class="cma-header-title">
               <span>Change Maker</span>
               <span class="cma-green">Community</span>
@@ -37,55 +92,84 @@
               data-cma-action="search"
               aria-label="Search"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="10.8" cy="10.8" r="6.8"></circle>
-                <path d="m16 16 5 5"></path>
-              </svg>
+              ${Icons.search}
             </button>
+
           </header>
 
-          <!-- TOP NAVIGATION -->
-          <nav class="cma-navigation">
 
-            <button class="cma-nav-item active"
-              data-cma-page="home">
-              <span class="cma-nav-icon">⌂</span>
+          <!-- TOP NAVIGATION -->
+          <nav class="cma-navigation" aria-label="Community navigation">
+
+            <button
+              class="cma-nav-item active"
+              type="button"
+              data-cma-page="home"
+              aria-current="page"
+            >
+              <span class="cma-nav-icon">
+                ${Icons.home}
+              </span>
               <span>Home</span>
             </button>
 
-            <button class="cma-nav-item"
-              data-cma-page="profile">
-              <span class="cma-nav-icon">♙</span>
+
+            <button
+              class="cma-nav-item"
+              type="button"
+              data-cma-page="profile"
+            >
+              <span class="cma-nav-icon">
+                ${Icons.profile}
+              </span>
               <span>Profile</span>
             </button>
 
-            <button class="cma-nav-item"
-              data-cma-page="friends">
-              <span class="cma-nav-icon">♧</span>
+
+            <button
+              class="cma-nav-item"
+              type="button"
+              data-cma-page="friends"
+            >
+              <span class="cma-nav-icon">
+                ${Icons.friends}
+              </span>
               <span>Friends</span>
             </button>
 
-            <button class="cma-nav-item"
-              data-cma-page="creator">
-              <span class="cma-nav-icon">♛</span>
+
+            <button
+              class="cma-nav-item"
+              type="button"
+              data-cma-page="creator"
+            >
+              <span class="cma-nav-icon">
+                ${Icons.creator}
+              </span>
               <span>Creator Panel</span>
             </button>
 
-            <button class="cma-nav-item"
-              data-cma-page="notifications">
-              <span class="cma-nav-icon">♧</span>
+
+            <button
+              class="cma-nav-item"
+              type="button"
+              data-cma-page="notifications"
+            >
+              <span class="cma-nav-icon">
+                ${Icons.notification}
+              </span>
               <span>Notification</span>
             </button>
 
           </nav>
 
+
           <!-- POST COMPOSER -->
           <section class="cma-composer">
 
             <div class="cma-composer-top">
-              <div class="cma-avatar">
-                ♙
-              </div>
+
+              <div class="cma-avatar"></div>
 
               <textarea
                 class="cma-post-input"
@@ -94,7 +178,9 @@
                 rows="1"
                 aria-label="Write a post"
               ></textarea>
+
             </div>
+
 
             <div class="cma-composer-bottom">
 
@@ -103,8 +189,10 @@
                 class="cma-photo-button"
                 data-cma-action="photo"
               >
-                <span>▧</span> Photo
+                <span aria-hidden="true">▧</span>
+                Photo
               </button>
+
 
               <button
                 type="button"
@@ -115,7 +203,9 @@
               </button>
 
             </div>
+
           </section>
+
 
           <!-- FEED POSTS -->
           <section
@@ -137,6 +227,7 @@
       this.bindEvents(root);
     },
 
+
     // Homepage interactions
     bindEvents(root) {
 
@@ -152,13 +243,16 @@
 
         if (!button || !root.contains(button)) return;
 
+
         // Navigation
         if (button.dataset.cmaPage) {
+
+          const page = button.dataset.cmaPage;
 
           window.dispatchEvent(
             new CustomEvent("cma:navigate", {
               detail: {
-                page: button.dataset.cmaPage
+                page: page
               }
             })
           );
@@ -166,15 +260,20 @@
           return;
         }
 
+
         const action = button.dataset.cmaAction;
+
 
         // Search
         if (action === "search") {
+
           window.dispatchEvent(
             new CustomEvent("cma:open-search")
           );
+
           return;
         }
+
 
         // Photo selection
         if (action === "photo") {
@@ -188,6 +287,7 @@
           return;
         }
 
+
         // Create post
         if (action === "post") {
 
@@ -197,10 +297,12 @@
           const content = input?.value.trim();
 
           if (!content) {
+
             Core.showNotice(
               "Please write something first.",
               "error"
             );
+
             return;
           }
 
@@ -215,7 +317,9 @@
         }
 
       });
+
     },
+
 
     // Reusable post card structure
     createPostCard(post) {
@@ -238,14 +342,13 @@
         item.image_url
       );
 
+
       return `
         <article class="cma-post-card">
 
           <div class="cma-post-header">
 
-            <div class="cma-avatar">
-              ♙
-            </div>
+            <div class="cma-avatar"></div>
 
             <div class="cma-post-author">
               <strong>${author}</strong>
@@ -261,9 +364,11 @@
 
           </div>
 
+
           <div class="cma-post-caption">
             ${caption}
           </div>
+
 
           ${
             imageURL
@@ -276,16 +381,21 @@
               : ""
           }
 
+
           <div class="cma-reactions">
+
             <button type="button" data-reaction="like">👍</button>
             <button type="button" data-reaction="love">❤️</button>
             <button type="button" data-reaction="haha">😂</button>
             <button type="button" data-reaction="wow">😮</button>
+
           </div>
+
 
           <div class="cma-comment-preview">
             Comments will appear here.
           </div>
+
 
           <button
             class="cma-view-comments"
@@ -295,15 +405,22 @@
             View all comments
           </button>
 
+
           <div class="cma-comment-input">
+
             <input
               type="text"
               placeholder="Write a comment..."
               aria-label="Write a comment"
             >
-            <button type="button" aria-label="Send comment">
+
+            <button
+              type="button"
+              aria-label="Send comment"
+            >
               ➤
             </button>
+
           </div>
 
         </article>
@@ -311,6 +428,7 @@
     }
 
   };
+
 
   window.CMACommunityFeed = Feed;
 
