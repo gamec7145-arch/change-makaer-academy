@@ -1,1113 +1,1013 @@
-
 /* ==================================================
    CHANGE MAKER ACADEMY
    COMMUNITY — COMPLETE RESPONSIVE DESIGN
-   Target: Second Screenshot
+   Corrected Version — Part 1 of 2
 ================================================== */
 
-
-/* ================================================
-   COMMUNITY PAGE BASE
-================================================ */
+/* COMMUNITY PAGE BASE */
 
 body.community-active{
- padding-bottom:0 !important;
- background:var(--bg) !important;
+  padding-bottom:0 !important;
+  background:var(--bg) !important;
 }
 
 body.community-active .header,
 body.community-active .cma-bottom-nav,
 body.community-active .footer,
 body.community-active .whatsapp{
- display:none !important;
+  display:none !important;
 }
 
 body.community-active #innerPage{
- padding:0 !important;
- margin:0 !important;
+  padding:0 !important;
+  margin:0 !important;
 }
 
 body.community-active #innerPage > .container{
- width:100% !important;
- max-width:760px !important;
- padding:0 12px 35px !important;
- margin:0 auto !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  max-width:760px !important;
+  padding:0 12px 35px !important;
+  margin:0 auto !important;
+  box-sizing:border-box !important;
 }
 
 body.community-active #backLink,
 body.community-active #pageBanner,
 body.community-active .page-intro{
- display:none !important;
+  display:none !important;
 }
 
 body.community-active #pageContent{
- width:100% !important;
- max-width:100% !important;
- min-width:0 !important;
- display:flex !important;
- flex-direction:column !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  box-sizing:border-box !important;
 }
 
 .community-page{
- width:100%;
- color:var(--white);
- font-family:'Nunito Sans',sans-serif;
+  width:100%;
+  min-width:0;
+  color:var(--white);
+  font-family:'Nunito Sans',sans-serif;
 }
 
-
-/* ================================================
-   HEADER — BRAND + RIGHT SEARCH
-================================================ */
+/* HEADER */
 
 body.community-active #pageContent .community-header{
- position:relative !important;
- top:auto !important;
- z-index:20 !important;
+  position:relative !important;
+  top:auto !important;
+  z-index:20 !important;
 
- display:flex !important;
- flex-direction:row !important;
- flex-wrap:nowrap !important;
- align-items:center !important;
- justify-content:space-between !important;
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  align-items:center !important;
+  justify-content:space-between !important;
 
- width:100% !important;
- min-width:0 !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 
- gap:10px !important;
- margin:0 !important;
- padding:14px 0 16px !important;
+  gap:10px !important;
+  margin:0 !important;
+  padding:14px 0 16px !important;
 
- background:var(--bg) !important;
- border-bottom:1px solid var(--border) !important;
+  background:var(--bg) !important;
+  border-bottom:1px solid var(--border) !important;
 }
 
 body.community-active #pageContent .community-brand{
- display:block !important;
+  display:block !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
 
- flex:1 1 auto !important;
- min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
 
- margin:0 !important;
- padding:0 !important;
+  color:var(--white) !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:clamp(17px,4.5vw,30px) !important;
+  line-height:1.2 !important;
+  font-weight:1000 !important;
+  letter-spacing:-.5px !important;
 
- color:var(--white) !important;
- font-family:'Nunito Sans',sans-serif !important;
- font-size:clamp(18px,4.9vw,34px) !important;
- line-height:1.2 !important;
- font-weight:1000 !important;
- letter-spacing:-.5px !important;
-
- white-space:nowrap !important;
- overflow:visible !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
 }
 
 body.community-active #pageContent .community-brand span{
- color:var(--green) !important;
+  color:var(--green) !important;
 }
 
-
-/* ================================================
-   HEADER SEARCH BUTTON
-================================================ */
+/* HEADER SEARCH + ACTIONS */
 
 body.community-active #pageContent .community-header-actions{
- display:flex !important;
- flex:0 0 auto !important;
-
- align-items:center !important;
- justify-content:flex-end !important;
-
- gap:7px !important;
- margin:0 !important;
- padding:0 !important;
+  display:flex !important;
+  flex:0 0 auto !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:7px !important;
+  margin:0 !important;
+  padding:0 !important;
 }
 
 body.community-active #pageContent .community-icon-btn{
- display:flex !important;
- align-items:center !important;
- justify-content:center !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- flex:0 0 48px !important;
- width:48px !important;
- min-width:48px !important;
- height:48px !important;
+  flex:0 0 44px !important;
+  width:44px !important;
+  min-width:44px !important;
+  height:44px !important;
 
- margin:0 !important;
- padding:0 !important;
+  margin:0 !important;
+  padding:0 !important;
 
- border:1px solid var(--border) !important;
- border-radius:12px !important;
+  border:1px solid var(--border) !important;
+  border-radius:12px !important;
 
- background:var(--panel) !important;
- color:var(--white) !important;
+  background:var(--panel) !important;
+  color:var(--white) !important;
 
- font-family:inherit !important;
- font-size:30px !important;
- line-height:1 !important;
+  font-family:inherit !important;
+  font-size:26px !important;
+  line-height:1 !important;
 
- cursor:pointer !important;
- box-shadow:none !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
 }
 
 body.community-active #pageContent .community-icon-btn:active{
- transform:scale(.96);
+  transform:scale(.96);
 }
 
-
-/* ================================================
-   SEARCH INPUT
-================================================ */
+/* SEARCH INPUT
+   Keeps the search field compact instead of
+   forcing it into a separate full-width row.
+*/
 
 body.community-active #pageContent .community-search{
- display:block;
- width:100%;
- min-width:0;
- box-sizing:border-box;
+  display:block !important;
 
- margin:8px 0 0;
- padding:11px 14px;
+  flex:0 1 210px !important;
+  width:210px !important;
+  max-width:34% !important;
+  min-width:105px !important;
 
- border:1px solid var(--border);
- border-radius:12px;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  padding:10px 12px !important;
 
- outline:none;
- background:var(--panel);
- color:var(--white);
+  border:1px solid var(--border) !important;
+  border-radius:12px !important;
 
- font-family:inherit;
- font-size:14px;
+  outline:none !important;
+  background:var(--panel) !important;
+  color:var(--white) !important;
+
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:14px !important;
 }
 
 body.community-active #pageContent .community-search::placeholder{
- color:var(--muted);
+  color:var(--muted) !important;
 }
 
-
-/* ================================================
-   NAVIGATION — UNDER HEADER
-================================================ */
+/* NAVIGATION */
 
 body.community-active #pageContent .community-nav{
- position:relative !important;
- top:auto !important;
- right:auto !important;
- bottom:auto !important;
- left:auto !important;
+  position:relative !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:auto !important;
 
- z-index:5 !important;
+  z-index:5 !important;
 
- display:grid !important;
- grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
 
- align-items:stretch !important;
- justify-content:stretch !important;
+  align-items:stretch !important;
+  justify-content:stretch !important;
 
- width:100% !important;
- min-width:0 !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 
- gap:4px !important;
+  gap:4px !important;
+  margin:0 !important;
+  padding:7px 0 9px !important;
 
- margin:0 !important;
- padding:9px 0 13px !important;
+  overflow:visible !important;
 
- overflow:visible !important;
+  border:0 !important;
+  border-bottom:1px solid var(--border) !important;
 
- border:0 !important;
- border-bottom:1px solid var(--border) !important;
-
- background:transparent !important;
- box-shadow:none !important;
+  background:transparent !important;
+  box-shadow:none !important;
 }
 
 body.community-active #pageContent .community-nav-button,
 body.community-active #pageContent .community-nav button{
- position:relative !important;
+  position:relative !important;
 
- display:flex !important;
- flex:initial !important;
+  display:flex !important;
+  flex:initial !important;
 
- flex-direction:column !important;
- align-items:center !important;
- justify-content:center !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- gap:7px !important;
+  gap:4px !important;
 
- width:100% !important;
- min-width:0 !important;
- min-height:82px !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:65px !important;
 
- margin:0 !important;
- padding:9px 2px !important;
+  margin:0 !important;
+  padding:8px 2px !important;
 
- border:0 !important;
- border-radius:17px !important;
+  border:0 !important;
+  border-radius:15px !important;
 
- background:transparent !important;
- color:var(--muted) !important;
+  background:transparent !important;
+  color:var(--muted) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:13px !important;
- font-weight:800 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:12px !important;
+  font-weight:800 !important;
 
- line-height:1.2 !important;
- white-space:nowrap !important;
+  line-height:1.2 !important;
+  white-space:nowrap !important;
 
- box-shadow:none !important;
- cursor:pointer !important;
+  box-shadow:none !important;
+  cursor:pointer !important;
 }
 
 body.community-active #pageContent .community-nav-button.active,
 body.community-active #pageContent .community-nav button.active{
- background:rgba(8,201,154,.13) !important;
- color:var(--mint) !important;
+  background:rgba(8,201,154,.13) !important;
+  color:var(--mint) !important;
 }
 
-
-/* ================================================
-   NAVIGATION ICONS
-================================================ */
+/* NAVIGATION ICONS */
 
 body.community-active #pageContent .community-nav-icon-wrap{
- position:relative !important;
+  position:relative !important;
 
- display:inline-flex !important;
- align-items:center !important;
- justify-content:center !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- width:32px !important;
- height:31px !important;
-
- flex:0 0 auto !important;
+  width:30px !important;
+  height:29px !important;
+  flex:0 0 auto !important;
 }
 
 body.community-active #pageContent .community-nav-icon{
- display:inline-flex !important;
- align-items:center !important;
- justify-content:center !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- font-size:27px !important;
- line-height:1 !important;
+  font-size:22px !important;
+  line-height:1 !important;
 }
 
 body.community-active #pageContent .community-nav-label{
- display:block !important;
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
 
- width:100% !important;
- min-width:0 !important;
+  color:inherit !important;
 
- color:inherit !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:11px !important;
+  line-height:1.25 !important;
+  font-weight:800 !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:clamp(10px,2.7vw,15px) !important;
- line-height:1.25 !important;
- font-weight:800 !important;
-
- text-align:center !important;
- white-space:nowrap !important;
+  text-align:center !important;
+  white-space:nowrap !important;
 }
 
-
-/* ================================================
-   NOTIFICATION DOT
-================================================ */
+/* NOTIFICATION DOT */
 
 body.community-active #pageContent .community-notification-dot{
- position:absolute !important;
+  position:absolute !important;
+  top:4px !important;
+  right:3px !important;
+  left:auto !important;
 
- top:4px !important;
- right:3px !important;
- left:auto !important;
+  width:8px !important;
+  height:8px !important;
 
- width:8px !important;
- height:8px !important;
+  border:1px solid var(--bg) !important;
+  border-radius:50% !important;
 
- border:1px solid var(--bg) !important;
- border-radius:50% !important;
+  background:#ff3b45 !important;
 
- background:#ff3b45 !important;
-
- transform:none !important;
- z-index:3 !important;
- pointer-events:none !important;
+  transform:none !important;
+  z-index:3 !important;
+  pointer-events:none !important;
 }
 
-
-/* ================================================
-   MAIN CONTENT — REMOVE EXTRA GAP
-================================================ */
+/* MAIN CONTENT */
 
 body.community-active #pageContent .community-main{
- display:block !important;
+  display:block !important;
 
- width:100% !important;
- max-width:100% !important;
- min-width:0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
 
- box-sizing:border-box !important;
-
- margin:14px auto 0 !important;
- padding:0 !important;
+  box-sizing:border-box !important;
+  margin:0 auto !important;
+  padding:0 !important;
 }
 
 body.community-active #pageContent .community-notice-area{
- width:100% !important;
+  width:100% !important;
 }
 
 body.community-active #pageContent .community-notice{
- display:none;
- margin-bottom:13px;
- padding:12px 14px;
+  display:none;
+  margin-bottom:13px;
+  padding:12px 14px;
 
- border:1px solid var(--border);
- border-radius:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
 
- background:var(--panel);
- color:var(--muted);
+  background:var(--panel);
+  color:var(--muted);
 
- font-size:13px;
- line-height:1.6;
+  font-size:13px;
+  line-height:1.6;
 }
 
 body.community-active #pageContent .community-notice.show{
- display:block;
+  display:block;
 }
 
-
-/* ================================================
-   CREATE A POST — TARGET SIZE
-================================================ */
+/* CREATE A POST */
 
 body.community-active #pageContent .community-composer{
- display:flex !important;
- flex-direction:column !important;
- align-items:stretch !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
 
- width:100% !important;
- min-width:0 !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 
- margin:20px 0 34px !important;
- padding:17px 18px !important;
+  margin:18px 0 20px !important;
+  padding:15px !important;
 
- border:1px solid var(--border) !important;
- border-radius:20px !important;
+  border:1px solid var(--border) !important;
+  border-radius:20px !important;
 
- background:var(--card) !important;
-
- box-shadow:none !important;
+  background:var(--card) !important;
+  box-shadow:none !important;
 }
 
 body.community-active #pageContent .community-composer-title{
- display:block !important;
+  display:block !important;
 
- margin:0 0 14px !important;
- padding:0 !important;
+  margin:0 0 10px !important;
+  padding:0 !important;
 
- color:var(--white) !important;
+  color:var(--white) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:19px !important;
- line-height:1.35 !important;
- font-weight:900 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:16px !important;
+  line-height:1.35 !important;
+  font-weight:900 !important;
 }
 
-
-/* ================================================
-   POST TEXTAREA
-================================================ */
+/* POST TEXTAREA */
 
 body.community-active #pageContent .community-composer textarea{
- display:block !important;
+  display:block !important;
 
- width:100% !important;
- min-width:0 !important;
- min-height:160px !important;
- height:160px !important;
+  width:100% !important;
+  min-width:0 !important;
+  min-height:90px !important;
+  height:90px !important;
 
- box-sizing:border-box !important;
- resize:vertical !important;
+  box-sizing:border-box !important;
+  resize:vertical !important;
 
- margin:0 !important;
- padding:20px 18px !important;
+  margin:0 !important;
+  padding:12px 14px !important;
 
- border:1px solid var(--border) !important;
- border-radius:23px !important;
+  border:1px solid var(--border) !important;
+  border-radius:16px !important;
 
- outline:none !important;
+  outline:none !important;
 
- background:var(--panel) !important;
- color:var(--white) !important;
+  background:var(--panel) !important;
+  color:var(--white) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:19px !important;
- line-height:1.5 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:15px !important;
+  line-height:1.5 !important;
 
- box-shadow:none !important;
+  box-shadow:none !important;
 }
 
 body.community-active #pageContent .community-composer textarea::placeholder{
- color:var(--muted) !important;
- opacity:1 !important;
+  color:var(--muted) !important;
+  opacity:1 !important;
 }
 
-
-/* ================================================
-   SELECTED IMAGE PREVIEW
-================================================ */
+/* SELECTED IMAGE PREVIEW */
 
 body.community-active #pageContent .community-composer .community-preview{
- display:none;
+  display:none;
+  width:100% !important;
+  max-height:280px !important;
 
- width:100% !important;
- max-height:280px !important;
+  margin:12px 0 !important;
 
- margin:12px 0 !important;
-
- border-radius:13px !important;
- object-fit:contain !important;
+  border-radius:13px !important;
+  object-fit:contain !important;
 }
 
-
-/* ================================================
-   PHOTO UPLOAD
-================================================ */
+/* PHOTO UPLOAD */
 
 body.community-active #pageContent .community-composer input[type="file"]{
- display:block !important;
+  display:block !important;
 
- width:auto !important;
- max-width:100% !important;
- min-width:0 !important;
+  width:auto !important;
+  max-width:100% !important;
+  min-width:0 !important;
 
- box-sizing:border-box !important;
+  box-sizing:border-box !important;
 
- margin:12px 0 0 !important;
- padding:0 !important;
+  margin:12px 0 0 !important;
+  padding:0 !important;
 
- border:0 !important;
- background:transparent !important;
- color:var(--muted) !important;
+  border:0 !important;
+  background:transparent !important;
+  color:var(--muted) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:13px !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:13px !important;
 }
 
 body.community-active #pageContent .community-composer input[type="file"]::file-selector-button{
- margin-right:9px !important;
- padding:10px 14px !important;
+  margin-right:9px !important;
+  padding:10px 14px !important;
 
- border:1px solid var(--border) !important;
- border-radius:12px !important;
+  border:1px solid var(--border) !important;
+  border-radius:12px !important;
 
- background:transparent !important;
- color:var(--mint) !important;
+  background:transparent !important;
+  color:var(--mint) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:13px !important;
- font-weight:900 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:13px !important;
+  font-weight:900 !important;
 }
 
-
-/* ================================================
-   PUBLISH BUTTON — RIGHT SIDE
-================================================ */
+/* PUBLISH BUTTON */
 
 body.community-active #pageContent .community-composer .community-publish-btn{
- display:block !important;
- align-self:flex-end !important;
+  display:block !important;
+  align-self:flex-end !important;
 
- width:auto !important;
- min-width:166px !important;
- min-height:78px !important;
+  width:auto !important;
+  min-width:88px !important;
+  min-height:44px !important;
 
- margin:8px 0 0 auto !important;
- padding:15px 27px !important;
+  margin:8px 0 0 auto !important;
+  padding:10px 18px !important;
 
- border:0 !important;
- border-radius:18px !important;
+  border:0 !important;
+  border-radius:12px !important;
 
- background:var(--green) !important;
- color:#052D3B !important;
+  background:var(--green) !important;
+  color:#052D3B !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:19px !important;
- font-weight:1000 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:15px !important;
+  font-weight:1000 !important;
 
- cursor:pointer !important;
- box-shadow:none !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
 }
 
 body.community-active #pageContent .community-composer .community-publish-btn:active{
- transform:scale(.97);
+  transform:scale(.97);
 }
 
 body.community-active #pageContent .community-composer .community-publish-btn:disabled{
- opacity:.65 !important;
- cursor:wait !important;
+  opacity:.65 !important;
+  cursor:wait !important;
 }
-
-
-/* ================================================
-   FEED TITLE
-================================================ */
+/* FEED TITLE */
 
 body.community-active #pageContent .community-feed-title{
- display:block !important;
+  display:block !important;
 
- margin:0 0 18px !important;
- padding:0 !important;
+  margin:0 0 12px !important;
+  padding:0 !important;
 
- color:var(--white) !important;
+  color:var(--white) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:21px !important;
- line-height:1.35 !important;
- font-weight:900 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:17px !important;
+  line-height:1.35 !important;
+  font-weight:900 !important;
 }
 
 body.community-active #pageContent .community-feed-search{
- display:none !important;
+  display:none !important;
 }
 
-
-/* ================================================
-   FEED LIST
-================================================ */
+/* FEED LIST */
 
 body.community-active #pageContent .community-feed{
- display:flex !important;
- flex-direction:column !important;
+  display:flex !important;
+  flex-direction:column !important;
 
- width:100% !important;
- min-width:0 !important;
+  width:100% !important;
+  min-width:0 !important;
 
- gap:15px !important;
+  gap:15px !important;
 }
 
 body.community-active #pageContent .community-empty{
- display:block !important;
+  display:block !important;
 
- width:100% !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  box-sizing:border-box !important;
 
- margin:0 !important;
- padding:45px 15px !important;
+  margin:0 !important;
+  padding:45px 15px !important;
 
- border:1px dashed var(--border) !important;
- border-radius:20px !important;
+  border:1px dashed var(--border) !important;
+  border-radius:20px !important;
 
- background:transparent !important;
- color:var(--muted) !important;
+  background:transparent !important;
+  color:var(--muted) !important;
 
- text-align:center !important;
- font-family:'Nunito Sans',sans-serif !important;
- font-size:16px !important;
+  text-align:center !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:16px !important;
 }
 
-
-/* ================================================
-   POST CARD
-================================================ */
+/* POST CARD */
 
 body.community-active #pageContent .community-post{
- display:block !important;
+  display:block !important;
 
- width:100% !important;
- min-width:0 !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 
- overflow:hidden !important;
+  overflow:hidden !important;
 
- margin:0 0 15px !important;
+  margin:0 0 15px !important;
 
- border:1px solid var(--border) !important;
- border-radius:20px !important;
+  border:1px solid var(--border) !important;
+  border-radius:20px !important;
 
- background:var(--card) !important;
+  background:var(--card) !important;
 }
 
 body.community-active #pageContent .community-post-top{
- display:flex !important;
- align-items:center !important;
+  display:flex !important;
+  align-items:center !important;
 
- gap:12px !important;
-
- padding:17px 18px 10px !important;
+  gap:12px !important;
+  padding:17px 18px 10px !important;
 }
 
 body.community-active #pageContent .community-avatar{
- width:78px !important;
- height:78px !important;
- min-width:78px !important;
+  width:78px !important;
+  height:78px !important;
+  min-width:78px !important;
 
- display:flex !important;
- align-items:center !important;
- justify-content:center !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- overflow:hidden !important;
+  overflow:hidden !important;
 
- border-radius:50% !important;
+  border-radius:50% !important;
 
- background:#0B7567 !important;
- color:#fff !important;
+  background:#0B7567 !important;
+  color:#fff !important;
 
- font-size:29px !important;
- font-weight:900 !important;
+  font-size:29px !important;
+  font-weight:900 !important;
 }
 
 body.community-active #pageContent .community-author-info{
- flex:1 !important;
- min-width:0 !important;
+  flex:1 !important;
+  min-width:0 !important;
 }
 
 body.community-active #pageContent .community-author-info strong,
 body.community-active #pageContent .community-author-name{
- display:block !important;
+  display:block !important;
 
- color:var(--white) !important;
- font-size:19px !important;
- font-weight:900 !important;
+  color:var(--white) !important;
+  font-size:19px !important;
+  font-weight:900 !important;
 }
 
 body.community-active #pageContent .community-author-info small,
 body.community-active #pageContent .community-post-time{
- display:block !important;
+  display:block !important;
 
- margin-top:4px !important;
+  margin-top:4px !important;
 
- color:var(--muted) !important;
- font-size:14px !important;
+  color:var(--muted) !important;
+  font-size:14px !important;
 }
 
 body.community-active #pageContent .community-demo-tag{
- display:inline-block !important;
+  display:inline-block !important;
 
- margin-top:8px !important;
- padding:5px 12px !important;
+  margin-top:8px !important;
+  padding:5px 12px !important;
 
- border-radius:8px !important;
+  border-radius:8px !important;
 
- background:rgba(8,201,154,.12) !important;
- color:var(--mint) !important;
+  background:rgba(8,201,154,.12) !important;
+  color:var(--mint) !important;
 
- font-size:13px !important;
- font-weight:900 !important;
- letter-spacing:.3px !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  letter-spacing:.3px !important;
 }
 
 body.community-active #pageContent .community-post-menu{
- border:0 !important;
- background:transparent !important;
- color:var(--muted) !important;
- font-size:23px !important;
+  border:0 !important;
+  background:transparent !important;
+  color:var(--muted) !important;
+  font-size:23px !important;
 }
 
-
-/* ================================================
-   POST CAPTION
-================================================ */
+/* POST CAPTION */
 
 body.community-active #pageContent .community-caption{
- margin:12px 18px 18px !important;
+  margin:12px 18px 18px !important;
 
- color:var(--white) !important;
+  color:var(--white) !important;
 
- font-family:'Nunito Sans',sans-serif !important;
- font-size:18px !important;
- line-height:1.7 !important;
+  font-family:'Nunito Sans',sans-serif !important;
+  font-size:18px !important;
+  line-height:1.7 !important;
 
- overflow-wrap:anywhere !important;
+  overflow-wrap:anywhere !important;
 }
 
-
-/* ================================================
-   POST IMAGE
-================================================ */
+/* POST IMAGE */
 
 body.community-active #pageContent .community-post-image{
- display:block !important;
+  display:block !important;
 
- width:100% !important;
- max-height:430px !important;
+  width:100% !important;
+  max-height:430px !important;
 
- object-fit:cover !important;
- background:var(--panel) !important;
+  object-fit:cover !important;
+  background:var(--panel) !important;
 }
 
-
-/* ================================================
-   REACTIONS
-================================================ */
+/* REACTIONS */
 
 body.community-active #pageContent .community-reactions{
- display:flex !important;
- flex-wrap:wrap !important;
- align-items:center !important;
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
 
- gap:10px !important;
+  gap:10px !important;
 
- padding:15px 18px 14px !important;
+  padding:15px 18px 14px !important;
 }
 
 body.community-active #pageContent .community-reaction{
- display:inline-flex !important;
- align-items:center !important;
- justify-content:center !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 
- min-width:58px !important;
- height:58px !important;
+  min-width:58px !important;
+  height:58px !important;
 
- border:1px solid var(--border) !important;
- border-radius:50% !important;
+  border:1px solid var(--border) !important;
+  border-radius:50% !important;
 
- background:var(--panel) !important;
+  background:var(--panel) !important;
 
- font-size:27px !important;
+  font-size:27px !important;
 }
 
 body.community-active #pageContent .community-reaction-button{
- cursor:pointer !important;
+  cursor:pointer !important;
 }
 
 body.community-active #pageContent .community-reaction-button.selected{
- border-color:var(--green) !important;
- background:rgba(8,201,154,.16) !important;
+  border-color:var(--green) !important;
+  background:rgba(8,201,154,.16) !important;
 }
 
-
-/* ================================================
-   COMMENTS
-================================================ */
+/* COMMENTS */
 
 body.community-active #pageContent .community-comments{
- padding:0 18px 16px !important;
+  padding:0 18px 16px !important;
 }
 
 body.community-active #pageContent .community-comments-title{
- margin:0 0 9px !important;
+  margin:0 0 9px !important;
 
- color:var(--mint) !important;
- font-size:14px !important;
- font-weight:900 !important;
+  color:var(--mint) !important;
+  font-size:14px !important;
+  font-weight:900 !important;
 }
 
 body.community-active #pageContent .community-comment{
- margin-top:8px !important;
- padding:12px !important;
+  margin-top:8px !important;
+  padding:12px !important;
 
- border-radius:12px !important;
+  border-radius:12px !important;
 
- background:var(--panel) !important;
- color:var(--muted) !important;
+  background:var(--panel) !important;
+  color:var(--muted) !important;
 
- font-size:14px !important;
- line-height:1.6 !important;
+  font-size:14px !important;
+  line-height:1.6 !important;
 }
 
 body.community-active #pageContent .community-comment strong{
- margin-right:5px !important;
- color:var(--white) !important;
+  margin-right:5px !important;
+  color:var(--white) !important;
 }
 
-
-/* ================================================
-   PROFILE AND OTHER PANELS
-================================================ */
+/* PROFILE AND OTHER PANELS */
 
 body.community-active #pageContent .community-section-panel{
- width:100% !important;
- min-width:0 !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 }
 
 body.community-active #pageContent .community-profile-form{
- display:flex !important;
- flex-direction:column !important;
- gap:12px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
 }
 
 body.community-active #pageContent .community-profile-tabs{
- display:flex !important;
- flex-wrap:wrap !important;
- gap:8px !important;
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:8px !important;
 }
 
 body.community-active #pageContent .community-profile-tab{
- padding:10px 14px !important;
+  padding:10px 14px !important;
 
- border:1px solid var(--border) !important;
- border-radius:10px !important;
+  border:1px solid var(--border) !important;
+  border-radius:10px !important;
 
- background:var(--panel) !important;
- color:var(--muted) !important;
+  background:var(--panel) !important;
+  color:var(--muted) !important;
 
- font-family:inherit !important;
- font-weight:800 !important;
+  font-family:inherit !important;
+  font-weight:800 !important;
 }
 
 body.community-active #pageContent .community-profile-tab.active{
- background:rgba(8,201,154,.13) !important;
- color:var(--mint) !important;
+  background:rgba(8,201,154,.13) !important;
+  color:var(--mint) !important;
 }
 
-
-/* ================================================
-   COMMENT OVERLAY
-================================================ */
+/* COMMENT OVERLAY */
 
 .community-comment-overlay{
- position:fixed !important;
- inset:0 !important;
+  position:fixed !important;
+  inset:0 !important;
 
- z-index:99999 !important;
+  z-index:99999 !important;
 
- display:flex !important;
- align-items:flex-end !important;
- justify-content:center !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
 
- background:rgba(0,0,0,.65) !important;
+  background:rgba(0,0,0,.65) !important;
 }
 
 .community-comment-sheet{
- width:100% !important;
- max-width:650px !important;
- max-height:80vh !important;
+  width:100% !important;
+  max-width:650px !important;
+  max-height:80vh !important;
 
- overflow:auto !important;
- box-sizing:border-box !important;
+  overflow:auto !important;
+  box-sizing:border-box !important;
 
- padding:16px !important;
+  padding:16px !important;
 
- border-radius:20px 20px 0 0 !important;
+  border-radius:20px 20px 0 0 !important;
 
- background:var(--bg) !important;
- color:var(--white) !important;
+  background:var(--bg) !important;
+  color:var(--white) !important;
 }
 
-
-/* ================================================
-   NOTIFICATIONS
-================================================ */
+/* NOTIFICATIONS */
 
 body.community-active #pageContent .community-notification-item{
- width:100% !important;
- box-sizing:border-box !important;
+  width:100% !important;
+  box-sizing:border-box !important;
 
- padding:14px !important;
- margin-bottom:10px !important;
+  padding:14px !important;
+  margin-bottom:10px !important;
 
- border:1px solid var(--border) !important;
- border-radius:14px !important;
+  border:1px solid var(--border) !important;
+  border-radius:14px !important;
 
- background:var(--panel) !important;
- color:var(--white) !important;
+  background:var(--panel) !important;
+  color:var(--white) !important;
 }
 
-
-/* ================================================
-   MOBILE RESPONSIVE
-================================================ */
+/* MOBILE RESPONSIVE */
 
 @media(max-width:420px){
 
- body.community-active #innerPage > .container{
-  padding-left:12px !important;
-  padding-right:12px !important;
- }
+  body.community-active #innerPage > .container{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
 
- body.community-active #pageContent .community-header{
-  gap:7px !important;
-  padding:12px 0 14px !important;
- }
+  body.community-active #pageContent .community-header{
+    gap:6px !important;
+    padding:12px 0 14px !important;
+  }
 
- body.community-active #pageContent .community-brand{
-  font-size:clamp(17px,4.8vw,21px) !important;
-  letter-spacing:-.4px !important;
- }
+  body.community-active #pageContent .community-brand{
+    font-size:clamp(15px,4.1vw,19px) !important;
+    letter-spacing:-.4px !important;
+  }
 
- body.community-active #pageContent .community-icon-btn{
-  width:43px !important;
-  min-width:43px !important;
-  height:43px !important;
-  flex-basis:43px !important;
-  font-size:26px !important;
- }
+  body.community-active #pageContent .community-search{
+    flex:0 1 125px !important;
+    width:125px !important;
+    max-width:36% !important;
+    min-width:85px !important;
+    padding:9px 9px !important;
+    font-size:12px !important;
+  }
 
- body.community-active #pageContent .community-nav{
-  gap:2px !important;
-  padding:8px 0 11px !important;
- }
+  body.community-active #pageContent .community-icon-btn{
+    width:39px !important;
+    min-width:39px !important;
+    height:39px !important;
+    flex-basis:39px !important;
+    font-size:23px !important;
+  }
 
- body.community-active #pageContent .community-nav-button,
- body.community-active #pageContent .community-nav button{
-  min-height:76px !important;
-  padding:8px 1px !important;
-  gap:6px !important;
-  border-radius:15px !important;
- }
+  body.community-active #pageContent .community-header-actions{
+    gap:5px !important;
+  }
 
- body.community-active #pageContent .community-nav-icon{
-  font-size:24px !important;
- }
+  body.community-active #pageContent .community-nav{
+    gap:2px !important;
+    padding:5px 0 7px !important;
+  }
 
- body.community-active #pageContent .community-nav-label{
-  font-size:clamp(9px,2.6vw,12px) !important;
- }
+  body.community-active #pageContent .community-nav-button,
+  body.community-active #pageContent .community-nav button{
+    min-height:65px !important;
+    padding:7px 1px !important;
+    gap:4px !important;
+    border-radius:13px !important;
+  }
 
- body.community-active #pageContent .community-main{
-  margin-top:12px !important;
- }
+  body.community-active #pageContent .community-nav-icon{
+    font-size:22px !important;
+  }
 
- body.community-active #pageContent .community-composer{
-  margin:20px 0 32px !important;
-  padding:16px !important;
-  border-radius:19px !important;
- }
+  body.community-active #pageContent .community-nav-label{
+    font-size:11px !important;
+  }
 
- body.community-active #pageContent .community-composer-title{
-  font-size:18px !important;
- }
+  body.community-active #pageContent .community-main{
+    margin-top:0 !important;
+  }
 
- body.community-active #pageContent .community-composer textarea{
-  min-height:160px !important;
-  height:160px !important;
-  padding:17px !important;
-  font-size:18px !important;
-  border-radius:22px !important;
- }
+  body.community-active #pageContent .community-composer{
+    margin:18px 0 20px !important;
+    padding:15px !important;
+    border-radius:19px !important;
+  }
 
- body.community-active #pageContent .community-composer .community-publish-btn{
-  min-width:150px !important;
-  min-height:72px !important;
-  font-size:18px !important;
- }
+  body.community-active #pageContent .community-composer-title{
+    font-size:16px !important;
+  }
 
- body.community-active #pageContent .community-feed-title{
-  font-size:20px !important;
- }
+  body.community-active #pageContent .community-composer textarea{
+    min-height:90px !important;
+    height:90px !important;
+    padding:12px 14px !important;
+    font-size:15px !important;
+    border-radius:16px !important;
+  }
 
- body.community-active #pageContent .community-post-image{
-  max-height:340px !important;
- }
+  body.community-active #pageContent .community-composer .community-publish-btn{
+    min-width:88px !important;
+    min-height:44px !important;
+    padding:10px 18px !important;
+    font-size:15px !important;
+  }
 
+  body.community-active #pageContent .community-feed-title{
+    font-size:17px !important;
+    margin-bottom:12px !important;
+  }
+
+  body.community-active #pageContent .community-post-image{
+    max-height:340px !important;
+  }
 }
 
-
-/* ================================================
-   SMALL MOBILE
-================================================ */
+/* SMALL MOBILE */
 
 @media(max-width:350px){
 
- body.community-active #pageContent .community-brand{
-  font-size:16px !important;
- }
+  body.community-active #pageContent .community-header{
+    gap:4px !important;
+  }
 
- body.community-active #pageContent .community-icon-btn{
-  width:39px !important;
-  min-width:39px !important;
-  height:39px !important;
-  flex-basis:39px !important;
- }
+  body.community-active #pageContent .community-brand{
+    font-size:14px !important;
+  }
 
- body.community-active #pageContent .community-nav-label{
-  font-size:9px !important;
- }
+  body.community-active #pageContent .community-search{
+    flex-basis:95px !important;
+    width:95px !important;
+    min-width:75px !important;
+    padding:8px 7px !important;
+    font-size:11px !important;
+  }
 
- body.community-active #pageContent .community-composer{
-  padding:13px !important;
- }
+  body.community-active #pageContent .community-icon-btn{
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    flex-basis:34px !important;
+    font-size:20px !important;
+  }
 
+  body.community-active #pageContent .community-nav-label{
+    font-size:9px !important;
+  }
+
+  body.community-active #pageContent .community-composer{
+    padding:13px !important;
+  }
 }
 
-
-/* ================================================
-   TABLET AND DESKTOP
-================================================ */
+/* TABLET AND DESKTOP */
 
 @media(min-width:700px){
 
- body.community-active #innerPage > .container{
-  max-width:760px !important;
- }
+  body.community-active #innerPage > .container{
+    max-width:760px !important;
+  }
 
- body.community-active #pageContent .community-header{
-  padding:15px 0 17px !important;
- }
+  body.community-active #pageContent .community-header{
+    padding:15px 0 17px !important;
+  }
 
- body.community-active #pageContent .community-nav{
-  justify-content:center !important;
- }
+  body.community-active #pageContent .community-search{
+    max-width:250px !important;
+  }
 
- body.community-active #pageContent .community-nav-button{
-  max-width:150px !important;
- }
+  body.community-active #pageContent .community-nav{
+    justify-content:center !important;
+  }
 
- body.community-active #pageContent .community-composer{
-  padding:20px !important;
- }
+  body.community-active #pageContent .community-nav-button,
+  body.community-active #pageContent .community-nav button{
+    max-width:150px !important;
+  }
 
+  body.community-active #pageContent .community-composer{
+    padding:20px !important;
+  }
 }
 
-/* ==========================================
-   COMMUNITY FINAL SIZE CORRECTION
-========================================== */
+/* FINAL HEADER POSITION SAFETY */
 
-body.community-active #pageContent .community-main{
- margin-top:0 !important;
-}
-
-body.community-active #pageContent .community-composer{
- margin-top:18px !important;
- margin-bottom:20px !important;
- padding:15px !important;
-}
-
-body.community-active #pageContent .community-composer textarea{
- min-height:90px !important;
- height:90px !important;
- padding:12px 14px !important;
- font-size:15px !important;
- border-radius:16px !important;
-}
-
-body.community-active #pageContent .community-composer-title{
- font-size:16px !important;
- margin-bottom:10px !important;
-}
-
-body.community-active #pageContent .community-composer .community-publish-btn{
- min-width:88px !important;
- min-height:44px !important;
- padding:10px 18px !important;
- margin-top:8px !important;
- border-radius:12px !important;
- font-size:15px !important;
+body.community-active #pageContent .community-header{
+  flex-wrap:nowrap !important;
 }
 
 body.community-active #pageContent .community-nav{
- padding-top:5px !important;
- padding-bottom:7px !important;
-}
-
-body.community-active #pageContent .community-nav button{
- min-height:65px !important;
- gap:4px !important;
-}
-
-body.community-active #pageContent .community-nav-icon{
- font-size:22px !important;
-}
-
-body.community-active #pageContent .community-nav-label{
- font-size:11px !important;
-}
-
-body.community-active #pageContent .community-feed-title{
- font-size:17px !important;
- margin-bottom:12px !important;
-}
+  position:relative !important;
+  inset:auto !important;
+  transform:none !important;
+   }
