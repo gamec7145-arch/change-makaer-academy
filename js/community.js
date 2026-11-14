@@ -14,8 +14,14 @@
 
  const reactionOptions = ["👍","❤️","😂","🔥"];
 
- // Track the user's own reactions separately
+ // One reaction per user per post
  const userReactions = {};
+
+ // Temporary local notifications
+ let communityNotifications = [];
+
+ // Open comment sections
+ const expandedComments = {};
 
 
  // ================================================
@@ -97,6 +103,123 @@
   svg.innerHTML = icons[name] || "";
 
   return svg;
+ }
+
+
+ // ================================================
+ // NOTIFICATION SYSTEM
+ // ================================================
+
+ function addReactionNotification(post,emoji){
+
+  if(!post || post.author === "You") return;
+
+  // Remove previous reaction notification
+  // from this user for this post
+  communityNotifications = communityNotifications.filter(item=>{
+
+   return !(
+    item.postId === String(post.id) &&
+    item.type === "reaction" &&
+    item.from === "You"
+   );
+
+  });
+
+  communityNotifications.unshift({
+
+   id: "notification-" + Date.now(),
+
+   type: "reaction",
+
+   postId: String(post.id),
+
+   from: "You",
+
+   owner: post.author,
+
+   emoji: emoji,
+
+   message: emoji
+    ? "You reacted " + emoji + " to " + post.author + "'s post."
+    : "Your reaction was removed.",
+
+   time: "Just now",
+
+   read: false
+
+  });
+
+ }
+
+
+ function renderNotifications(container){
+
+  container.innerHTML = "";
+
+  const title = createElement(
+   "h3",
+   "community-notifications-title",
+   "Notifications"
+  );
+
+  container.appendChild(title);
+
+  if(!communityNotifications.length){
+
+   container.appendChild(
+    createElement(
+     "div",
+     "community-empty",
+     "No notifications yet."
+    )
+   );
+
+   return;
+  }
+
+  communityNotifications.forEach(item=>{
+
+   const notification = createElement(
+    "div",
+    "community-notification-item"
+   );
+
+   notification.style.cssText = `
+    padding:13px;
+    margin-bottom:9px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--panel);
+    color:var(--white);
+    font-size:13px;
+   `;
+
+   const message = createElement(
+    "div",
+    "",
+    item.message
+   );
+
+   const time = createElement(
+    "small",
+    "",
+    item.time
+   );
+
+   time.style.cssText = `
+    display:block;
+    margin-top:5px;
+    color:var(--muted);
+   `;
+
+   notification.appendChild(message);
+   notification.appendChild(time);
+
+   container.appendChild(notification);
+
+  });
+
  }
 
 
@@ -327,25 +450,37 @@
     button.classList.add("active");
 
     if(item[2] === "home"){
+
+     notificationPanel.style.display = "none";
+     main.style.display = "block";
+
      showNotice("Welcome to the Community feed.");
+
     }
 
     if(item[2] === "me"){
+
      showNotice(
       "My Profile will be connected with your Account in a future update."
      );
+
     }
 
     if(item[2] === "creator"){
+
      showNotice(
       "Creator Panel is planned for a future update."
      );
+
     }
 
     if(item[2] === "notifications"){
-     showNotice(
-      "Notifications will be connected after the account and backend system is ready."
-     );
+
+     main.style.display = "none";
+     notificationPanel.style.display = "block";
+
+     renderNotifications(notificationList);
+
     }
 
    });
@@ -459,6 +594,31 @@
 
   main.appendChild(feed);
   root.appendChild(main);
+
+
+  // ================================================
+  // NOTIFICATION PANEL
+  // ================================================
+
+  const notificationPanel = createElement(
+   "section",
+   "community-notification-panel"
+  );
+
+  notificationPanel.style.cssText = `
+   display:none;
+   padding:16px;
+   width:100%;
+   box-sizing:border-box;
+  `;
+
+  const notificationList = createElement(
+   "div",
+   "community-notification-list"
+  );
+
+  notificationPanel.appendChild(notificationList);
+  root.appendChild(notificationPanel);
 
   pageContent.appendChild(root);
 
@@ -638,6 +798,8 @@
 
     const card = createElement("article","community-post");
 
+    const postId = String(post.id || post.author + post.time);
+
 
     // ================================================
     // AUTHOR
@@ -749,7 +911,7 @@
 
 
     // ================================================
-    // REACTIONS — ONE BUTTON PER EMOJI
+    // REACTIONS
     // ================================================
 
     const reactions = createElement(
@@ -757,19 +919,19 @@
      "community-reactions"
     );
 
-    const postId = String(post.id || post.author + post.time);
+    const baseReactions = Array.isArray(post.reactions)
+     ? post.reactions
+     : [];
 
-    if(!userReactions[postId]){
-     userReactions[postId] = {};
-    }
+    const selectedEmoji = userReactions[postId] || "";
 
     reactionOptions.forEach(emoji=>{
 
-     const baseCount = Array.isArray(post.reactions)
-      ? post.reactions.filter(value=>value === emoji).length
-      : 0;
+     const baseCount = baseReactions.filter(
+      value=>value === emoji
+     ).length;
 
-     const selected = !!userReactions[postId][emoji];
+     const selected = selectedEmoji === emoji;
 
      const count = baseCount + (selected ? 1 : 0);
 
@@ -789,18 +951,39 @@
       "React with " + emoji + ". " + count + " reactions."
      );
 
+     button.style.cssText = `
+      cursor:pointer;
+      transition:all .18s ease;
+     `;
+
      if(selected){
+
       button.classList.add("selected");
+
+      button.style.background = "var(--green)";
+      button.style.borderColor = "var(--green)";
+      button.style.color = "#052D3B";
+      button.style.transform = "scale(1.08)";
+      button.style.fontWeight = "900";
+
      }
 
      button.addEventListener("click",()=>{
 
-      const wasSelected = !!userReactions[postId][emoji];
+      const previousEmoji = userReactions[postId] || "";
 
-      userReactions[postId][emoji] = !wasSelected;
+      if(previousEmoji === emoji){
 
-      if(!userReactions[postId][emoji]){
-       delete userReactions[postId][emoji];
+       delete userReactions[postId];
+
+       addReactionNotification(post,"");
+
+      }else{
+
+       userReactions[postId] = emoji;
+
+       addReactionNotification(post,emoji);
+
       }
 
       renderFeed();
@@ -815,13 +998,63 @@
 
 
     // ================================================
-    // COMMENTS
+    // COMMENT ACTION BUTTON
+    // ================================================
+
+    const actionRow = createElement(
+     "div",
+     "community-post-actions"
+    );
+
+    actionRow.style.cssText = `
+     display:flex;
+     align-items:center;
+     gap:10px;
+     padding:10px 0;
+     border-top:1px solid var(--border);
+     border-bottom:1px solid var(--border);
+    `;
+
+    const commentButton = createElement(
+     "button",
+     "community-comment-toggle",
+     "Comment"
+    );
+
+    commentButton.type = "button";
+
+    commentButton.style.cssText = `
+     border:0;
+     background:transparent;
+     color:var(--muted);
+     font:inherit;
+     font-weight:800;
+     cursor:pointer;
+     padding:8px 12px;
+    `;
+
+    commentButton.setAttribute(
+     "aria-expanded",
+     expandedComments[postId] ? "true" : "false"
+    );
+
+    actionRow.appendChild(commentButton);
+    card.appendChild(actionRow);
+
+
+    // ================================================
+    // COMMENTS SECTION
     // ================================================
 
     const commentsBox = createElement(
      "div",
      "community-comments"
     );
+
+    commentsBox.style.cssText = `
+     display:${expandedComments[postId] ? "block" : "none"};
+     padding-top:12px;
+    `;
 
     commentsBox.appendChild(
      createElement(
@@ -962,6 +1195,8 @@
       text:commentText
      });
 
+     expandedComments[postId] = true;
+
      showNotice(
       "Your comment has been added to this temporary preview."
      );
@@ -973,6 +1208,20 @@
     commentsBox.appendChild(commentForm);
 
     card.appendChild(commentsBox);
+
+
+    // ================================================
+    // OPEN / CLOSE COMMENTS
+    // ================================================
+
+    commentButton.addEventListener("click",()=>{
+
+     expandedComments[postId] = !expandedComments[postId];
+
+     renderFeed();
+
+    });
+
 
     feed.appendChild(card);
 
