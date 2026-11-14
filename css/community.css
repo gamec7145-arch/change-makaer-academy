@@ -1,12 +1,18 @@
 
 /* ==================================================
    CHANGE MAKER ACADEMY
-   COMMUNITY — SEPARATE DESIGN
+   COMMUNITY — COMPLETE RESPONSIVE DESIGN
+   Target: Second Screenshot
 ================================================== */
+
+
+/* ================================================
+   COMMUNITY PAGE BASE
+================================================ */
 
 body.community-active{
  padding-bottom:0 !important;
- background:var(--bg);
+ background:var(--bg) !important;
 }
 
 body.community-active .header,
@@ -26,7 +32,7 @@ body.community-active #innerPage > .container{
  max-width:760px !important;
  padding:0 12px 35px !important;
  margin:0 auto !important;
- box-sizing:border-box;
+ box-sizing:border-box !important;
 }
 
 body.community-active #backLink,
@@ -35,484 +41,1014 @@ body.community-active .page-intro{
  display:none !important;
 }
 
+body.community-active #pageContent{
+ width:100% !important;
+ max-width:100% !important;
+ min-width:0 !important;
+ display:flex !important;
+ flex-direction:column !important;
+ box-sizing:border-box !important;
+}
+
 .community-page{
  width:100%;
  color:var(--white);
  font-family:'Nunito Sans',sans-serif;
 }
 
-/* HEADER */
 
-.community-header{
- position:sticky;
- top:0;
- z-index:1000;
- display:flex;
- flex-wrap:wrap;
- align-items:center;
- gap:12px;
- padding:13px 0;
- background:var(--bg);
- border-bottom:1px solid var(--border);
+/* ================================================
+   HEADER — BRAND + RIGHT SEARCH
+================================================ */
+
+body.community-active #pageContent .community-header{
+ position:relative !important;
+ top:auto !important;
+ z-index:20 !important;
+
+ display:flex !important;
+ flex-direction:row !important;
+ flex-wrap:nowrap !important;
+ align-items:center !important;
+ justify-content:space-between !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ box-sizing:border-box !important;
+
+ gap:10px !important;
+ margin:0 !important;
+ padding:14px 0 16px !important;
+
+ background:var(--bg) !important;
+ border-bottom:1px solid var(--border) !important;
 }
 
-.community-brand{
- flex-shrink:0;
- color:var(--white);
- font-size:21px;
- font-weight:900;
- text-decoration:none;
+body.community-active #pageContent .community-brand{
+ display:block !important;
+
+ flex:1 1 auto !important;
+ min-width:0 !important;
+
+ margin:0 !important;
+ padding:0 !important;
+
+ color:var(--white) !important;
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:clamp(18px,4.9vw,34px) !important;
+ line-height:1.2 !important;
+ font-weight:1000 !important;
+ letter-spacing:-.5px !important;
+
+ white-space:nowrap !important;
+ overflow:visible !important;
 }
 
-.community-brand span{
- color:var(--green);
+body.community-active #pageContent .community-brand span{
+ color:var(--green) !important;
 }
 
-.community-search{
- flex:1;
- min-width:140px;
+
+/* ================================================
+   HEADER SEARCH BUTTON
+================================================ */
+
+body.community-active #pageContent .community-header-actions{
+ display:flex !important;
+ flex:0 0 auto !important;
+
+ align-items:center !important;
+ justify-content:flex-end !important;
+
+ gap:7px !important;
+ margin:0 !important;
+ padding:0 !important;
 }
 
-.community-search input{
+body.community-active #pageContent .community-icon-btn{
+ display:flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ flex:0 0 48px !important;
+ width:48px !important;
+ min-width:48px !important;
+ height:48px !important;
+
+ margin:0 !important;
+ padding:0 !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:12px !important;
+
+ background:var(--panel) !important;
+ color:var(--white) !important;
+
+ font-family:inherit !important;
+ font-size:30px !important;
+ line-height:1 !important;
+
+ cursor:pointer !important;
+ box-shadow:none !important;
+}
+
+body.community-active #pageContent .community-icon-btn:active{
+ transform:scale(.96);
+}
+
+
+/* ================================================
+   SEARCH INPUT
+================================================ */
+
+body.community-active #pageContent .community-search{
+ display:block;
  width:100%;
+ min-width:0;
  box-sizing:border-box;
+
+ margin:8px 0 0;
  padding:11px 14px;
+
  border:1px solid var(--border);
- border-radius:24px;
+ border-radius:12px;
+
  outline:none;
  background:var(--panel);
  color:var(--white);
- font-family:inherit;
- font-size:13px;
-}
 
-.community-search input::placeholder{
- color:var(--muted);
-}
-
-.community-header-actions{
- display:flex;
- align-items:center;
- gap:7px;
-}
-
-.community-icon-btn{
- width:39px;
- height:39px;
- display:flex;
- align-items:center;
- justify-content:center;
- border:1px solid var(--border);
- border-radius:50%;
- background:var(--panel);
- color:var(--white);
- font-size:20px;
- cursor:pointer;
-}
-
-/* COMMUNITY NAVIGATION */
-
-.community-nav{
- display:flex;
- width:100%;
- gap:5px;
- overflow-x:auto;
- scrollbar-width:none;
-}
-
-.community-nav::-webkit-scrollbar{
- display:none;
-}
-
-.community-nav button{
- flex:1;
- min-width:65px;
- display:flex;
- flex-direction:column;
- align-items:center;
- justify-content:center;
- gap:5px;
- padding:10px 7px;
- border:0;
- border-radius:10px;
- background:transparent;
- color:var(--muted);
- font-family:inherit;
- font-size:12px;
- font-weight:800;
- white-space:nowrap;
- cursor:pointer;
-}
-
-.community-nav button.active{
- background:rgba(8,201,154,.13);
- color:var(--mint);
-}
-
-/* NAV ICONS */
-
-.community-nav-icon-wrap{
- position:relative;
- width:30px;
- height:27px;
- display:inline-flex;
- align-items:center;
- justify-content:center;
- flex-shrink:0;
-}
-
-.community-nav-icon{
- display:inline-flex;
- align-items:center;
- justify-content:center;
- font-size:21px;
- line-height:1;
-}
-
-.community-nav-label{
- display:block;
- font-size:12px;
- line-height:1.3;
-}
-
-/* Notification dot — centered over the bell emoji */
-
-.community-notification-dot{
- position:absolute;
- top:50%;
- left:50%;
- width:8px;
- height:8px;
- border:1px solid var(--bg);
- border-radius:50%;
- background:#ff3b45;
- transform:translate(-50%,-50%);
- z-index:2;
- pointer-events:none;
-}
-
-/* MAIN */
-
-.community-main{
- width:100%;
- max-width:620px;
- margin:18px auto 0;
-}
-
-.community-notice{
- display:none;
- margin-bottom:13px;
- padding:12px 14px;
- border:1px solid var(--border);
- border-radius:12px;
- background:var(--panel);
- color:var(--muted);
- font-size:13px;
- line-height:1.6;
-}
-
-.community-notice.show{
- display:block;
-}
-
-/* CREATE POST */
-
-.community-composer{
- padding:15px;
- margin-bottom:17px;
- border:1px solid var(--border);
- border-radius:16px;
- background:var(--card);
-}
-
-.community-composer-title{
- margin:0 0 12px;
- color:var(--white);
- font-size:15px;
- font-weight:900;
-}
-
-.community-composer textarea{
- display:block;
- width:100%;
- min-height:85px;
- box-sizing:border-box;
- resize:vertical;
- padding:12px;
- border:1px solid var(--border);
- border-radius:12px;
- outline:none;
- background:var(--panel);
- color:var(--white);
  font-family:inherit;
  font-size:14px;
 }
 
-.community-composer textarea::placeholder{
+body.community-active #pageContent .community-search::placeholder{
  color:var(--muted);
 }
 
-.community-composer-bottom{
- display:flex;
- flex-wrap:wrap;
- align-items:center;
- justify-content:space-between;
- gap:10px;
- margin-top:12px;
+
+/* ================================================
+   NAVIGATION — UNDER HEADER
+================================================ */
+
+body.community-active #pageContent .community-nav{
+ position:relative !important;
+ top:auto !important;
+ right:auto !important;
+ bottom:auto !important;
+ left:auto !important;
+
+ z-index:5 !important;
+
+ display:grid !important;
+ grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+
+ align-items:stretch !important;
+ justify-content:stretch !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ box-sizing:border-box !important;
+
+ gap:4px !important;
+
+ margin:0 !important;
+ padding:9px 0 13px !important;
+
+ overflow:visible !important;
+
+ border:0 !important;
+ border-bottom:1px solid var(--border) !important;
+
+ background:transparent !important;
+ box-shadow:none !important;
 }
 
-.community-photo-label{
- display:inline-flex;
- align-items:center;
- gap:7px;
- padding:9px 12px;
+body.community-active #pageContent .community-nav-button,
+body.community-active #pageContent .community-nav button{
+ position:relative !important;
+
+ display:flex !important;
+ flex:initial !important;
+
+ flex-direction:column !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ gap:7px !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ min-height:82px !important;
+
+ margin:0 !important;
+ padding:9px 2px !important;
+
+ border:0 !important;
+ border-radius:17px !important;
+
+ background:transparent !important;
+ color:var(--muted) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:13px !important;
+ font-weight:800 !important;
+
+ line-height:1.2 !important;
+ white-space:nowrap !important;
+
+ box-shadow:none !important;
+ cursor:pointer !important;
+}
+
+body.community-active #pageContent .community-nav-button.active,
+body.community-active #pageContent .community-nav button.active{
+ background:rgba(8,201,154,.13) !important;
+ color:var(--mint) !important;
+}
+
+
+/* ================================================
+   NAVIGATION ICONS
+================================================ */
+
+body.community-active #pageContent .community-nav-icon-wrap{
+ position:relative !important;
+
+ display:inline-flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ width:32px !important;
+ height:31px !important;
+
+ flex:0 0 auto !important;
+}
+
+body.community-active #pageContent .community-nav-icon{
+ display:inline-flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ font-size:27px !important;
+ line-height:1 !important;
+}
+
+body.community-active #pageContent .community-nav-label{
+ display:block !important;
+
+ width:100% !important;
+ min-width:0 !important;
+
+ color:inherit !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:clamp(10px,2.7vw,15px) !important;
+ line-height:1.25 !important;
+ font-weight:800 !important;
+
+ text-align:center !important;
+ white-space:nowrap !important;
+}
+
+
+/* ================================================
+   NOTIFICATION DOT
+================================================ */
+
+body.community-active #pageContent .community-notification-dot{
+ position:absolute !important;
+
+ top:4px !important;
+ right:3px !important;
+ left:auto !important;
+
+ width:8px !important;
+ height:8px !important;
+
+ border:1px solid var(--bg) !important;
+ border-radius:50% !important;
+
+ background:#ff3b45 !important;
+
+ transform:none !important;
+ z-index:3 !important;
+ pointer-events:none !important;
+}
+
+
+/* ================================================
+   MAIN CONTENT — REMOVE EXTRA GAP
+================================================ */
+
+body.community-active #pageContent .community-main{
+ display:block !important;
+
+ width:100% !important;
+ max-width:100% !important;
+ min-width:0 !important;
+
+ box-sizing:border-box !important;
+
+ margin:14px auto 0 !important;
+ padding:0 !important;
+}
+
+body.community-active #pageContent .community-notice-area{
+ width:100% !important;
+}
+
+body.community-active #pageContent .community-notice{
+ display:none;
+ margin-bottom:13px;
+ padding:12px 14px;
+
  border:1px solid var(--border);
- border-radius:10px;
- color:var(--mint);
- font-size:12px;
- font-weight:800;
- cursor:pointer;
-}
-
-.community-photo-label input{
- display:none;
-}
-
-.community-selected-file{
- width:100%;
- color:var(--muted);
- font-size:11px;
-}
-
-.community-publish-btn{
- padding:10px 20px;
- border:0;
- border-radius:10px;
- background:var(--green);
- color:#052D3B;
- font-family:inherit;
- font-size:13px;
- font-weight:900;
- cursor:pointer;
-}
-
-.community-publish-btn:active{
- transform:scale(.97);
-}
-
-.community-preview{
- display:none;
- width:100%;
- max-height:230px;
- margin-top:12px;
  border-radius:12px;
- object-fit:cover;
-}
 
-/* FEED */
+ background:var(--panel);
+ color:var(--muted);
 
-.community-feed-title{
- margin:0 0 12px;
- color:var(--white);
- font-size:16px;
- font-weight:900;
-}
-
-.community-post{
- overflow:hidden;
- margin-bottom:15px;
- border:1px solid var(--border);
- border-radius:16px;
- background:var(--card);
-}
-
-.community-post-top{
- display:flex;
- align-items:center;
- gap:10px;
- padding:14px 14px 9px;
-}
-
-.community-avatar{
- width:41px;
- height:41px;
- flex-shrink:0;
- display:flex;
- align-items:center;
- justify-content:center;
- border-radius:50%;
- background:#0B7567;
- color:#FFFFFF;
- font-size:16px;
- font-weight:900;
-}
-
-.community-author-info{
- flex:1;
- min-width:0;
-}
-
-.community-author-name{
- display:block;
- color:var(--white);
  font-size:13px;
- font-weight:900;
-}
-
-.community-post-time{
- display:block;
- margin-top:2px;
- color:var(--muted);
- font-size:10px;
-}
-
-.community-demo-tag{
- display:inline-block;
- margin-top:4px;
- padding:2px 7px;
- border-radius:5px;
- background:rgba(8,201,154,.12);
- color:var(--mint);
- font-size:9px;
- font-weight:900;
- letter-spacing:.4px;
-}
-
-.community-post-menu{
- border:0;
- background:transparent;
- color:var(--muted);
- font-size:21px;
-}
-
-.community-caption{
- margin:5px 14px 13px;
- color:var(--white);
- font-size:13px;
- line-height:1.7;
- overflow-wrap:anywhere;
-}
-
-.community-post-image{
- display:block;
- width:100%;
- max-height:390px;
- object-fit:cover;
- background:var(--panel);
-}
-
-.community-reactions{
- display:flex;
- align-items:center;
- gap:8px;
- padding:12px 14px 9px;
-}
-
-.community-reaction{
- display:inline-flex;
- align-items:center;
- justify-content:center;
- min-width:31px;
- height:30px;
- border:1px solid var(--border);
- border-radius:18px;
- background:var(--panel);
- font-size:16px;
-}
-
-.community-reaction-button{
- cursor:pointer;
-}
-
-.community-reaction-button.selected{
- border-color:var(--green);
- background:rgba(8,201,154,.16);
-}
-
-.community-comments{
- padding:0 14px 14px;
-}
-
-.community-comments-title{
- margin:0 0 9px;
- color:var(--mint);
- font-size:11px;
- font-weight:900;
-}
-
-.community-comment{
- margin-top:7px;
- padding:9px 11px;
- border-radius:10px;
- background:var(--panel);
- color:var(--muted);
- font-size:12px;
  line-height:1.6;
 }
 
-.community-comment strong{
- margin-right:5px;
- color:var(--white);
+body.community-active #pageContent .community-notice.show{
+ display:block;
 }
 
-.community-empty{
- padding:30px 15px;
- border:1px dashed var(--border);
- border-radius:14px;
- color:var(--muted);
- text-align:center;
- font-size:13px;
+
+/* ================================================
+   CREATE A POST — TARGET SIZE
+================================================ */
+
+body.community-active #pageContent .community-composer{
+ display:flex !important;
+ flex-direction:column !important;
+ align-items:stretch !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ box-sizing:border-box !important;
+
+ margin:20px 0 34px !important;
+ padding:17px 18px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:20px !important;
+
+ background:var(--card) !important;
+
+ box-shadow:none !important;
 }
 
-/* MOBILE */
+body.community-active #pageContent .community-composer-title{
+ display:block !important;
+
+ margin:0 0 14px !important;
+ padding:0 !important;
+
+ color:var(--white) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:19px !important;
+ line-height:1.35 !important;
+ font-weight:900 !important;
+}
+
+
+/* ================================================
+   POST TEXTAREA
+================================================ */
+
+body.community-active #pageContent .community-composer textarea{
+ display:block !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ min-height:160px !important;
+ height:160px !important;
+
+ box-sizing:border-box !important;
+ resize:vertical !important;
+
+ margin:0 !important;
+ padding:20px 18px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:23px !important;
+
+ outline:none !important;
+
+ background:var(--panel) !important;
+ color:var(--white) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:19px !important;
+ line-height:1.5 !important;
+
+ box-shadow:none !important;
+}
+
+body.community-active #pageContent .community-composer textarea::placeholder{
+ color:var(--muted) !important;
+ opacity:1 !important;
+}
+
+
+/* ================================================
+   SELECTED IMAGE PREVIEW
+================================================ */
+
+body.community-active #pageContent .community-composer .community-preview{
+ display:none;
+
+ width:100% !important;
+ max-height:280px !important;
+
+ margin:12px 0 !important;
+
+ border-radius:13px !important;
+ object-fit:contain !important;
+}
+
+
+/* ================================================
+   PHOTO UPLOAD
+================================================ */
+
+body.community-active #pageContent .community-composer input[type="file"]{
+ display:block !important;
+
+ width:auto !important;
+ max-width:100% !important;
+ min-width:0 !important;
+
+ box-sizing:border-box !important;
+
+ margin:12px 0 0 !important;
+ padding:0 !important;
+
+ border:0 !important;
+ background:transparent !important;
+ color:var(--muted) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:13px !important;
+}
+
+body.community-active #pageContent .community-composer input[type="file"]::file-selector-button{
+ margin-right:9px !important;
+ padding:10px 14px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:12px !important;
+
+ background:transparent !important;
+ color:var(--mint) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:13px !important;
+ font-weight:900 !important;
+}
+
+
+/* ================================================
+   PUBLISH BUTTON — RIGHT SIDE
+================================================ */
+
+body.community-active #pageContent .community-composer .community-publish-btn{
+ display:block !important;
+ align-self:flex-end !important;
+
+ width:auto !important;
+ min-width:166px !important;
+ min-height:78px !important;
+
+ margin:8px 0 0 auto !important;
+ padding:15px 27px !important;
+
+ border:0 !important;
+ border-radius:18px !important;
+
+ background:var(--green) !important;
+ color:#052D3B !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:19px !important;
+ font-weight:1000 !important;
+
+ cursor:pointer !important;
+ box-shadow:none !important;
+}
+
+body.community-active #pageContent .community-composer .community-publish-btn:active{
+ transform:scale(.97);
+}
+
+body.community-active #pageContent .community-composer .community-publish-btn:disabled{
+ opacity:.65 !important;
+ cursor:wait !important;
+}
+
+
+/* ================================================
+   FEED TITLE
+================================================ */
+
+body.community-active #pageContent .community-feed-title{
+ display:block !important;
+
+ margin:0 0 18px !important;
+ padding:0 !important;
+
+ color:var(--white) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:21px !important;
+ line-height:1.35 !important;
+ font-weight:900 !important;
+}
+
+body.community-active #pageContent .community-feed-search{
+ display:none !important;
+}
+
+
+/* ================================================
+   FEED LIST
+================================================ */
+
+body.community-active #pageContent .community-feed{
+ display:flex !important;
+ flex-direction:column !important;
+
+ width:100% !important;
+ min-width:0 !important;
+
+ gap:15px !important;
+}
+
+body.community-active #pageContent .community-empty{
+ display:block !important;
+
+ width:100% !important;
+ box-sizing:border-box !important;
+
+ margin:0 !important;
+ padding:45px 15px !important;
+
+ border:1px dashed var(--border) !important;
+ border-radius:20px !important;
+
+ background:transparent !important;
+ color:var(--muted) !important;
+
+ text-align:center !important;
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:16px !important;
+}
+
+
+/* ================================================
+   POST CARD
+================================================ */
+
+body.community-active #pageContent .community-post{
+ display:block !important;
+
+ width:100% !important;
+ min-width:0 !important;
+ box-sizing:border-box !important;
+
+ overflow:hidden !important;
+
+ margin:0 0 15px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:20px !important;
+
+ background:var(--card) !important;
+}
+
+body.community-active #pageContent .community-post-top{
+ display:flex !important;
+ align-items:center !important;
+
+ gap:12px !important;
+
+ padding:17px 18px 10px !important;
+}
+
+body.community-active #pageContent .community-avatar{
+ width:78px !important;
+ height:78px !important;
+ min-width:78px !important;
+
+ display:flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ overflow:hidden !important;
+
+ border-radius:50% !important;
+
+ background:#0B7567 !important;
+ color:#fff !important;
+
+ font-size:29px !important;
+ font-weight:900 !important;
+}
+
+body.community-active #pageContent .community-author-info{
+ flex:1 !important;
+ min-width:0 !important;
+}
+
+body.community-active #pageContent .community-author-info strong,
+body.community-active #pageContent .community-author-name{
+ display:block !important;
+
+ color:var(--white) !important;
+ font-size:19px !important;
+ font-weight:900 !important;
+}
+
+body.community-active #pageContent .community-author-info small,
+body.community-active #pageContent .community-post-time{
+ display:block !important;
+
+ margin-top:4px !important;
+
+ color:var(--muted) !important;
+ font-size:14px !important;
+}
+
+body.community-active #pageContent .community-demo-tag{
+ display:inline-block !important;
+
+ margin-top:8px !important;
+ padding:5px 12px !important;
+
+ border-radius:8px !important;
+
+ background:rgba(8,201,154,.12) !important;
+ color:var(--mint) !important;
+
+ font-size:13px !important;
+ font-weight:900 !important;
+ letter-spacing:.3px !important;
+}
+
+body.community-active #pageContent .community-post-menu{
+ border:0 !important;
+ background:transparent !important;
+ color:var(--muted) !important;
+ font-size:23px !important;
+}
+
+
+/* ================================================
+   POST CAPTION
+================================================ */
+
+body.community-active #pageContent .community-caption{
+ margin:12px 18px 18px !important;
+
+ color:var(--white) !important;
+
+ font-family:'Nunito Sans',sans-serif !important;
+ font-size:18px !important;
+ line-height:1.7 !important;
+
+ overflow-wrap:anywhere !important;
+}
+
+
+/* ================================================
+   POST IMAGE
+================================================ */
+
+body.community-active #pageContent .community-post-image{
+ display:block !important;
+
+ width:100% !important;
+ max-height:430px !important;
+
+ object-fit:cover !important;
+ background:var(--panel) !important;
+}
+
+
+/* ================================================
+   REACTIONS
+================================================ */
+
+body.community-active #pageContent .community-reactions{
+ display:flex !important;
+ flex-wrap:wrap !important;
+ align-items:center !important;
+
+ gap:10px !important;
+
+ padding:15px 18px 14px !important;
+}
+
+body.community-active #pageContent .community-reaction{
+ display:inline-flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+
+ min-width:58px !important;
+ height:58px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:50% !important;
+
+ background:var(--panel) !important;
+
+ font-size:27px !important;
+}
+
+body.community-active #pageContent .community-reaction-button{
+ cursor:pointer !important;
+}
+
+body.community-active #pageContent .community-reaction-button.selected{
+ border-color:var(--green) !important;
+ background:rgba(8,201,154,.16) !important;
+}
+
+
+/* ================================================
+   COMMENTS
+================================================ */
+
+body.community-active #pageContent .community-comments{
+ padding:0 18px 16px !important;
+}
+
+body.community-active #pageContent .community-comments-title{
+ margin:0 0 9px !important;
+
+ color:var(--mint) !important;
+ font-size:14px !important;
+ font-weight:900 !important;
+}
+
+body.community-active #pageContent .community-comment{
+ margin-top:8px !important;
+ padding:12px !important;
+
+ border-radius:12px !important;
+
+ background:var(--panel) !important;
+ color:var(--muted) !important;
+
+ font-size:14px !important;
+ line-height:1.6 !important;
+}
+
+body.community-active #pageContent .community-comment strong{
+ margin-right:5px !important;
+ color:var(--white) !important;
+}
+
+
+/* ================================================
+   PROFILE AND OTHER PANELS
+================================================ */
+
+body.community-active #pageContent .community-section-panel{
+ width:100% !important;
+ min-width:0 !important;
+ box-sizing:border-box !important;
+}
+
+body.community-active #pageContent .community-profile-form{
+ display:flex !important;
+ flex-direction:column !important;
+ gap:12px !important;
+}
+
+body.community-active #pageContent .community-profile-tabs{
+ display:flex !important;
+ flex-wrap:wrap !important;
+ gap:8px !important;
+}
+
+body.community-active #pageContent .community-profile-tab{
+ padding:10px 14px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:10px !important;
+
+ background:var(--panel) !important;
+ color:var(--muted) !important;
+
+ font-family:inherit !important;
+ font-weight:800 !important;
+}
+
+body.community-active #pageContent .community-profile-tab.active{
+ background:rgba(8,201,154,.13) !important;
+ color:var(--mint) !important;
+}
+
+
+/* ================================================
+   COMMENT OVERLAY
+================================================ */
+
+.community-comment-overlay{
+ position:fixed !important;
+ inset:0 !important;
+
+ z-index:99999 !important;
+
+ display:flex !important;
+ align-items:flex-end !important;
+ justify-content:center !important;
+
+ background:rgba(0,0,0,.65) !important;
+}
+
+.community-comment-sheet{
+ width:100% !important;
+ max-width:650px !important;
+ max-height:80vh !important;
+
+ overflow:auto !important;
+ box-sizing:border-box !important;
+
+ padding:16px !important;
+
+ border-radius:20px 20px 0 0 !important;
+
+ background:var(--bg) !important;
+ color:var(--white) !important;
+}
+
+
+/* ================================================
+   NOTIFICATIONS
+================================================ */
+
+body.community-active #pageContent .community-notification-item{
+ width:100% !important;
+ box-sizing:border-box !important;
+
+ padding:14px !important;
+ margin-bottom:10px !important;
+
+ border:1px solid var(--border) !important;
+ border-radius:14px !important;
+
+ background:var(--panel) !important;
+ color:var(--white) !important;
+}
+
+
+/* ================================================
+   MOBILE RESPONSIVE
+================================================ */
 
 @media(max-width:420px){
 
- .community-header{
-  gap:9px;
+ body.community-active #innerPage > .container{
+  padding-left:12px !important;
+  padding-right:12px !important;
  }
 
- .community-brand{
-  font-size:19px;
+ body.community-active #pageContent .community-header{
+  gap:7px !important;
+  padding:12px 0 14px !important;
  }
 
- .community-search{
-  order:3;
-  flex-basis:100%;
+ body.community-active #pageContent .community-brand{
+  font-size:clamp(17px,4.8vw,21px) !important;
+  letter-spacing:-.4px !important;
  }
 
- .community-nav button{
-  font-size:11px;
+ body.community-active #pageContent .community-icon-btn{
+  width:43px !important;
+  min-width:43px !important;
+  height:43px !important;
+  flex-basis:43px !important;
+  font-size:26px !important;
  }
 
- .community-nav-label{
-  font-size:11px;
+ body.community-active #pageContent .community-nav{
+  gap:2px !important;
+  padding:8px 0 11px !important;
  }
 
- .community-post-image{
-  max-height:320px;
+ body.community-active #pageContent .community-nav-button,
+ body.community-active #pageContent .community-nav button{
+  min-height:76px !important;
+  padding:8px 1px !important;
+  gap:6px !important;
+  border-radius:15px !important;
+ }
+
+ body.community-active #pageContent .community-nav-icon{
+  font-size:24px !important;
+ }
+
+ body.community-active #pageContent .community-nav-label{
+  font-size:clamp(9px,2.6vw,12px) !important;
+ }
+
+ body.community-active #pageContent .community-main{
+  margin-top:12px !important;
+ }
+
+ body.community-active #pageContent .community-composer{
+  margin:20px 0 32px !important;
+  padding:16px !important;
+  border-radius:19px !important;
+ }
+
+ body.community-active #pageContent .community-composer-title{
+  font-size:18px !important;
+ }
+
+ body.community-active #pageContent .community-composer textarea{
+  min-height:160px !important;
+  height:160px !important;
+  padding:17px !important;
+  font-size:18px !important;
+  border-radius:22px !important;
+ }
+
+ body.community-active #pageContent .community-composer .community-publish-btn{
+  min-width:150px !important;
+  min-height:72px !important;
+  font-size:18px !important;
+ }
+
+ body.community-active #pageContent .community-feed-title{
+  font-size:20px !important;
+ }
+
+ body.community-active #pageContent .community-post-image{
+  max-height:340px !important;
  }
 
 }
 
-/* TABLET / DESKTOP */
+
+/* ================================================
+   SMALL MOBILE
+================================================ */
+
+@media(max-width:350px){
+
+ body.community-active #pageContent .community-brand{
+  font-size:16px !important;
+ }
+
+ body.community-active #pageContent .community-icon-btn{
+  width:39px !important;
+  min-width:39px !important;
+  height:39px !important;
+  flex-basis:39px !important;
+ }
+
+ body.community-active #pageContent .community-nav-label{
+  font-size:9px !important;
+ }
+
+ body.community-active #pageContent .community-composer{
+  padding:13px !important;
+ }
+
+}
+
+
+/* ================================================
+   TABLET AND DESKTOP
+================================================ */
 
 @media(min-width:700px){
 
- .community-header{
-  padding:15px 4px;
+ body.community-active #innerPage > .container{
+  max-width:760px !important;
  }
 
- .community-nav{
-  justify-content:center;
+ body.community-active #pageContent .community-header{
+  padding:15px 0 17px !important;
  }
 
- .community-nav button{
-  max-width:130px;
+ body.community-active #pageContent .community-nav{
+  justify-content:center !important;
  }
 
- .community-composer{
-  padding:18px;
+ body.community-active #pageContent .community-nav-button{
+  max-width:150px !important;
+ }
+
+ body.community-active #pageContent .community-composer{
+  padding:20px !important;
  }
 
 }
