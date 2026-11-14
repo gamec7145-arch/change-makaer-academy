@@ -584,8 +584,7 @@ async function addComment(postId,text){
  await loadComments();
  await loadProfiles();
 }
-
- // ================================================
+  // ================================================
 // PROFILE FIELD
 // ================================================
 
@@ -1314,9 +1313,7 @@ function renderPostCard(container,post,ownPost){
  });
 
  card.appendChild(reactionRow);
-
-
- // COMMENT BUTTON
+    // COMMENT BUTTON
 
  const actionRow = createElement(
   "div",
@@ -1674,7 +1671,8 @@ function openComments(post){
  document.body.appendChild(overlay);
 }
 
- // ================================================
+
+// ================================================
 // CREATE POST COMPOSER
 // ================================================
 
@@ -1860,6 +1858,13 @@ async function renderFeed(container,postScope){
 
  container.innerHTML = "";
 
+ // ALL LOGGED-IN USERS CAN POST ON HOME
+
+ // CREATOR ROLES ONLY OUTSIDE COMMUNITY HOME
+
+ createComposer(container,scope);
+
+ // Feed heading belongs below the post composer, matching the target layout.
  container.appendChild(
   createElement(
    "h3",
@@ -1869,13 +1874,6 @@ async function renderFeed(container,postScope){
     : "Creator Panel Posts"
   )
  );
-
-
- // ALL LOGGED-IN USERS CAN POST ON HOME
-
- // CREATOR ROLES ONLY OUTSIDE COMMUNITY HOME
-
- createComposer(container,scope);
 
 
  // SEARCH
@@ -1918,7 +1916,7 @@ async function renderFeed(container,postScope){
 
   list.innerHTML = "";
 
-    const query = search.value
+  const query = search.value
    .trim()
    .toLowerCase();
 
@@ -1981,10 +1979,8 @@ async function renderFeed(container,postScope){
  search.addEventListener("input",draw);
 
  draw();
-}
-
-
-// ================================================
+      }
+   // ================================================
 // CREATOR PANEL
 // ================================================
 
@@ -2230,19 +2226,19 @@ async function renderNotifications(container){
  });
 }
 
- // ==============================
-// PART 4/4 — PAGE, NAVIGATION & INITIALIZATION
+
+// ==============================
+// PAGE, NAVIGATION & INITIALIZATION
 // ==============================
 
 let communityRenderPromise = null;
 
 async function renderCommunityPage() {
-  // The main router owns page navigation. Community must render only
-  // while ?page=community is the active route.
+
   const route = new URLSearchParams(window.location.search).get("page");
+
   if (route !== "community") return;
 
-  // index.html provides #pageContent inside #innerPage.
   const page = document.getElementById("pageContent");
 
   if (!page) {
@@ -2250,54 +2246,261 @@ async function renderCommunityPage() {
     return;
   }
 
-  // Prevent Router and Supabase auth events from rendering simultaneously.
   if (communityRenderPromise) return communityRenderPromise;
 
   communityRenderPromise = (async function () {
+
   page.innerHTML = "";
+
   document.body.classList.add("community-active");
 
-  // Hide the old inline feed search.
-  if (!document.getElementById("community-search-style")) {
+
+  // ================================================
+  // COMMUNITY LAYOUT CSS
+  // ================================================
+
+  if (!document.getElementById("community-target-layout-style")) {
+
     const style = document.createElement("style");
-    style.id = "community-search-style";
+
+    style.id = "community-target-layout-style";
+
     style.textContent = `
-      .community-feed-search {
-        display: none !important;
+
+      /* Main page layout */
+
+      body.community-active #pageContent {
+        display:flex !important;
+        flex-direction:column !important;
+        width:100% !important;
+        max-width:100% !important;
+        box-sizing:border-box !important;
       }
+
+
+      /* HEADER */
+
+      body.community-active #pageContent .community-header {
+        display:flex !important;
+        align-items:center !important;
+        justify-content:space-between !important;
+        gap:12px !important;
+        width:100% !important;
+        box-sizing:border-box !important;
+        margin:0 0 14px !important;
+        padding:14px 0 !important;
+      }
+
+      body.community-active #pageContent .community-brand {
+        min-width:0 !important;
+        font-size:clamp(20px,5.2vw,34px) !important;
+        line-height:1.15 !important;
+        font-weight:900 !important;
+        letter-spacing:-.5px !important;
+        white-space:nowrap !important;
+      }
+
+      body.community-active #pageContent .community-brand span {
+        color:var(--green,#08C99A) !important;
+      }
+
+
+      /* SEARCH BUTTON */
+
+      body.community-active #pageContent .community-header-actions {
+        display:flex !important;
+        align-items:center !important;
+        justify-content:flex-end !important;
+        gap:8px !important;
+        flex:0 0 auto !important;
+      }
+
+      body.community-active #pageContent .community-icon-btn {
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        width:48px !important;
+        height:48px !important;
+        flex:0 0 48px !important;
+        border:1px solid var(--border,#245563) !important;
+        border-radius:12px !important;
+        background:var(--panel,#08494B) !important;
+        color:var(--white,#fff) !important;
+        font-size:30px !important;
+        line-height:1 !important;
+      }
+
+      body.community-active #pageContent .community-search {
+        width:min(54vw,260px) !important;
+        min-width:0 !important;
+        box-sizing:border-box !important;
+        padding:11px !important;
+        border:1px solid var(--border,#245563) !important;
+        border-radius:10px !important;
+        background:var(--panel,#08494B) !important;
+        color:var(--white,#fff) !important;
+      }
+
+
+      /* TOP NAVIGATION */
+
+      body.community-active #pageContent .community-nav {
+        position:relative !important;
+        inset:auto !important;
+        bottom:auto !important;
+        top:auto !important;
+        left:auto !important;
+        right:auto !important;
+        z-index:2 !important;
+        display:grid !important;
+        grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+        align-items:stretch !important;
+        gap:4px !important;
+        width:100% !important;
+        box-sizing:border-box !important;
+        margin:0 0 18px !important;
+        padding:0 0 14px !important;
+        border:0 !important;
+        border-bottom:1px solid var(--border,#245563) !important;
+        background:transparent !important;
+        box-shadow:none !important;
+      }
+
+      body.community-active #pageContent .community-nav-button {
+        position:relative !important;
+        display:flex !important;
+        flex-direction:column !important;
+        align-items:center !important;
+        justify-content:center !important;
+        gap:7px !important;
+        min-width:0 !important;
+        min-height:82px !important;
+        padding:9px 3px !important;
+        border:0 !important;
+        border-radius:17px !important;
+        background:transparent !important;
+        color:var(--muted,#A8C0CE) !important;
+        box-shadow:none !important;
+      }
+
+      body.community-active #pageContent .community-nav-button.active {
+        background:rgba(8,201,154,.13) !important;
+        color:var(--mint,#68DDB9) !important;
+      }
+
+      body.community-active #pageContent .community-nav-icon {
+        font-size:27px !important;
+        line-height:1 !important;
+      }
+
+      body.community-active #pageContent .community-nav-label {
+        font-size:clamp(10px,2.8vw,15px) !important;
+        line-height:1.2 !important;
+        font-weight:800 !important;
+        text-align:center !important;
+        white-space:nowrap !important;
+      }
+
+
+      /* MAIN CONTENT */
+
+      body.community-active #pageContent .community-main {
+        display:block !important;
+        width:100% !important;
+        min-width:0 !important;
+        box-sizing:border-box !important;
+      }
+
+      body.community-active #pageContent .community-feed-search {
+        display:none !important;
+      }
+
+      body.community-active #pageContent .community-composer {
+        margin:16px 0 30px !important;
+      }
+
+      body.community-active #pageContent .community-feed-title {
+        margin:0 0 18px !important;
+      }
+
+      body.community-active #pageContent .community-feed {
+        display:flex !important;
+        flex-direction:column !important;
+        gap:16px !important;
+      }
+
+
+      /* SMALL MOBILE */
+
+      @media (max-width:380px) {
+
+        body.community-active #pageContent .community-brand {
+          font-size:19px !important;
+        }
+
+        body.community-active #pageContent .community-nav-label {
+          font-size:10px !important;
+        }
+      }
+
     `;
+
     document.head.appendChild(style);
   }
 
+
   await loadSession();
+
   await refreshData();
+
+
+  // ================================================
+  // HEADER
+  // ================================================
 
   const header = createElement("header", "community-header");
 
   const brand = createElement("div", "community-brand");
-  brand.textContent = "Community";
+
+  brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
 
   const headerActions = createElement("div", "community-header-actions");
 
   const searchButton = makeButton("⌕", "community-icon-btn");
+
   searchButton.type = "button";
+
   searchButton.setAttribute("aria-label", "Open search");
+
   searchButton.title = "Search";
 
   const searchInput = createElement("input", "community-search");
+
   searchInput.type = "search";
+
   searchInput.placeholder = "Search posts or people...";
+
   searchInput.setAttribute("aria-label", "Search community");
+
   searchInput.value = currentFeedSearchQuery || "";
+
   searchInput.style.display = "none";
 
   headerActions.appendChild(searchButton);
+
   headerActions.appendChild(searchInput);
 
   header.appendChild(brand);
+
   header.appendChild(headerActions);
 
+
+  // ================================================
+  // NAVIGATION AND MAIN
+  // ================================================
+
   const nav = createElement("nav", "community-nav");
+
   nav.setAttribute("aria-label", "Community navigation");
 
   const main = createElement("main", "community-main");
@@ -2305,23 +2508,39 @@ async function renderCommunityPage() {
   const noticeArea = createElement("div", "community-notice-area");
 
   const feedPanel = createElement("section", "community-feed-panel");
+
   const mePanel = createElement("section", "community-section-panel");
+
   const creatorPanel = createElement("section", "community-section-panel");
+
   const notificationPanel = createElement("section", "community-section-panel");
 
   mePanel.style.display = "none";
+
   creatorPanel.style.display = "none";
+
   notificationPanel.style.display = "none";
 
   main.appendChild(noticeArea);
+
   main.appendChild(feedPanel);
+
   main.appendChild(mePanel);
+
   main.appendChild(creatorPanel);
+
   main.appendChild(notificationPanel);
 
+
+  // IMPORTANT ORDER:
+  // HEADER -> NAVIGATION -> MAIN CONTENT
+
   page.appendChild(header);
-  page.appendChild(main);
+
   page.appendChild(nav);
+
+  page.appendChild(main);
+
 
   const panels = {
     home: feedPanel,
@@ -2332,20 +2551,31 @@ async function renderCommunityPage() {
 
   let activePage = "home";
 
+
   function showPanel(name) {
+
     activePage = name;
 
     Object.entries(panels).forEach(([key, panel]) => {
+
       panel.style.display = key === name ? "" : "none";
+
     });
 
     nav.querySelectorAll("button").forEach(button => {
+
       button.classList.toggle(
         "active",
         button.dataset.page === name
       );
+
     });
   }
+
+
+  // ================================================
+  // NAVIGATION ITEMS
+  // ================================================
 
   const navItems = [
     { id: "home", label: "Home", icon: "⌂" },
@@ -2355,66 +2585,107 @@ async function renderCommunityPage() {
   ];
 
   const notificationBadge = document.createElement("span");
+
   notificationBadge.className = "community-notification-dot";
+
   notificationBadge.style.display = "none";
 
   const navButtons = {};
 
+
   navItems.forEach(item => {
+
     const button = makeButton("", "community-nav-button");
+
     button.type = "button";
+
     button.dataset.page = item.id;
+
     button.setAttribute("aria-label", item.label);
+
     button.title = item.label;
 
     const iconWrap = createElement("span", "community-nav-icon-wrap");
+
     const icon = createElement("span", "community-nav-icon", item.icon);
+
     iconWrap.appendChild(icon);
 
     if (item.id === "notifications") {
+
       iconWrap.appendChild(notificationBadge);
+
     }
 
     const label = createElement("span", "community-nav-label", item.label);
 
     button.appendChild(iconWrap);
+
     button.appendChild(label);
 
+
     button.addEventListener("click", async () => {
+
       showPanel(item.id);
 
       if (item.id === "home") {
+
         await refreshData();
+
         renderFeed(feedPanel, "community_home");
+
       }
 
       if (item.id === "me") {
+
         await refreshData();
+
         await renderMe(mePanel);
+
       }
 
       if (item.id === "creator") {
+
         await refreshData();
+
         await renderCreator(creatorPanel);
+
       }
 
       if (item.id === "notifications") {
+
         await renderNotifications(notificationPanel);
+
         updateNotificationBadge();
+
       }
+
     });
 
+
     navButtons[item.id] = button;
+
     nav.appendChild(button);
+
   });
 
+
+  // ================================================
+  // NOTIFICATION BADGE
+  // ================================================
+
   async function updateNotificationBadge() {
+
     if (!currentUser) {
+
       notificationBadge.style.display = "none";
+
       return;
+
     }
 
     try {
+
       const { count, error } = await db
         .from("community_notifications")
         .select("*", { count: "exact", head: true })
@@ -2424,105 +2695,159 @@ async function renderCommunityPage() {
       if (error) throw error;
 
       notificationBadge.style.display = count > 0 ? "inline-block" : "none";
+
       notificationBadge.title = count > 0
         ? `${count} unread notifications`
         : "";
+
     } catch (error) {
+
       console.error("Notification badge error:", error);
+
       notificationBadge.style.display = "none";
+
     }
   }
 
+
+  // ================================================
+  // SEARCH BUTTON
+  // ================================================
+
   searchButton.addEventListener("click", () => {
+
     const isOpen = searchInput.style.display !== "none";
 
     if (isOpen) {
+
       searchInput.style.display = "none";
+
       searchInput.value = "";
+
       currentFeedSearchQuery = "";
+
       searchButton.setAttribute("aria-label", "Open search");
 
       if (activePage === "home") {
+
         renderFeed(feedPanel, "community_home");
+
       }
+
     } else {
+
       searchInput.style.display = "block";
+
       searchButton.setAttribute("aria-label", "Close search");
+
       searchInput.focus();
+
     }
   });
 
+
   searchInput.addEventListener("input", () => {
+
     currentFeedSearchQuery = searchInput.value.trim();
 
     if (activePage === "home") {
+
       renderFeed(feedPanel, "community_home");
+
     }
   });
 
-  // Initial page
+
+  // ================================================
+  // INITIAL PAGE
+  // ================================================
+
   showPanel("home");
+
   renderFeed(feedPanel, "community_home");
+
   updateNotificationBadge();
 
-  // Expose refresh function for other community scripts.
+
+  // ================================================
+  // GLOBAL REFRESH
+  // ================================================
+
   window.cmaCommunityRefresh = async function () {
+
     await refreshData();
 
     if (activePage === "home") {
+
       renderFeed(feedPanel, "community_home");
+
     } else if (activePage === "me") {
+
       await renderMe(mePanel);
+
     } else if (activePage === "creator") {
+
       await renderCreator(creatorPanel);
+
     } else if (activePage === "notifications") {
+
       await renderNotifications(notificationPanel);
+
     }
 
     updateNotificationBadge();
+
   };
+
   })();
 
+
   try {
+
     await communityRenderPromise;
+
   } finally {
+
     communityRenderPromise = null;
+
   }
 }
 
 
-// ==============================
+// ================================================
 // AUTH STATE CHANGES
-// ==============================
+// ================================================
 
 if (db && db.auth) {
+
   db.auth.onAuthStateChange((event, session) => {
+
     currentUser = session?.user || null;
 
-    // The Router is the only owner of navigation. Do not render Community
-    // on homepage or on unrelated pages just because #pageContent exists.
     const activeRoute = new URLSearchParams(window.location.search).get("page");
+
     if (
       event !== "INITIAL_SESSION" &&
       activeRoute === "community" &&
       document.getElementById("pageContent")
     ) {
-      // Defer database work until Supabase finishes its auth callback.
+
       Promise.resolve().then(() => renderCommunityPage());
+
     }
+
   });
+
 }
 
 
-// ==============================
+// ================================================
 // GLOBAL ACCESS
-// ==============================
+// ================================================
 
 window.renderCommunityPage = renderCommunityPage;
 
-// Do not auto-render on DOMContentLoaded. router.js calls this function
-// only after it has opened the Community route.
 
-})(); 
+// router.js calls this function only after opening Community.
 
-                            
+})();
