@@ -1,24 +1,17 @@
-
-/* =========================================================
-   CHANGE MAKER ACADEMY
-   COMMUNITY SYSTEM — COMPLETE REBUILD
-   PART 1 OF 8 — CORE + DATABASE FOUNDATION
-   ========================================================= */
-
 (function () {
   "use strict";
 
-  // ---------------------------------------------------------
-  // 1. SUPABASE CONFIGURATION
-  // ---------------------------------------------------------
+  /* ==========================================
+     CHANGE MAKER ACADEMY
+     COMMUNITY SYSTEM
+     PART 1/9 — CORE FOUNDATION
+  ========================================== */
 
   const db = window.cmaSupabase;
   const BUCKET = "community-media";
 
   const LOGIN_ERROR =
     "Login Error! Please go back to homepage, select Account, sign up your account and sign in to continue.";
-
-  const EMOJIS = ["👍", "❤️", "😂", "😮"];
 
   const THEME = {
     bg: "#073746",
@@ -32,9 +25,40 @@
     muted: "#A8C0CE"
   };
 
-  // ---------------------------------------------------------
-  // 2. SHARED COMMUNITY STATE
-  // ---------------------------------------------------------
+  const EMOJIS = ["👍", "❤️", "😂", "😮"];
+
+  const POST_SCOPES = {
+    COMMUNITY: "community",
+    CREATOR: "creator",
+    HOME: "home",
+    STUDY: "study",
+    EXAM: "exam",
+    ONLINE: "online",
+    OFFLINE: "offline"
+  };
+
+  const state = {
+    page: "community",
+    section: "home",
+
+    previousPage: "home",
+
+    activeProfileId: null,
+    activeProfileTab: "Posts",
+    activeSearchTab: "Profiles",
+
+    searchQuery: "",
+    recentSearches: [],
+
+    activePost: null,
+    activeCommentPost: null,
+
+    loading: false,
+    initialized: false,
+
+    modalOpen: false,
+    searchVersion: 0
+  };
 
   let currentUser = null;
   let currentProfile = null;
@@ -50,40 +74,23 @@
   let friendships = [];
   let notifications = [];
 
-  let activePost = null;
-  let activeProfileId = null;
-  let activeProfileTab = "posts";
-  let activeSearchTab = "profiles";
-
-  let currentFeedSearchQuery = "";
-  let currentSearchQuery = "";
+  let creatorRoles = [];
 
   let selectedPostImage = null;
   let selectedAvatar = null;
   let selectedCover = null;
 
-  let communityLoading = false;
-  let communityInitialized = false;
+  /* ==========================================
+     DOM HELPERS
+  ========================================== */
 
-  const state = {
-    page: "home",
-    commentsPostId: null,
-    commentsOpen: false,
-    editProfileOpen: false,
-    searchOpen: false,
-    previousPage: "home",
-    pendingProfileId: null
-  };
+  function $(selector, parent = document) {
+    return parent.querySelector(selector);
+  }
 
-  // ---------------------------------------------------------
-  // 3. DOM HELPERS
-  // ---------------------------------------------------------
-
-  const $ = (selector, parent = document) =>
-    parent.querySelector(selector);
-
-  const $$ = (selector, parent = document) =>
-    Array.from(parent.querySelectorAll(selector));
+  function $$(selector, parent = document) {
+    return Array.from(parent.querySelectorAll(selector));
+  }
 
   function createElement(tag, className = "", text = "") {
     const element = document.createElement(tag);
@@ -92,16 +99,21 @@
       element.className = className;
     }
 
-    if (text !== undefined && text !== null) {
-      element.textContent = String(text);
+    if (text !== "") {
+      element.textContent = text;
     }
 
     return element;
   }
 
+  function clearElement(element) {
+    if (element) {
+      element.replaceChildren();
+    }
+  }
+
   function makeButton(text, className = "", onClick = null) {
     const button = createElement("button", className, text);
-
     button.type = "button";
 
     if (typeof onClick === "function") {
@@ -111,68 +123,60 @@
     return button;
   }
 
-  function makeInput(type, placeholder, className = "") {
+  function makeInput(placeholder = "", className = "") {
     const input = createElement("input", className);
-
-    input.type = type || "text";
-    input.placeholder = placeholder || "";
-
+    input.type = "text";
+    input.placeholder = placeholder;
     return input;
   }
 
-  function clearElement(element) {
-    if (element) {
-      element.replaceChildren();
-    }
+  function makeTextarea(placeholder = "", className = "") {
+    const textarea = createElement("textarea", className);
+    textarea.placeholder = placeholder;
+    return textarea;
   }
 
-  function getCommunityRoot() {
-    return $("#pageContent") || $("#innerPage");
-  }
-
-  // ---------------------------------------------------------
-  // 4. SAFE TEXT AND IMAGE HELPERS
-  // ---------------------------------------------------------
-
-  function escapeText(value = "") {
-    return String(value).replace(/[&<>"']/g, character => {
-      const map = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      };
-
-      return map[character];
-    });
+  function escapeText(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function safeImage(url) {
-    if (!url) return "";
+    if (!url || typeof url !== "string") {
+      return "";
+    }
 
     try {
-      const parsed = new URL(
-        String(url),
-        window.location.origin
-      );
+      const parsed = new URL(url, window.location.origin);
 
       if (
-        parsed.protocol !== "https:" &&
-        parsed.protocol !== "http:"
+        parsed.protocol === "https:" ||
+        parsed.protocol === "http:"
       ) {
-        return "";
+        return parsed.href;
       }
-
-      return parsed.href;
     } catch (error) {
       return "";
     }
+
+    return "";
   }
 
-  function getInitial(name = "") {
+  function getInitial(name) {
+    const value = String(name || "M").trim();
+    return value.charAt(0).toUpperCase() || "M";
+  }
+
+  function getCommunityRoot() {
     return (
-      String(name).trim().charAt(0).toUpperCase() || "U"
+      document.getElementById("communityRoot") ||
+      document.getElementById("communityPage") ||
+      document.querySelector("[data-community-root]") ||
+      document.body
     );
   }
 
@@ -181,5341 +185,5130 @@
       currentProfile?.display_name ||
       currentUser?.user_metadata?.full_name ||
       currentUser?.email?.split("@")[0] ||
-      "User"
+      "Member"
     );
   }
 
   function getProfile(userId) {
+    if (!userId) return null;
+
+    return profiles.find(
+      profile => String(profile.user_id) === String(userId)
+    ) || (
+      currentProfile &&
+      String(currentProfile.user_id) === String(userId)
+        ? currentProfile
+        : null
+    );
+  }
+
+  function getRole(userId) {
+    if (!userId) return null;
+
     if (
-      currentUser?.id === userId &&
-      currentProfile
+      currentUser &&
+      String(currentUser.id) === String(userId)
+    ) {
+      return currentRole;
+    }
+
+    return creatorRoles.find(
+      item => String(item.user_id) === String(userId)
+    )?.role || null;
+  }
+
+  function isCreator(userId = currentUser?.id) {
+    const role = getRole(userId);
+
+    return ["admin", "moderator", "developer"].includes(
+      String(role || "").toLowerCase()
+    );
+  }
+
+  function requireLogin() {
+    if (!currentUser) {
+      showNotice(LOGIN_ERROR, "error");
+      return false;
+    }
+
+    return true;
+  }
+
+  function showNotice(message, type = "info") {
+    const oldNotice = $(".cma-notice");
+
+    if (oldNotice) {
+      oldNotice.remove();
+    }
+
+    const notice = createElement(
+      "div",
+      `cma-notice cma-notice-${type}`
+    );
+
+    notice.textContent = message;
+    notice.setAttribute("role", "status");
+
+    getCommunityRoot().appendChild(notice);
+
+    window.setTimeout(() => {
+      notice.remove();
+    }, 4500);
+  }
+
+  /* ==========================================
+     DATE & TIME HELPERS
+  ========================================== */
+
+  function formatRelativeTime(dateValue) {
+    if (!dateValue) return "Recently";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Recently";
+    }
+
+    const seconds = Math.floor(
+      (Date.now() - date.getTime()) / 1000
+    );
+
+    if (seconds < 60) return "Just now";
+
+    const minutes = Math.floor(seconds / 60);
+
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+
+    if (hours < 24) {
+      return `${hours}h ago`;
+    }
+
+    const days = Math.floor(hours / 24);
+
+    if (days < 7) {
+      return `${days}d ago`;
+    }
+
+    if (days < 30) {
+      return `${Math.floor(days / 7)}w ago`;
+    }
+
+    if (days < 365) {
+      return `${Math.floor(days / 30)}mo ago`;
+    }
+
+    return `${Math.floor(days / 365)}y ago`;
+  }
+
+  function dateText(dateValue) {
+    if (!dateValue) return "";
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleString("en-BD", {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
+  }
+
+  /* ==========================================
+     DATABASE HELPERS
+  ========================================== */
+
+  function getDatabase() {
+    return window.cmaSupabase || db || null;
+  }
+
+  async function runQuery(query) {
+    if (!query || typeof query.then !== "function") {
+      throw new Error("Invalid database query.");
+    }
+
+    const result = await query;
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result;
+  }
+
+  function requireDatabase() {
+    const client = getDatabase();
+
+    if (!client) {
+      showNotice(
+        "Community database is not connected. Please check Supabase configuration.",
+        "error"
+      );
+
+      return null;
+    }
+
+    return client;
+  }
+
+  function asArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function sortNewest(items, field = "created_at") {
+    return [...asArray(items)].sort((a, b) => {
+      return (
+        new Date(b?.[field] || 0).getTime() -
+        new Date(a?.[field] || 0).getTime()
+      );
+    });
+  }
+
+  function uniqueBy(items, key) {
+    const seen = new Set();
+
+    return asArray(items).filter(item => {
+      const value = item?.[key];
+
+      if (value == null || seen.has(String(value))) {
+        return false;
+      }
+
+      seen.add(String(value));
+      return true;
+    });
+  }
+
+  function getErrorMessage(error) {
+    return (
+      error?.message ||
+      error?.details ||
+      "Something went wrong. Please try again."
+    );
+  }
+
+  /* ==========================================
+     END OF PART 1
+     NEXT: SESSION + DATABASE LOADING
+  ========================================== */
+   
+  /* ==========================================
+     PART 2/9 — SESSION & DATA LOADING
+  ========================================== */
+
+  async function loadSession() {
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) throw error;
+
+      currentUser = data?.session?.user || null;
+
+      return currentUser;
+    } catch (error) {
+      console.error("Community session error:", error);
+      currentUser = null;
+      return null;
+    }
+  }
+
+  async function loadMyProfile() {
+    if (!currentUser) {
+      currentProfile = null;
+      return null;
+    }
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client
+        .from("community_profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      currentProfile = data || null;
+
+      if (
+        currentProfile &&
+        !profiles.some(
+          item => String(item.user_id) === String(currentUser.id)
+        )
+      ) {
+        profiles.push(currentProfile);
+      }
+
+      return currentProfile;
+    } catch (error) {
+      console.error("My profile loading error:", error);
+      currentProfile = null;
+      return null;
+    }
+  }
+
+  async function loadMyPrivateProfile() {
+    if (!currentUser) {
+      currentPrivate = null;
+      return null;
+    }
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client
+        .from("community_private_profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      currentPrivate = data || null;
+      return currentPrivate;
+    } catch (error) {
+      console.error("Private profile loading error:", error);
+      currentPrivate = null;
+      return null;
+    }
+  }
+
+  async function loadMyRole() {
+    if (!currentUser) {
+      currentRole = null;
+      return null;
+    }
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client
+        .from("community_creator_roles")
+        .select("user_id, role")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      currentRole = data?.role || null;
+
+      if (data) {
+        creatorRoles = [
+          ...creatorRoles.filter(
+            item => String(item.user_id) !== String(currentUser.id)
+          ),
+          data
+        ];
+      }
+
+      return currentRole;
+    } catch (error) {
+      console.error("Creator role loading error:", error);
+      currentRole = null;
+      return null;
+    }
+  }
+
+  async function loadCreatorRoles() {
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_creator_roles")
+        .select("user_id, role");
+
+      if (error) throw error;
+
+      creatorRoles = asArray(data);
+
+      if (currentUser) {
+        const ownRole = creatorRoles.find(
+          item => String(item.user_id) === String(currentUser.id)
+        );
+
+        currentRole = ownRole?.role || null;
+      }
+
+      return creatorRoles;
+    } catch (error) {
+      console.error("Creator roles loading error:", error);
+      return creatorRoles;
+    }
+  }
+
+  async function loadPosts() {
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_posts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      posts = sortNewest(data);
+      return posts;
+    } catch (error) {
+      console.error("Community posts loading error:", error);
+      posts = [];
+      return posts;
+    }
+  }
+
+  async function loadReactions() {
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_reactions")
+        .select("*");
+
+      if (error) throw error;
+
+      reactions = asArray(data);
+      return reactions;
+    } catch (error) {
+      console.error("Reactions loading error:", error);
+      reactions = [];
+      return reactions;
+    }
+  }
+
+  async function loadComments() {
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_comments")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      comments = asArray(data);
+      return comments;
+    } catch (error) {
+      console.error("Comments loading error:", error);
+      comments = [];
+      return comments;
+    }
+  }
+
+  async function loadPublicProfiles() {
+    const client = requireDatabase();
+    if (!client) return [];
+
+    const pageSize = 500;
+    let from = 0;
+    let allProfiles = [];
+
+    try {
+      while (true) {
+        let result = await client
+          .from("community_profiles")
+          .select("*")
+          .range(from, from + pageSize - 1);
+
+        if (result.error) throw result.error;
+
+        const batch = asArray(result.data);
+        allProfiles = allProfiles.concat(batch);
+
+        if (batch.length < pageSize) break;
+
+        from += pageSize;
+      }
+
+      profiles = uniqueBy(allProfiles, "user_id");
+
+      if (currentProfile) {
+        profiles = uniqueBy(
+          [currentProfile, ...profiles],
+          "user_id"
+        );
+      }
+
+      return profiles;
+    } catch (error) {
+      console.error("Public profiles loading error:", error);
+
+      if (currentProfile) {
+        profiles = uniqueBy(
+          [currentProfile, ...profiles],
+          "user_id"
+        );
+      }
+
+      return profiles;
+    }
+  }
+
+  async function fetchPublicProfile(userId) {
+    if (!userId) return null;
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    if (
+      currentProfile &&
+      String(currentProfile.user_id) === String(userId)
     ) {
       return currentProfile;
     }
 
-    return (
-      profiles.find(profile => profile.user_id === userId) ||
-      null
-    );
-  }
-
-  function isCreator() {
-    return ["admin", "moderator", "developer"].includes(
-      String(currentRole || "").toLowerCase()
-    );
-  }
-
-  // ---------------------------------------------------------
-  // 5. NOTICE / MESSAGE SYSTEM
-  // ---------------------------------------------------------
-
-  function showNotice(message, type = "info") {
-    let notice = $("#communityNotice");
-
-    if (!notice) {
-      notice = createElement(
-        "div",
-        "community-notice"
-      );
-
-      notice.id = "communityNotice";
-
-      document.body.appendChild(notice);
-    }
-
-    notice.textContent = String(message || "");
-    notice.dataset.type = type;
-
-    notice.classList.add("show");
-
-    clearTimeout(notice._timer);
-
-    notice._timer = setTimeout(() => {
-      notice.classList.remove("show");
-    }, 3200);
-  }
-
-  function requireLogin() {
-    if (currentUser) {
-      return true;
-    }
-
-    showNotice(LOGIN_ERROR, "error");
-    return false;
-  }
-
-  // ---------------------------------------------------------
-  // 6. RELATIVE TIME SYSTEM
-  // ---------------------------------------------------------
-
-  function getTimeDifference(value) {
-    if (!value) return null;
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    const difference = Date.now() - date.getTime();
-
-    if (difference < 0) {
-      return 0;
-    }
-
-    return difference;
-  }
-
-  function formatRelativeTime(value, compact = false) {
-    const difference = getTimeDifference(value);
-
-    if (difference === null) {
-      return "";
-    }
-
-    const seconds = Math.floor(difference / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const weeks = Math.floor(days / 7);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-
-    if (compact) {
-      if (seconds < 60) return "Just now";
-      if (minutes < 60) return `${minutes}m`;
-      if (hours < 24) return `${hours}h`;
-      if (days < 7) return `${days}d`;
-      if (days < 30) return `${weeks}w`;
-      if (days < 365) return `${months}mo`;
-
-      return `${years}y`;
-    }
-
-    if (seconds < 60) return "Just now";
-    if (minutes < 60) {
-      return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
-    }
-
-    if (hours < 24) {
-      return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-    }
-
-    if (days < 7) {
-      return `${days} ${days === 1 ? "day" : "days"} ago`;
-    }
-
-    if (days < 30) {
-      return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
-    }
-
-    if (days < 365) {
-      return `${months} ${months === 1 ? "month" : "months"} ago`;
-    }
-
-    return `${years} ${years === 1 ? "year" : "years"} ago`;
-  }
-
-  function dateText(value) {
-    if (!value) return "";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "Asia/Dhaka"
-    });
-  }
-
-  // ---------------------------------------------------------
-  // 7. SUPABASE SESSION
-  // ---------------------------------------------------------
-
-  async function loadSession() {
-    if (!db || !db.auth) {
-      console.error(
-        "Community: Supabase client not found."
-      );
-
-      currentUser = null;
-      return null;
-    }
-
-    const { data, error } = await db.auth.getSession();
-
-    if (error) {
-      console.error(
-        "Community session error:",
-        error
-      );
-
-      currentUser = null;
-      return null;
-    }
-
-    currentUser = data?.session?.user || null;
-
-    return currentUser;
-  }
-
-  // ---------------------------------------------------------
-  // 8. MY PROFILE DATA
-  // ---------------------------------------------------------
-
-  async function loadMyProfile() {
-    currentProfile = null;
-    currentPrivate = null;
-
-    if (!currentUser || !db) {
-      return null;
-    }
-
-    const { data, error } = await db
-      .from("community_profiles")
-      .select("*")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error(
-        "Community profile load error:",
-        error
-      );
-    } else {
-      currentProfile = data || null;
-    }
-
-    const {
-      data: privateData,
-      error: privateError
-    } = await db
-      .from("community_private_profiles")
-      .select("*")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (privateError) {
-      console.error(
-        "Private profile load error:",
-        privateError
-      );
-    } else {
-      currentPrivate = privateData || null;
-    }
-
-    return currentProfile;
-  }
-
-  // ---------------------------------------------------------
-  // 9. CREATOR ROLE
-  // ---------------------------------------------------------
-
-  async function loadMyRole() {
-    currentRole = null;
-
-    if (!currentUser || !db) {
-      return null;
-    }
-
-    const { data, error } = await db
-      .from("community_creator_roles")
-      .select("role")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error(
-        "Community role load error:",
-        error
-      );
-
-      return null;
-    }
-
-    currentRole = data?.role || null;
-
-    return currentRole;
-  }
-
-  // ---------------------------------------------------------
-  // 10. COMMUNITY POSTS
-  // ---------------------------------------------------------
-
-  async function loadPosts() {
-    if (!db) {
-      posts = [];
-      return posts;
-    }
-
-    const { data, error } = await db
-      .from("community_posts")
-      .select("*")
-      .order("created_at", {
-        ascending: false
-      });
-
-    if (error) {
-      console.error(
-        "Community posts load error:",
-        error
-      );
-
-      posts = [];
-      return posts;
-    }
-
-    posts = data || [];
-
-    return posts;
-  }
-
-  // ---------------------------------------------------------
-  // 11. COMMUNITY REACTIONS
-  // ---------------------------------------------------------
-
-  async function loadReactions() {
-    reactions = [];
-
-    if (!db) {
-      return reactions;
-    }
-
-    const { data, error } = await db
-      .from("community_reactions")
-      .select("*");
-
-    if (error) {
-      console.error(
-        "Community reactions load error:",
-        error
-      );
-
-      return reactions;
-    }
-
-    reactions = data || [];
-
-    return reactions;
-  }
-
-  // ---------------------------------------------------------
-  // 12. COMMUNITY COMMENTS
-  // ---------------------------------------------------------
-
-  async function loadComments() {
-    comments = [];
-
-    if (!db) {
-      return comments;
-    }
-
-    const { data, error } = await db
-      .from("community_comments")
-      .select("*")
-      .order("created_at", {
-        ascending: true
-      });
-
-    if (error) {
-      console.error(
-        "Community comments load error:",
-        error
-      );
-
-      return comments;
-    }
-
-    comments = data || [];
-
-    return comments;
-  }
-
-  // ---------------------------------------------------------
-  // 13. PUBLIC COMMUNITY PROFILES
-  // ---------------------------------------------------------
-
-  async function loadPublicProfiles() {
-    profiles = [];
-
-    if (!db) {
-      return profiles;
-    }
-
-    const { data, error } = await db
-      .from("community_profiles")
-      .select("*")
-      .order("display_name", {
-        ascending: true
-      });
-
-    if (error) {
-      console.error(
-        "Public profiles load error:",
-        error
-      );
-
-      return profiles;
-    }
-
-    profiles = data || [];
-
-    return profiles;
-  }
-
-  // ---------------------------------------------------------
-  // 14. GET POST RELATED DATA
-  // ---------------------------------------------------------
-
-  function getReaction(postId, userId = null) {
-    return reactions.find(reaction => {
-      if (reaction.post_id !== postId) {
-        return false;
+    const cached = getProfile(userId);
+    if (cached) return cached;
+
+    try {
+      const { data, error } = await client
+        .from("community_profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        profiles = uniqueBy(
+          [data, ...profiles],
+          "user_id"
+        );
       }
 
-      if (
-        userId &&
-        reaction.user_id !== userId
-      ) {
-        return false;
-      }
-
-      return true;
-    }) || null;
+      return data || null;
+    } catch (error) {
+      console.error("Single profile loading error:", error);
+      return null;
+    }
   }
 
-  function getPostComments(postId) {
-    return comments.filter(
-      comment => comment.post_id === postId
-    );
+  function getReaction(postId, userId = currentUser?.id) {
+    return reactions.find(item =>
+      String(item.post_id) === String(postId) &&
+      String(item.user_id) === String(userId)
+    ) || null;
   }
 
   function getPostReactions(postId) {
     return reactions.filter(
-      reaction => reaction.post_id === postId
+      item => String(item.post_id) === String(postId)
     );
   }
 
-  // ---------------------------------------------------------
-  // 15. REFRESH ALL COMMUNITY DATA
-  // ---------------------------------------------------------
+  function getPostComments(postId) {
+    return sortNewest(
+      comments.filter(
+        item => String(item.post_id) === String(postId)
+      ),
+      "created_at"
+    );
+  }
 
   async function refreshCommunityData() {
-    if (!db) {
-      showNotice(
-        "Community database connection is unavailable.",
-        "error"
-      );
+    if (state.loading) return;
 
-      return false;
-    }
+    state.loading = true;
 
     try {
       await loadSession();
 
-      await Promise.all([
-        loadPosts(),
-        loadComments(),
-        loadReactions(),
-        loadPublicProfiles()
-      ]);
-
-      if (currentUser) {
-        await Promise.all([
-          loadMyProfile(),
-          loadMyRole()
-        ]);
-      } else {
+      if (!currentUser) {
         currentProfile = null;
         currentPrivate = null;
         currentRole = null;
+      } else {
+        await Promise.all([
+          loadMyProfile(),
+          loadMyPrivateProfile(),
+          loadMyRole()
+        ]);
+      }
+
+      await Promise.all([
+        loadPublicProfiles(),
+        loadCreatorRoles(),
+        loadPosts(),
+        loadReactions(),
+        loadComments()
+      ]);
+
+      state.initialized = true;
+
+      return true;
+    } catch (error) {
+      console.error("Community refresh error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    } finally {
+      state.loading = false;
+    }
+  }
+
+  /* ==========================================
+     END OF PART 2
+     NEXT: IMAGE UPLOAD + PROFILE + POSTS
+  ========================================== */
+       
+  /* ==========================================
+     PART 3/9 — PROFILE + IMAGE + POST SYSTEM
+  ========================================== */
+
+  function validateCommunityImage(file) {
+    if (!file) {
+      throw new Error("Please select an image first.");
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error("Only JPG, PNG and WEBP images are allowed.");
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Image size must be 5 MB or less.");
+    }
+
+    return true;
+  }
+
+  async function uploadCommunityImage(file, folder = "posts") {
+    validateCommunityImage(file);
+
+    if (!requireLogin()) {
+      throw new Error(LOGIN_ERROR);
+    }
+
+    const client = requireDatabase();
+    if (!client) {
+      throw new Error("Database connection is unavailable.");
+    }
+
+    const extension = file.type === "image/jpeg"
+      ? "jpg"
+      : file.type === "image/png"
+        ? "png"
+        : "webp";
+
+    const safeFolder = String(folder).replace(
+      /[^a-zA-Z0-9_-]/g,
+      ""
+    );
+
+    const filePath =
+      `${currentUser.id}/${safeFolder}/` +
+      `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${extension}`;
+
+    const { data, error } = await client.storage
+      .from(BUCKET)
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) throw error;
+
+    const { data: publicData } = client.storage
+      .from(BUCKET)
+      .getPublicUrl(data.path);
+
+    const imageUrl = safeImage(publicData?.publicUrl);
+
+    if (!imageUrl) {
+      throw new Error("Could not create the image URL.");
+    }
+
+    return imageUrl;
+  }
+
+  function chooseCommunityImage(callback, folder = "posts") {
+    if (typeof callback !== "function") return;
+
+    if (!requireLogin()) return;
+
+    const input = createElement("input");
+
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp";
+    input.hidden = true;
+
+    document.body.appendChild(input);
+
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+
+      if (!file) {
+        input.remove();
+        return;
+      }
+
+      try {
+        validateCommunityImage(file);
+
+        const imageUrl = await uploadCommunityImage(
+          file,
+          folder
+        );
+
+        await callback(imageUrl, file);
+      } catch (error) {
+        showNotice(getErrorMessage(error), "error");
+      } finally {
+        input.remove();
+      }
+    });
+
+    input.click();
+  }
+
+  async function saveProfile(formData = {}) {
+    if (!requireLogin()) return null;
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    const displayName = String(
+      formData.display_name ?? currentProfile?.display_name ?? ""
+    ).trim();
+
+    const shortDescription = String(
+      formData.short_description ??
+      currentProfile?.short_description ??
+      ""
+    ).trim();
+
+    const school = String(
+      formData.school ?? currentProfile?.school ?? ""
+    ).trim();
+
+    if (!displayName) {
+      showNotice("Full name is required.", "error");
+      return null;
+    }
+
+    const payload = {
+      user_id: currentUser.id,
+      display_name: displayName,
+      short_description: shortDescription,
+      school
+    };
+
+    if (formData.avatar_url !== undefined) {
+      payload.avatar_url = safeImage(formData.avatar_url);
+    }
+
+    if (formData.cover_url !== undefined) {
+      payload.cover_url = safeImage(formData.cover_url);
+    }
+
+    try {
+      const { data, error } = await client
+        .from("community_profiles")
+        .upsert(payload, {
+          onConflict: "user_id"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      currentProfile = data;
+
+      profiles = uniqueBy(
+        [data, ...profiles],
+        "user_id"
+      );
+
+      return data;
+    } catch (error) {
+      console.error("Profile saving error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function savePrivateProfile(formData = {}) {
+    if (!requireLogin()) return null;
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    const payload = {
+      user_id: currentUser.id,
+      phone: String(
+        formData.phone ?? currentPrivate?.phone ?? ""
+      ).trim(),
+      address: String(
+        formData.address ?? currentPrivate?.address ?? ""
+      ).trim()
+    };
+
+    try {
+      const { data, error } = await client
+        .from("community_private_profiles")
+        .upsert(payload, {
+          onConflict: "user_id"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      currentPrivate = data;
+      return data;
+    } catch (error) {
+      console.error("Private profile saving error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function updateProfilePicture(file) {
+    if (!requireLogin()) return null;
+
+    try {
+      const imageUrl = await uploadCommunityImage(
+        file,
+        "avatars"
+      );
+
+      const saved = await saveProfile({
+        avatar_url: imageUrl
+      });
+
+      if (saved) {
+        showNotice("Profile picture updated.", "success");
+      }
+
+      return saved;
+    } catch (error) {
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function updateCoverPhoto(file) {
+    if (!requireLogin()) return null;
+
+    try {
+      const imageUrl = await uploadCommunityImage(
+        file,
+        "covers"
+      );
+
+      const saved = await saveProfile({
+        cover_url: imageUrl
+      });
+
+      if (saved) {
+        showNotice("Cover photo updated.", "success");
+      }
+
+      return saved;
+    } catch (error) {
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function publishPost({
+    caption = "",
+    imageUrl = "",
+    imageFile = null,
+    scope = POST_SCOPES.COMMUNITY
+  } = {}) {
+    if (!requireLogin()) return null;
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    const allowedScopes = Object.values(POST_SCOPES);
+
+    if (!allowedScopes.includes(scope)) {
+      showNotice("Invalid publishing destination.", "error");
+      return null;
+    }
+
+    if (
+      scope !== POST_SCOPES.COMMUNITY &&
+      !isCreator()
+    ) {
+      showNotice(
+        "Only Admin, Moderator and Developer can publish here.",
+        "error"
+      );
+      return null;
+    }
+
+    const content = String(caption || "").trim();
+
+    if (!content && !imageUrl && !imageFile) {
+      showNotice(
+        "Write something or add a photo before publishing.",
+        "error"
+      );
+      return null;
+    }
+
+    try {
+      let finalImageUrl = "";
+
+      if (imageFile) {
+        finalImageUrl = await uploadCommunityImage(
+          imageFile,
+          "posts"
+        );
+      } else if (imageUrl) {
+        finalImageUrl = safeImage(imageUrl);
+
+        if (!finalImageUrl) {
+          throw new Error("Invalid image URL.");
+        }
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        content,
+        image_url: finalImageUrl || null,
+        post_scope: scope
+      };
+
+      const { data, error } = await client
+        .from("community_posts")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      posts = sortNewest([data, ...posts]);
+
+      selectedPostImage = null;
+
+      showNotice("Post published successfully.", "success");
+
+      return data;
+    } catch (error) {
+      console.error("Post publishing error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function deletePost(postId) {
+    if (!requireLogin()) return false;
+
+    const post = posts.find(
+      item => String(item.id) === String(postId)
+    );
+
+    if (!post) {
+      showNotice("Post not found.", "error");
+      return false;
+    }
+
+    const isOwner =
+      String(post.user_id) === String(currentUser.id);
+
+    if (!isOwner && !isCreator()) {
+      showNotice(
+        "You do not have permission to delete this post.",
+        "error"
+      );
+      return false;
+    }
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      posts = posts.filter(
+        item => String(item.id) !== String(postId)
+      );
+
+      reactions = reactions.filter(
+        item => String(item.post_id) !== String(postId)
+      );
+
+      comments = comments.filter(
+        item => String(item.post_id) !== String(postId)
+      );
+
+      showNotice("Post deleted.", "success");
+      return true;
+    } catch (error) {
+      console.error("Post deletion error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  async function toggleReaction(postId, emoji) {
+    if (!requireLogin()) return false;
+
+    if (!EMOJIS.includes(emoji)) {
+      showNotice("Invalid reaction.", "error");
+      return false;
+    }
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    const existing = getReaction(postId);
+
+    try {
+      if (existing?.emoji === emoji) {
+        const { error } = await client
+          .from("community_reactions")
+          .delete()
+          .eq("id", existing.id);
+
+        if (error) throw error;
+
+        reactions = reactions.filter(
+          item => String(item.id) !== String(existing.id)
+        );
+      } else if (existing) {
+        const { data, error } = await client
+          .from("community_reactions")
+          .update({ emoji })
+          .eq("id", existing.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        reactions = reactions.map(item =>
+          String(item.id) === String(existing.id)
+            ? data
+            : item
+        );
+      } else {
+        const { data, error } = await client
+          .from("community_reactions")
+          .insert({
+            post_id: postId,
+            user_id: currentUser.id,
+            emoji
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        reactions.push(data);
+
+        const post = posts.find(
+          item => String(item.id) === String(postId)
+        );
+
+        if (
+          post &&
+          String(post.user_id) !== String(currentUser.id)
+        ) {
+          await createCommunityNotification(
+            post.user_id,
+            `${currentName()} reacted ${emoji} to your post.`
+          );
+        }
       }
 
       return true;
     } catch (error) {
-      console.error(
-        "Community refresh error:",
-        error
-      );
-
-      showNotice(
-        "Could not refresh Community data.",
-        "error"
-      );
-
+      console.error("Reaction update error:", error);
+      showNotice(getErrorMessage(error), "error");
       return false;
     }
   }
 
-  // =========================================================
-  // END OF PART 1
-  // NEXT: PART 2 — PROFILE SAVE, IMAGE UPLOAD,
-  // POST PUBLISH, REACTION AND COMMENT ACTIONS
-  // =========================================================
-        
-// =========================================================
-// PART 2 OF 8
-// PROFILE SAVE + IMAGE UPLOAD + POST ACTIONS
-// =========================================================
-
-// ---------------------------------------------------------
-// 16. IMAGE VALIDATION
-// ---------------------------------------------------------
-
-function validateCommunityImage(file) {
-  if (!file) {
-    showNotice("Please select an image.", "error");
-    return false;
-  }
-
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp"
-  ];
-
-  if (!allowedTypes.includes(file.type)) {
-    showNotice(
-      "Only JPG, PNG and WEBP images are allowed.",
-      "error"
-    );
-    return false;
-  }
-
-  const maxSize = 5 * 1024 * 1024;
-
-  if (file.size > maxSize) {
-    showNotice(
-      "Image size must be 5MB or smaller.",
-      "error"
-    );
-    return false;
-  }
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 17. SUPABASE IMAGE UPLOAD
-// ---------------------------------------------------------
-
-async function uploadCommunityImage(file, folder = "posts") {
-  if (!requireLogin()) return null;
-
-  if (!validateCommunityImage(file)) {
-    return null;
-  }
-
-  if (!db?.storage) {
-    showNotice(
-      "Image storage is unavailable.",
-      "error"
-    );
-
-    return null;
-  }
-
-  const extensionMap = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp"
-  };
-
-  const extension = extensionMap[file.type];
-
-  const fileName =
-    `${currentUser.id}/${folder}/` +
-    `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${extension}`;
-
-  const { data, error } = await db.storage
-    .from(BUCKET)
-    .upload(fileName, file, {
-      cacheControl: "3600",
-      contentType: file.type,
-      upsert: false
-    });
-
-  if (error) {
-    console.error("Community upload error:", error);
-
-    showNotice(
-      "Image upload failed. Please try again.",
-      "error"
-    );
-
-    return null;
-  }
-
-  const { data: publicData } = db.storage
-    .from(BUCKET)
-    .getPublicUrl(data.path);
-
-  const imageUrl = publicData?.publicUrl || "";
-
-  if (!imageUrl) {
-    showNotice(
-      "Could not generate image URL.",
-      "error"
-    );
-
-    return null;
-  }
-
-  return imageUrl;
-}
-
-// ---------------------------------------------------------
-// 18. PHONE GALLERY PICKER
-// ---------------------------------------------------------
-
-function chooseCommunityImage(callback, folder = "posts") {
-  if (!requireLogin()) return;
-
-  const input = createElement("input");
-
-  input.type = "file";
-  input.accept = "image/jpeg,image/png,image/webp";
-  input.style.display = "none";
-
-  document.body.appendChild(input);
-
-  input.addEventListener("change", async () => {
-    const file = input.files?.[0];
-
-    input.remove();
-
-    if (!file) return;
-
-    const imageUrl = await uploadCommunityImage(
-      file,
-      folder
-    );
-
-    if (imageUrl && typeof callback === "function") {
-      callback(imageUrl, file);
-    }
-  });
-
-  input.click();
-}
-
-// ---------------------------------------------------------
-// 19. SAVE PERSONAL INFORMATION
-// ---------------------------------------------------------
-
-async function saveProfile(formData = {}) {
-  if (!requireLogin()) return false;
-
-  if (!db) return false;
-
-  const displayName = String(
-    formData.display_name ??
-    currentProfile?.display_name ??
-    currentName()
-  ).trim();
-
-  const shortDescription = String(
-    formData.short_description ??
-    currentProfile?.short_description ??
-    ""
-  ).trim();
-
-  const institution = String(
-    formData.school ??
-    currentProfile?.school ??
-    ""
-  ).trim();
-
-  if (!displayName) {
-    showNotice(
-      "Full Name cannot be empty.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const profileData = {
-    user_id: currentUser.id,
-    display_name: displayName,
-    short_description: shortDescription,
-    school: institution,
-    updated_at: new Date().toISOString()
-  };
-
-  if (formData.avatar_url !== undefined) {
-    profileData.avatar_url = formData.avatar_url;
-  }
-
-  if (formData.cover_url !== undefined) {
-    profileData.cover_url = formData.cover_url;
-  }
-
-  const { data, error } = await db
-    .from("community_profiles")
-    .upsert(profileData, {
-      onConflict: "user_id"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Profile save error:", error);
-
-    showNotice(
-      "Could not save profile information.",
-      "error"
-    );
-
-    return false;
-  }
-
-  currentProfile = data;
-
-  await loadPublicProfiles();
-
-  showNotice(
-    "Profile information saved successfully.",
-    "success"
-  );
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 20. SAVE PRIVATE PROFILE INFORMATION
-// ---------------------------------------------------------
-
-async function savePrivateProfile(formData = {}) {
-  if (!requireLogin()) return false;
-
-  if (!db) return false;
-
-  const privateData = {
-    user_id: currentUser.id,
-    phone: String(formData.phone || "").trim(),
-    address: String(formData.address || "").trim(),
-    updated_at: new Date().toISOString()
-  };
-
-  const { data, error } = await db
-    .from("community_private_profiles")
-    .upsert(privateData, {
-      onConflict: "user_id"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(
-      "Private profile save error:",
-      error
-    );
-
-    showNotice(
-      "Could not save contact information.",
-      "error"
-    );
-
-    return false;
-  }
-
-  currentPrivate = data;
-
-  showNotice(
-    "Contact information saved.",
-    "success"
-  );
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 21. UPDATE PROFILE PICTURE
-// ---------------------------------------------------------
-
-async function updateProfilePicture(file) {
-  if (!requireLogin()) return false;
-
-  const imageUrl = await uploadCommunityImage(
-    file,
-    "avatars"
-  );
-
-  if (!imageUrl) return false;
-
-  return await saveProfile({
-    avatar_url: imageUrl
-  });
-}
-
-// ---------------------------------------------------------
-// 22. UPDATE COVER PHOTO
-// ---------------------------------------------------------
-
-async function updateCoverPhoto(file) {
-  if (!requireLogin()) return false;
-
-  const imageUrl = await uploadCommunityImage(
-    file,
-    "covers"
-  );
-
-  if (!imageUrl) return false;
-
-  return await saveProfile({
-    cover_url: imageUrl
-  });
-}
-
-// ---------------------------------------------------------
-// 23. PUBLISH COMMUNITY POST
-// ---------------------------------------------------------
-
-async function publishPost({
-  caption = "",
-  imageUrl = "",
-  scope = "community_home"
-} = {}) {
-  if (!requireLogin()) return false;
-
-  if (!db) return false;
-
-  const cleanCaption = String(caption).trim();
-
-  const cleanImageUrl = safeImage(imageUrl);
-
-  if (!cleanCaption && !cleanImageUrl) {
-    showNotice(
-      "Write something or add a photo.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const allowedScopes = [
-    "community_home",
-    "creator_panel"
-  ];
-
-  if (!allowedScopes.includes(scope)) {
-    showNotice(
-      "Invalid publishing destination.",
-      "error"
-    );
-
-    return false;
-  }
-
-  if (
-    scope !== "community_home" &&
-    !isCreator()
-  ) {
-    showNotice(
-      "Only Admin, Moderator and Developer can publish here.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const postData = {
-    user_id: currentUser.id,
-    content: cleanCaption,
-    image_url: cleanImageUrl || null,
-    post_scope: scope
-  };
-
-  const { data, error } = await db
-    .from("community_posts")
-    .insert(postData)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Post publish error:", error);
-
-    showNotice(
-      "Post could not be published.",
-      "error"
-    );
-
-    return false;
-  }
-
-  posts.unshift(data);
-
-  showNotice(
-    "Your post has been published.",
-    "success"
-  );
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 24. DELETE COMMUNITY POST
-// ---------------------------------------------------------
-
-async function deletePost(postId) {
-  if (!requireLogin()) return false;
-
-  const post = posts.find(
-    item => item.id === postId
-  );
-
-  if (!post) return false;
-
-  const isOwner = post.user_id === currentUser.id;
-
-  if (!isOwner && !isCreator()) {
-    showNotice(
-      "You cannot delete this post.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const confirmed = window.confirm(
-    "Are you sure you want to delete this post?"
-  );
-
-  if (!confirmed) return false;
-
-  const { error } = await db
-    .from("community_posts")
-    .delete()
-    .eq("id", postId);
-
-  if (error) {
-    console.error("Post delete error:", error);
-
-    showNotice(
-      "Could not delete this post.",
-      "error"
-    );
-
-    return false;
-  }
-
-  posts = posts.filter(
-    item => item.id !== postId
-  );
-
-  reactions = reactions.filter(
-    item => item.post_id !== postId
-  );
-
-  comments = comments.filter(
-    item => item.post_id !== postId
-  );
-
-  showNotice(
-    "Post deleted successfully.",
-    "success"
-  );
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 25. ADD / CHANGE / REMOVE REACTION
-// ---------------------------------------------------------
-
-async function toggleReaction(postId, emoji) {
-  if (!requireLogin()) return false;
-
-  if (!EMOJIS.includes(emoji)) {
-    return false;
-  }
-
-  const existing = reactions.find(item =>
-    item.post_id === postId &&
-    item.user_id === currentUser.id
-  );
-
-  if (existing && existing.emoji === emoji) {
-    const { error } = await db
-      .from("community_reactions")
-      .delete()
-      .eq("id", existing.id);
-
-    if (error) {
-      console.error(
-        "Reaction remove error:",
-        error
-      );
-
-      showNotice(
-        "Could not remove reaction.",
-        "error"
-      );
-
-      return false;
-    }
-
-    reactions = reactions.filter(
-      item => item.id !== existing.id
-    );
-
-    return true;
-  }
-
-  if (existing) {
-    const { data, error } = await db
-      .from("community_reactions")
-      .update({
-        emoji: emoji
-      })
-      .eq("id", existing.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error(
-        "Reaction update error:",
-        error
-      );
-
-      showNotice(
-        "Could not change reaction.",
-        "error"
-      );
-
-      return false;
-    }
-
-    reactions = reactions.map(item =>
-      item.id === existing.id ? data : item
-    );
-
-    return true;
-  }
-
-  const { data, error } = await db
-    .from("community_reactions")
-    .insert({
-      post_id: postId,
-      user_id: currentUser.id,
-      emoji: emoji
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(
-      "Reaction insert error:",
-      error
-    );
-
-    showNotice(
-      "Could not add reaction.",
-      "error"
-    );
-
-    return false;
-  }
-
-  reactions.push(data);
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 26. ADD COMMENT
-// ---------------------------------------------------------
-
-async function addComment(postId, text) {
-  if (!requireLogin()) return false;
-
-  const cleanText = String(text || "").trim();
-
-  if (!cleanText) {
-    showNotice(
-      "Write a comment first.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const { data, error } = await db
-    .from("community_comments")
-    .insert({
-      post_id: postId,
-      user_id: currentUser.id,
-      content: cleanText
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(
-      "Comment insert error:",
-      error
-    );
-
-    showNotice(
-      "Could not add comment.",
-      "error"
-    );
-
-    return false;
-  }
-
-  comments.push(data);
-
-  showNotice(
-    "Comment added.",
-    "success"
-  );
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 27. DELETE COMMENT
-// ---------------------------------------------------------
-
-async function deleteComment(commentId) {
-  if (!requireLogin()) return false;
-
-  const comment = comments.find(
-    item => item.id === commentId
-  );
-
-  if (!comment) return false;
-
-  const isOwner =
-    comment.user_id === currentUser.id;
-
-  if (!isOwner && !isCreator()) {
-    showNotice(
-      "You cannot delete this comment.",
-      "error"
-    );
-
-    return false;
-  }
-
-  const { error } = await db
-    .from("community_comments")
-    .delete()
-    .eq("id", commentId);
-
-  if (error) {
-    console.error(
-      "Comment delete error:",
-      error
-    );
-
-    showNotice(
-      "Could not delete comment.",
-      "error"
-    );
-
-    return false;
-  }
-
-  comments = comments.filter(
-    item => item.id !== commentId
-  );
-
-  return true;
-}
-
-// =========================================================
-// END OF PART 2
-// NEXT: PART 3 — POST CARD + FEED + COMPOSER UI
-// =========================================================
-    
-// =========================================================
-// PART 3 OF 8
-// POST CARD + HOMEPAGE FEED + COMPOSER
-// =========================================================
-
-// ---------------------------------------------------------
-// 28. GET POST AUTHOR
-// ---------------------------------------------------------
-
-function getPostAuthor(post) {
-  return getProfile(post.user_id);
-}
-
-function getAuthorName(post) {
-  const profile = getPostAuthor(post);
-
-  return (
-    profile?.display_name ||
-    "Community Member"
-  );
-}
-
-function getAuthorAvatar(post) {
-  const profile = getPostAuthor(post);
-
-  return safeImage(profile?.avatar_url || "");
-}
-
-// ---------------------------------------------------------
-// 29. CREATE AVATAR
-// ---------------------------------------------------------
-
-function createAuthorAvatar(profile, size = "normal") {
-  const avatar = createElement(
-    "div",
-    `community-avatar community-avatar-${size}`
-  );
-
-  const imageUrl = safeImage(profile?.avatar_url);
-
-  if (imageUrl) {
-    const image = createElement("img");
-
-    image.src = imageUrl;
-    image.alt = profile?.display_name || "Member";
-    image.loading = "lazy";
-
-    image.onerror = () => {
-      image.remove();
-      avatar.textContent = getInitial(
-        profile?.display_name
-      );
-    };
-
-    avatar.appendChild(image);
-  } else {
-    avatar.textContent = getInitial(
-      profile?.display_name
-    );
-  }
-
-  return avatar;
-}
-
-// ---------------------------------------------------------
-// 30. CREATE POST AUTHOR BUTTON
-// ---------------------------------------------------------
-
-function createPostAuthor(post) {
-  const profile = getPostAuthor(post);
-
-  const button = createElement(
-    "button",
-    "community-post-author"
-  );
-
-  button.type = "button";
-
-  button.appendChild(
-    createAuthorAvatar(profile, "small")
-  );
-
-  const details = createElement(
-    "div",
-    "community-post-author-details"
-  );
-
-  const name = createElement(
-    "span",
-    "community-post-author-name",
-    getAuthorName(post)
-  );
-
-  const time = createElement(
-    "span",
-    "community-post-time",
-    formatRelativeTime(post.created_at)
-  );
-
-  details.append(name, time);
-
-  button.appendChild(details);
-
-  button.addEventListener("click", () => {
-    window.cmaOpenCommunityProfile?.(
-      post.user_id
-    );
-  });
-
-  return button;
-}
-
-// ---------------------------------------------------------
-// 31. POST MENU
-// ---------------------------------------------------------
-
-function createPostMenu(post) {
-  const wrapper = createElement(
-    "div",
-    "community-post-menu-wrapper"
-  );
-
-  const menuButton = makeButton(
-    "⋯",
-    "community-post-menu-button"
-  );
-
-  menuButton.setAttribute(
-    "aria-label",
-    "Post options"
-  );
-
-  const menu = createElement(
-    "div",
-    "community-post-menu"
-  );
-
-  menu.hidden = true;
-
-  const isOwner =
-    currentUser?.id === post.user_id;
-
-  if (isOwner || isCreator()) {
-    const deleteButton = makeButton(
-      "Delete Post",
-      "community-menu-item community-delete-post-button",
-      async () => {
-        menu.hidden = true;
-
-        const deleted = await deletePost(post.id);
-
-        if (deleted) {
-          renderCommunityPage();
-        }
-      }
-    );
-
-    menu.appendChild(deleteButton);
-  }
-
-  if (!menu.children.length) {
-    const unavailable = createElement(
+  /* ==========================================
+     END OF PART 3
+     NEXT: POST CARD + COMMENTS SYSTEM
+  ========================================== */
+      
+  /* ==========================================
+     PART 4/9 — POST CARD + COMMENTS SYSTEM
+  ========================================== */
+
+  function createMemberAvatar(userId, size = "normal") {
+    const profile = getProfile(userId);
+    const avatar = createElement(
       "div",
-      "community-menu-empty",
-      "No options available"
+      `cma-avatar cma-avatar-${size}`
     );
 
-    menu.appendChild(unavailable);
+    const imageUrl = safeImage(profile?.avatar_url);
+
+    if (imageUrl) {
+      const image = createElement("img");
+      image.src = imageUrl;
+      image.alt = "Member profile picture";
+      image.loading = "lazy";
+
+      image.onerror = () => {
+        image.remove();
+        avatar.textContent = getInitial(profile?.display_name);
+      };
+
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = getInitial(profile?.display_name);
+    }
+
+    return avatar;
   }
 
-  menuButton.addEventListener("click", event => {
-    event.stopPropagation();
-
-    menu.hidden = !menu.hidden;
-  });
-
-  document.addEventListener("click", event => {
-    if (!wrapper.contains(event.target)) {
-      menu.hidden = true;
-    }
-  });
-
-  wrapper.append(menuButton, menu);
-
-  return wrapper;
-}
-
-// ---------------------------------------------------------
-// 32. REACTION BUTTONS
-// ---------------------------------------------------------
-
-function createReactionBar(post) {
-  const bar = createElement(
-    "div",
-    "community-reaction-bar"
-  );
-
-  const currentReaction = reactions.find(item =>
-    item.post_id === post.id &&
-    item.user_id === currentUser?.id
-  );
-
-  EMOJIS.forEach(emoji => {
-    const button = makeButton(
-      emoji,
-      "community-reaction-button",
-      async () => {
-        if (!requireLogin()) return;
-
-        const success = await toggleReaction(
-          post.id,
-          emoji
-        );
-
-        if (success) {
-          renderCommunityPage();
-        }
-      }
-    );
-
-    button.setAttribute(
-      "aria-label",
-      `React with ${emoji}`
-    );
-
-    if (currentReaction?.emoji === emoji) {
-      button.classList.add("active");
+  function getMemberName(userId) {
+    if (
+      currentUser &&
+      String(currentUser.id) === String(userId)
+    ) {
+      return currentName();
     }
 
-    button.addEventListener("contextmenu", event => {
-      event.preventDefault();
-      openReactionMembers(post.id, emoji);
-    });
-
-    button.addEventListener("click", event => {
-      if (event.detail === 2) {
-        openReactionMembers(post.id, emoji);
-      }
-    });
-
-    bar.appendChild(button);
-  });
-
-  return bar;
-}
-
-// ---------------------------------------------------------
-// 33. REACTION MEMBER LIST
-// ---------------------------------------------------------
-
-function openReactionMembers(postId, emoji) {
-  const matching = reactions.filter(item =>
-    item.post_id === postId &&
-    item.emoji === emoji
-  );
-
-  const overlay = createElement(
-    "div",
-    "community-modal-overlay"
-  );
-
-  const sheet = createElement(
-    "div",
-    "community-modal-sheet"
-  );
-
-  const heading = createElement(
-    "h3",
-    "",
-    `${emoji} Reactions`
-  );
-
-  const close = makeButton(
-    "×",
-    "community-modal-close",
-    () => overlay.remove()
-  );
-
-  sheet.append(heading, close);
-
-  if (!matching.length) {
-    sheet.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        "No reactions yet."
-      )
+    return (
+      getProfile(userId)?.display_name ||
+      "Community Member"
     );
   }
 
-  matching.forEach(reaction => {
-    const profile = getProfile(reaction.user_id);
+  function openCommunityProfile(userId) {
+    if (!userId) return;
 
-    const row = createElement(
+    if (typeof window.cmaOpenCommunityProfile === "function") {
+      window.cmaOpenCommunityProfile(userId);
+      return;
+    }
+
+    state.activeProfileId = userId;
+    state.section = "profile";
+
+    renderCommunityPage();
+  }
+
+  function renderPostHeader(post) {
+    const header = createElement("div", "cma-post-header");
+
+    const identity = createElement(
       "div",
-      "community-reaction-member"
+      "cma-post-identity"
     );
 
-    row.appendChild(
-      createAuthorAvatar(profile, "small")
-    );
-
-    row.appendChild(
-      createElement(
-        "span",
-        "",
-        profile?.display_name || "Member"
-      )
-    );
-
-    sheet.appendChild(row);
-  });
-
-  overlay.appendChild(sheet);
-
-  overlay.addEventListener("click", event => {
-    if (event.target === overlay) {
-      overlay.remove();
-    }
-  });
-
-  document.body.appendChild(overlay);
-}
-
-// ---------------------------------------------------------
-// 34. ONE COMMENT PREVIEW
-// ---------------------------------------------------------
-
-function createCommentPreview(post) {
-  const postComments = getPostComments(post.id);
-
-  if (!postComments.length) {
-    return null;
-  }
-
-  const randomIndex = Math.floor(
-    Math.random() * postComments.length
-  );
-
-  const comment = postComments[randomIndex];
-
-  const profile = getProfile(comment.user_id);
-
-  const card = createElement(
-    "div",
-    "community-comment-preview"
-  );
-
-  card.appendChild(
-    createAuthorAvatar(profile, "tiny")
-  );
-
-  const body = createElement(
-    "div",
-    "community-comment-preview-body"
-  );
-
-  const header = createElement(
-    "div",
-    "community-comment-preview-header"
-  );
-
-  header.append(
-    createElement(
-      "strong",
+    const avatarButton = makeButton(
       "",
-      profile?.display_name || "Member"
-    ),
-    createElement(
+      "cma-post-avatar-button",
+      () => openCommunityProfile(post.user_id)
+    );
+
+    avatarButton.appendChild(
+      createMemberAvatar(post.user_id, "small")
+    );
+
+    const details = createElement(
+      "div",
+      "cma-post-author-details"
+    );
+
+    const name = makeButton(
+      getMemberName(post.user_id),
+      "cma-post-author",
+      () => openCommunityProfile(post.user_id)
+    );
+
+    const timestamp = createElement(
       "span",
-      "",
-      formatRelativeTime(comment.created_at, true)
-    )
-  );
-
-  body.append(
-    header,
-    createElement(
-      "p",
-      "",
-      comment.content || ""
-    )
-  );
-
-  card.appendChild(body);
-
-  return card;
-}
-
-// ---------------------------------------------------------
-// 35. WRITE COMMENT BAR
-// ---------------------------------------------------------
-
-function createWriteCommentBar(post) {
-  const bar = createElement(
-    "form",
-    "community-write-comment"
-  );
-
-  const avatar = createAuthorAvatar(
-    currentProfile,
-    "tiny"
-  );
-
-  const input = makeInput(
-    "text",
-    "Write a comment...",
-    "community-write-comment-input"
-  );
-
-  const send = makeButton(
-    "➤",
-    "community-write-comment-send"
-  );
-
-  send.type = "submit";
-
-  bar.append(avatar, input, send);
-
-  bar.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!requireLogin()) return;
-
-    const success = await addComment(
-      post.id,
-      input.value
+      "cma-post-time",
+      formatRelativeTime(post.created_at)
     );
 
-    if (success) {
-      renderCommunityPage();
-    }
-  });
+    timestamp.title = dateText(post.created_at);
 
-  return bar;
-}
+    details.append(name, timestamp);
+    identity.append(avatarButton, details);
 
-// ---------------------------------------------------------
-// 36. COMPLETE POST CARD
-// ---------------------------------------------------------
-
-function renderPostCard(post) {
-  const card = createElement(
-    "article",
-    "community-post-card"
-  );
-
-  card.id = `community-post-${post.id}`;
-
-  // Header
-  const header = createElement(
-    "div",
-    "community-post-header"
-  );
-
-  header.append(
-    createPostAuthor(post),
-    createPostMenu(post)
-  );
-
-  card.appendChild(header);
-
-  // Caption
-  if (post.content) {
-    card.appendChild(
-      createElement(
-        "p",
-        "community-post-caption",
-        post.content
-      )
+    const menuButton = makeButton(
+      "⋯",
+      "cma-post-menu-button",
+      () => openPostMenu(post)
     );
+
+    menuButton.setAttribute("aria-label", "Post options");
+
+    header.append(identity, menuButton);
+
+    return header;
   }
 
-  // Photo
-  const imageUrl = safeImage(post.image_url);
+  function openPostMenu(post) {
+    const canDelete =
+      currentUser &&
+      (
+        String(post.user_id) === String(currentUser.id) ||
+        isCreator()
+      );
 
-  if (imageUrl) {
-    const image = createElement(
-      "img",
-      "community-post-image"
+    if (!canDelete) {
+      showNotice("No available post actions.", "info");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Do you want to delete this post?"
     );
+
+    if (!confirmed) return;
+
+    deletePost(post.id).then(success => {
+      if (success) {
+        renderCommunityPage();
+      }
+    });
+  }
+
+  function renderPostMedia(post) {
+    const imageUrl = safeImage(post.image_url);
+
+    if (!imageUrl) return null;
+
+    const wrapper = createElement(
+      "div",
+      "cma-post-media"
+    );
+
+    const image = createElement("img");
 
     image.src = imageUrl;
     image.alt = "Community post image";
     image.loading = "lazy";
 
-    card.appendChild(image);
+    wrapper.appendChild(image);
+
+    return wrapper;
   }
 
-  // Reactions
-  card.appendChild(createReactionBar(post));
-
-  // One comment preview
-  const preview = createCommentPreview(post);
-
-  if (preview) {
-    card.appendChild(preview);
-  }
-
-  // View all comments
-  const postComments = getPostComments(post.id);
-
-  if (postComments.length > 0) {
-    const viewAll = makeButton(
-      "View all comments",
-      "community-view-comments",
-      () => openComments(post.id)
+  function renderReactionBar(post) {
+    const bar = createElement(
+      "div",
+      "cma-reaction-bar"
     );
 
-    card.appendChild(viewAll);
-  }
+    EMOJIS.forEach(emoji => {
+      const button = makeButton(
+        emoji,
+        "cma-reaction-button",
+        async () => {
+          const success = await toggleReaction(
+            post.id,
+            emoji
+          );
 
-  // Write comment
-  card.appendChild(createWriteCommentBar(post));
-
-  return card;
-}
-
-// ---------------------------------------------------------
-// 37. POST COMPOSER
-// ---------------------------------------------------------
-
-function createComposer(scope = "community_home") {
-  const composer = createElement(
-    "form",
-    "community-composer"
-  );
-
-  const heading = createElement(
-    "div",
-    "community-composer-heading",
-    "Create a Post"
-  );
-
-  const textarea = createElement(
-    "textarea",
-    "community-composer-textarea"
-  );
-
-  textarea.placeholder = "What's on your mind?";
-  textarea.rows = 2;
-
-  const imagePreview = createElement(
-    "div",
-    "community-composer-image-preview"
-  );
-
-  let selectedImageUrl = "";
-
-  const actions = createElement(
-    "div",
-    "community-composer-actions"
-  );
-
-  const photoButton = makeButton(
-    "＋ Add Photo",
-    "community-composer-photo"
-  );
-
-  const publishButton = makeButton(
-    "Post",
-    "community-composer-submit"
-  );
-
-  publishButton.type = "submit";
-
-  photoButton.addEventListener("click", () => {
-    chooseCommunityImage(imageUrl => {
-      selectedImageUrl = imageUrl;
-
-      clearElement(imagePreview);
-
-      const image = createElement("img");
-
-      image.src = imageUrl;
-      image.alt = "Selected post photo";
-
-      const remove = makeButton(
-        "×",
-        "community-composer-remove-image",
-        () => {
-          selectedImageUrl = "";
-          clearElement(imagePreview);
+          if (success) {
+            renderCommunityPage();
+          }
         }
       );
 
-      imagePreview.append(image, remove);
-    }, "posts");
-  });
+      const selected = getReaction(post.id);
 
-  actions.append(photoButton, publishButton);
+      if (selected?.emoji === emoji) {
+        button.classList.add("is-active");
+      }
 
-  composer.append(
-    heading,
-    textarea,
-    imagePreview,
-    actions
-  );
-
-  composer.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!requireLogin()) return;
-
-    publishButton.disabled = true;
-
-    const success = await publishPost({
-      caption: textarea.value,
-      imageUrl: selectedImageUrl,
-      scope
-    });
-
-    publishButton.disabled = false;
-
-    if (success) {
-      renderCommunityPage();
-    }
-  });
-
-  return composer;
-}
-
-// ---------------------------------------------------------
-// 38. FILTER POSTS
-// ---------------------------------------------------------
-
-function getCommunityPosts(scope = "community_home") {
-  return posts
-    .filter(post => post.post_scope === scope)
-    .sort((a, b) =>
-      new Date(b.created_at) -
-      new Date(a.created_at)
-    );
-}
-
-// ---------------------------------------------------------
-// 39. RENDER HOMEPAGE FEED
-// ---------------------------------------------------------
-
-function renderFeed(container) {
-  clearElement(container);
-
-  const heading = createElement(
-    "h2",
-    "community-section-title",
-    "Community"
-  );
-
-  container.appendChild(heading);
-
-  if (currentUser) {
-    container.appendChild(
-      createComposer("community_home")
-    );
-  }
-
-  const feed = createElement(
-    "div",
-    "community-feed"
-  );
-
-  const communityPosts = getCommunityPosts(
-    "community_home"
-  );
-
-  if (!communityPosts.length) {
-    feed.appendChild(
-      createElement(
-        "div",
-        "community-empty",
-        "No posts yet. Be the first to share something!"
-      )
-    );
-  } else {
-    communityPosts.forEach(post => {
-      feed.appendChild(
-        renderPostCard(post)
+      button.setAttribute(
+        "aria-label",
+        `React ${emoji}`
       );
+
+      bar.appendChild(button);
     });
+
+    return bar;
   }
 
-  container.appendChild(feed);
-}
+  function renderReactionMembers(postId, emoji) {
+    const members = getPostReactions(postId)
+      .filter(item => item.emoji === emoji)
+      .map(item => getMemberName(item.user_id));
 
-// =========================================================
-// END OF PART 3
-// NEXT: PART 4 — COMMENTS BOTTOM SHEET + PROFILE SYSTEM
-// =========================================================
-    
-// =========================================================
-// PART 4 OF 8
-// COMMENTS + MY PROFILE + OTHER MEMBER PROFILE
-// =========================================================
+    if (!members.length) {
+      showNotice("No members have used this reaction yet.", "info");
+      return;
+    }
 
-// ---------------------------------------------------------
-// 40. CLOSE COMMUNITY MODAL
-// ---------------------------------------------------------
+    const uniqueNames = [...new Set(members)];
 
-function closeCommunityModal() {
-  const overlay = $(".community-modal-overlay");
-
-  if (overlay) {
-    overlay.remove();
+    showNotice(
+      `${emoji} ${uniqueNames.join(", ")}`,
+      "info"
+    );
   }
 
-  state.commentsOpen = false;
-  state.commentsPostId = null;
-}
+  function renderRandomCommentPreview(post) {
+    const postComments = getPostComments(post.id);
 
-// ---------------------------------------------------------
-// 41. COMMENTS BOTTOM SHEET
-// ---------------------------------------------------------
+    if (!postComments.length) return null;
 
-function openComments(postId) {
-  if (state.commentsOpen) {
-    closeCommunityModal();
+    const randomIndex = Math.floor(
+      Math.random() * postComments.length
+    );
+
+    const comment = postComments[randomIndex];
+
+    const preview = createElement(
+      "div",
+      "cma-comment-preview"
+    );
+
+    const author = createElement(
+      "span",
+      "cma-comment-preview-author",
+      getMemberName(comment.user_id)
+    );
+
+    const content = createElement(
+      "span",
+      "cma-comment-preview-text",
+      comment.content || ""
+    );
+
+    preview.append(author, content);
+
+    return preview;
   }
 
-  const post = posts.find(
-    item => item.id === postId
-  );
+  async function addCommunityComment(postId, content) {
+    if (!requireLogin()) return null;
 
-  if (!post) return;
+    const text = String(content || "").trim();
 
-  state.commentsOpen = true;
-  state.commentsPostId = postId;
+    if (!text) {
+      showNotice("Write a comment first.", "error");
+      return null;
+    }
 
-  const overlay = createElement(
-    "div",
-    "community-modal-overlay community-comments-overlay"
-  );
+    if (text.length > 3000) {
+      showNotice("Comment is too long.", "error");
+      return null;
+    }
 
-  const sheet = createElement(
-    "section",
-    "community-modal-sheet community-comments-sheet"
-  );
+    const client = requireDatabase();
+    if (!client) return null;
 
-  const header = createElement(
-    "div",
-    "community-comments-header"
-  );
+    try {
+      const { data, error } = await client
+        .from("community_comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          content: text
+        })
+        .select()
+        .single();
 
-  const heading = createElement(
-    "h3",
-    "",
-    "Comments"
-  );
+      if (error) throw error;
 
-  const close = makeButton(
-    "×",
-    "community-modal-close",
-    closeCommunityModal
-  );
+      comments.push(data);
 
-  header.append(heading, close);
+      const post = posts.find(
+        item => String(item.id) === String(postId)
+      );
 
-  const list = createElement(
-    "div",
-    "community-comments-list"
-  );
+      if (
+        post &&
+        String(post.user_id) !== String(currentUser.id)
+      ) {
+        await createCommunityNotification(
+          post.user_id,
+          `${currentName()} commented on your post.`
+        );
+      }
 
-  const renderComments = () => {
-    clearElement(list);
+      showNotice("Comment added.", "success");
 
-    const postComments = getPostComments(postId);
+      return data;
+    } catch (error) {
+      console.error("Comment publishing error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function deleteCommunityComment(commentId) {
+    if (!requireLogin()) return false;
+
+    const comment = comments.find(
+      item => String(item.id) === String(commentId)
+    );
+
+    if (!comment) return false;
+
+    const isOwner =
+      String(comment.user_id) === String(currentUser.id);
+
+    const post = posts.find(
+      item => String(item.id) === String(comment.post_id)
+    );
+
+    const canDelete =
+      isOwner ||
+      isCreator() ||
+      (
+        post &&
+        String(post.user_id) === String(currentUser.id)
+      );
+
+    if (!canDelete) {
+      showNotice("You cannot delete this comment.", "error");
+      return false;
+    }
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_comments")
+        .delete()
+        .eq("id", commentId);
+
+      if (error) throw error;
+
+      comments = comments.filter(
+        item => String(item.id) !== String(commentId)
+      );
+
+      showNotice("Comment deleted.", "success");
+      return true;
+    } catch (error) {
+      console.error("Comment deletion error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  function renderCommentItem(comment) {
+    const item = createElement(
+      "div",
+      "cma-comment-item"
+    );
+
+    const avatar = createMemberAvatar(
+      comment.user_id,
+      "comment"
+    );
+
+    const body = createElement(
+      "div",
+      "cma-comment-body"
+    );
+
+    const top = createElement(
+      "div",
+      "cma-comment-top"
+    );
+
+    const author = makeButton(
+      getMemberName(comment.user_id),
+      "cma-comment-author",
+      () => openCommunityProfile(comment.user_id)
+    );
+
+    const time = createElement(
+      "span",
+      "cma-comment-time",
+      formatRelativeTime(comment.created_at)
+    );
+
+    time.title = dateText(comment.created_at);
+
+    top.append(author, time);
+
+    const content = createElement(
+      "p",
+      "cma-comment-content",
+      comment.content || ""
+    );
+
+    body.append(top, content);
+
+    const canDelete =
+      currentUser &&
+      (
+        String(comment.user_id) === String(currentUser.id) ||
+        isCreator()
+      );
+
+    if (canDelete) {
+      const remove = makeButton(
+        "Delete",
+        "cma-comment-delete",
+        async () => {
+          const confirmed = window.confirm(
+            "Delete this comment?"
+          );
+
+          if (!confirmed) return;
+
+          const success = await deleteCommunityComment(
+            comment.id
+          );
+
+          if (success) {
+            openAllComments(comment.post_id);
+          }
+        }
+      );
+
+      body.appendChild(remove);
+    }
+
+    item.append(avatar, body);
+
+    return item;
+  }
+
+  function openAllComments(postId) {
+    state.activeCommentPost = postId;
+
+    const existing = $(".cma-comments-overlay");
+
+    if (existing) existing.remove();
+
+    const overlay = createElement(
+      "div",
+      "cma-comments-overlay"
+    );
+
+    const sheet = createElement(
+      "section",
+      "cma-comments-sheet"
+    );
+
+    const header = createElement(
+      "div",
+      "cma-comments-sheet-header"
+    );
+
+    const title = createElement(
+      "h3",
+      "cma-comments-sheet-title",
+      "Comments"
+    );
+
+    const close = makeButton(
+      "×",
+      "cma-comments-close",
+      () => {
+        overlay.remove();
+        state.activeCommentPost = null;
+      }
+    );
+
+    header.append(title, close);
+
+    const list = createElement(
+      "div",
+      "cma-comments-list"
+    );
+
+    const postComments = [...getPostComments(postId)]
+      .sort((a, b) =>
+        new Date(a.created_at || 0) -
+        new Date(b.created_at || 0)
+      );
 
     if (!postComments.length) {
       list.appendChild(
         createElement(
           "p",
-          "community-empty",
-          "No comments yet."
+          "cma-comments-empty",
+          "No comments yet. Be the first to comment."
+        )
+      );
+    } else {
+      postComments.forEach(comment => {
+        list.appendChild(renderCommentItem(comment));
+      });
+    }
+
+    const composer = createElement(
+      "form",
+      "cma-comments-composer"
+    );
+
+    const input = makeInput(
+      "Write a comment...",
+      "cma-comment-input"
+    );
+
+    input.maxLength = 3000;
+
+    const send = makeButton(
+      "Send",
+      "cma-comment-send"
+    );
+
+    send.type = "submit";
+
+    composer.append(input, send);
+
+    composer.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!requireLogin()) return;
+
+      const content = input.value.trim();
+
+      if (!content) return;
+
+      send.disabled = true;
+
+      const result = await addCommunityComment(
+        postId,
+        content
+      );
+
+      send.disabled = false;
+
+      if (result) {
+        openAllComments(postId);
+      }
+    });
+
+    sheet.append(header, list, composer);
+    overlay.appendChild(sheet);
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) {
+        overlay.remove();
+        state.activeCommentPost = null;
+      }
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  function renderPostCommentComposer(post) {
+    const form = createElement(
+      "form",
+      "cma-post-comment-composer"
+    );
+
+    form.appendChild(
+      createMemberAvatar(currentUser?.id, "comment")
+    );
+
+    const input = makeInput(
+      "Write a comment...",
+      "cma-post-comment-input"
+    );
+
+    input.maxLength = 3000;
+    input.disabled = !currentUser;
+
+    const send = makeButton(
+      "➤",
+      "cma-post-comment-send"
+    );
+
+    send.type = "submit";
+    send.disabled = !currentUser;
+
+    form.append(input, send);
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!requireLogin()) return;
+
+      const content = input.value.trim();
+
+      if (!content) return;
+
+      send.disabled = true;
+
+      const result = await addCommunityComment(
+        post.id,
+        content
+      );
+
+      send.disabled = false;
+
+      if (result) {
+        renderCommunityPage();
+      }
+    });
+
+    return form;
+  }
+
+  function renderPostCard(post) {
+    const card = createElement(
+      "article",
+      "cma-post-card"
+    );
+
+    card.dataset.postId = post.id;
+
+    card.appendChild(renderPostHeader(post));
+
+    const caption = String(post.content || "").trim();
+
+    if (caption) {
+      card.appendChild(
+        createElement(
+          "p",
+          "cma-post-caption",
+          caption
+        )
+      );
+    }
+
+    const media = renderPostMedia(post);
+
+    if (media) {
+      card.appendChild(media);
+    }
+
+    const reactionBar = renderReactionBar(post);
+
+    card.appendChild(reactionBar);
+
+    const postComments = getPostComments(post.id);
+
+    const preview = renderRandomCommentPreview(post);
+
+    if (preview) {
+      card.appendChild(preview);
+    }
+
+    if (postComments.length > 1) {
+      const viewAll = makeButton(
+        "View all comments",
+        "cma-view-all-comments",
+        () => openAllComments(post.id)
+      );
+
+      card.appendChild(viewAll);
+    }
+
+    card.appendChild(
+      renderPostCommentComposer(post)
+    );
+
+    return card;
+  }
+
+  function renderFeed(feedItems = posts, scope = null) {
+    const feed = createElement("div", "cma-post-feed");
+
+    let filtered = sortNewest(feedItems);
+
+    if (scope) {
+      filtered = filtered.filter(
+        post => post.post_scope === scope
+      );
+    }
+
+    if (!filtered.length) {
+      feed.appendChild(
+        createElement(
+          "div",
+          "cma-empty-feed",
+          "No posts to show yet."
+        )
+      );
+
+      return feed;
+    }
+
+    filtered.forEach(post => {
+      feed.appendChild(renderPostCard(post));
+    });
+
+    return feed;
+  }
+
+  /* ==========================================
+     END OF PART 4
+     NEXT: PROFILE + EDIT INFORMATION SYSTEM
+  ========================================== */
+           
+  /* ==========================================
+     PART 5/9 — PROFILE + EDIT INFORMATION
+  ========================================== */
+
+  function getMemberId(profile) {
+    return (
+      profile?.member_id ||
+      profile?.user_id ||
+      "Member"
+    );
+  }
+
+  function renderProfileHeader(profile, isOwn = false) {
+    const wrapper = createElement(
+      "section",
+      "cma-profile-header"
+    );
+
+    const cover = createElement(
+      "div",
+      "cma-profile-cover"
+    );
+
+    const coverUrl = safeImage(profile?.cover_url);
+
+    if (coverUrl) {
+      cover.style.backgroundImage = `url("${coverUrl}")`;
+    }
+
+    if (isOwn) {
+      cover.addEventListener("click", () => {
+        chooseCommunityImage(
+          async (url) => {
+            const saved = await saveProfile({
+              cover_url: url
+            });
+
+            if (saved) renderCommunityPage();
+          },
+          "covers"
+        );
+      });
+
+      cover.classList.add("cma-editable-cover");
+    }
+
+    const avatarArea = createElement(
+      "div",
+      "cma-profile-avatar-area"
+    );
+
+    const avatar = createMemberAvatar(
+      profile?.user_id,
+      "profile"
+    );
+
+    if (isOwn) {
+      avatar.classList.add("cma-editable-avatar");
+
+      avatar.addEventListener("click", event => {
+        event.stopPropagation();
+
+        chooseCommunityImage(
+          async (url) => {
+            const saved = await saveProfile({
+              avatar_url: url
+            });
+
+            if (saved) renderCommunityPage();
+          },
+          "avatars"
+        );
+      });
+    }
+
+    avatarArea.appendChild(avatar);
+
+    wrapper.append(cover, avatarArea);
+
+    const details = createElement(
+      "div",
+      "cma-profile-main-details"
+    );
+
+    details.appendChild(
+      createElement(
+        "h2",
+        "cma-profile-name",
+        profile?.display_name || "Community Member"
+      )
+    );
+
+    details.appendChild(
+      createElement(
+        "p",
+        "cma-profile-member-id",
+        `Member ID: ${getMemberId(profile)}`
+      )
+    );
+
+    if (profile?.short_description) {
+      details.appendChild(
+        createElement(
+          "p",
+          "cma-profile-description",
+          profile.short_description
+        )
+      );
+    }
+
+    if (isOwn) {
+      const edit = makeButton(
+        "✎",
+        "cma-profile-edit-button",
+        () => renderEditInformationPage()
+      );
+
+      edit.setAttribute(
+        "aria-label",
+        "Edit personal information"
+      );
+
+      details.appendChild(edit);
+    } else {
+      const actions = createElement(
+        "div",
+        "cma-profile-actions"
+      );
+
+      const addFriend = makeButton(
+        "Add Friend",
+        "cma-add-friend-button",
+        () => sendFriendRequest(profile.user_id)
+      );
+
+      const message = makeButton(
+        "Message",
+        "cma-message-button",
+        () => openMessageConversation(profile.user_id)
+      );
+
+      actions.append(addFriend, message);
+      details.appendChild(actions);
+    }
+
+    wrapper.appendChild(details);
+
+    return wrapper;
+  }
+
+  function renderPersonalInformation(profile, privateData = null) {
+    const section = createElement(
+      "section",
+      "cma-personal-information"
+    );
+
+    const heading = createElement(
+      "h3",
+      "cma-section-heading",
+      "Personal Information"
+    );
+
+    section.appendChild(heading);
+
+    const rows = [
+      {
+        label: "Institution",
+        value: profile?.school || "Not added"
+      }
+    ];
+
+    if (
+      currentUser &&
+      String(currentUser.id) === String(profile?.user_id)
+    ) {
+      rows.push(
+        {
+          label: "Mobile Number",
+          value: privateData?.phone || "Not added"
+        },
+        {
+          label: "Address",
+          value: privateData?.address || "Not added"
+        }
+      );
+    }
+
+    rows.forEach(row => {
+      const item = createElement(
+        "div",
+        "cma-information-row"
+      );
+
+      item.append(
+        createElement(
+          "span",
+          "cma-information-label",
+          row.label
+        ),
+        createElement(
+          "span",
+          "cma-information-value",
+          row.value
+        )
+      );
+
+      section.appendChild(item);
+    });
+
+    return section;
+  }
+
+  function renderProfileComposer() {
+    if (!requireLogin()) return null;
+
+    const composer = createElement(
+      "form",
+      "cma-profile-post-composer"
+    );
+
+    const textarea = makeTextarea(
+      "What's on your mind?",
+      "cma-profile-post-input"
+    );
+
+    textarea.maxLength = 5000;
+
+    const imageButton = makeButton(
+      "＋ Photo",
+      "cma-composer-photo-button",
+      () => {
+        chooseCommunityImage(
+          async (url) => {
+            selectedPostImage = url;
+
+            const preview = $(".cma-profile-image-preview", composer);
+
+            if (preview) preview.remove();
+
+            const image = createElement("img");
+            image.className = "cma-profile-image-preview";
+            image.src = url;
+            image.alt = "Selected post image";
+
+            composer.insertBefore(image, actions);
+          },
+          "posts"
+        );
+      }
+    );
+
+    const publish = makeButton(
+      "Post",
+      "cma-composer-publish-button"
+    );
+
+    publish.type = "submit";
+
+    const actions = createElement(
+      "div",
+      "cma-profile-composer-actions"
+    );
+
+    actions.append(imageButton, publish);
+
+    composer.append(textarea, actions);
+
+    composer.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      publish.disabled = true;
+
+      const result = await publishPost({
+        caption: textarea.value,
+        imageUrl: selectedPostImage || "",
+        scope: POST_SCOPES.COMMUNITY
+      });
+
+      publish.disabled = false;
+
+      if (result) {
+        textarea.value = "";
+        selectedPostImage = null;
+        renderCommunityPage();
+      }
+    });
+
+    return composer;
+  }
+
+  function renderProfileTabs() {
+    const tabs = createElement(
+      "div",
+      "cma-profile-tabs"
+    );
+
+    ["Posts", "Photos", "React On", "Friends"].forEach(tab => {
+      const button = makeButton(
+        tab,
+        "cma-profile-tab",
+        () => {
+          state.activeProfileTab = tab;
+          renderCommunityPage();
+        }
+      );
+
+      if (state.activeProfileTab === tab) {
+        button.classList.add("active");
+      }
+
+      tabs.appendChild(button);
+    });
+
+    return tabs;
+  }
+
+  function renderProfileContent(profile) {
+    const userId = profile.user_id;
+    const content = createElement(
+      "div",
+      "cma-profile-content"
+    );
+
+    if (state.activeProfileTab === "Posts") {
+      const userPosts = posts.filter(
+        post => String(post.user_id) === String(userId) &&
+          post.post_scope === POST_SCOPES.COMMUNITY
+      );
+
+      content.appendChild(renderFeed(userPosts));
+    }
+
+    if (state.activeProfileTab === "Photos") {
+      const photos = posts.filter(
+        post =>
+          String(post.user_id) === String(userId) &&
+          post.image_url &&
+          post.post_scope === POST_SCOPES.COMMUNITY
+      );
+
+      const gallery = createElement(
+        "div",
+        "cma-profile-photo-grid"
+      );
+
+      photos.forEach(post => {
+        const image = createElement("img");
+        image.src = safeImage(post.image_url);
+        image.alt = "Community photo";
+        image.loading = "lazy";
+
+        gallery.appendChild(image);
+      });
+
+      content.appendChild(gallery);
+    }
+
+    if (state.activeProfileTab === "React On") {
+      const reactedPostIds = uniqueBy(
+        reactions.filter(
+          reaction => String(reaction.user_id) === String(userId)
+        ),
+        "post_id"
+      );
+
+      const reactedPosts = reactedPostIds
+        .map(reaction =>
+          posts.find(
+            post => String(post.id) === String(reaction.post_id)
+          )
+        )
+        .filter(Boolean);
+
+      content.appendChild(renderFeed(reactedPosts));
+    }
+
+    if (state.activeProfileTab === "Friends") {
+      content.appendChild(
+        renderProfileFriends(userId)
+      );
+    }
+
+    return content;
+  }
+
+  async function renderUserProfile(userId) {
+    const root = getCommunityRoot();
+    clearElement(root);
+
+    const profile = await fetchPublicProfile(userId);
+
+    if (!profile) {
+      root.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          "This member profile could not be found."
         )
       );
 
       return;
     }
 
-    postComments.forEach(comment => {
-      const profile = getProfile(comment.user_id);
+    const isOwn =
+      currentUser &&
+      String(currentUser.id) === String(userId);
 
-      const row = createElement(
-        "div",
-        "community-comment-row"
-      );
-
-      row.appendChild(
-        createAuthorAvatar(profile, "small")
-      );
-
-      const body = createElement(
-        "div",
-        "community-comment-body"
-      );
-
-      const top = createElement(
-        "div",
-        "community-comment-top"
-      );
-
-      top.append(
-        createElement(
-          "strong",
-          "",
-          profile?.display_name || "Member"
-        ),
-        createElement(
-          "span",
-          "",
-          formatRelativeTime(comment.created_at, true)
-        )
-      );
-
-      body.append(
-        top,
-        createElement(
-          "p",
-          "",
-          comment.content || ""
-        )
-      );
-
-      if (
-        currentUser &&
-        (
-          comment.user_id === currentUser.id ||
-          isCreator()
-        )
-      ) {
-        const remove = makeButton(
-          "Delete",
-          "community-comment-delete",
-          async () => {
-            const success = await deleteComment(
-              comment.id
-            );
-
-            if (success) {
-              renderComments();
-              renderCommunityPage();
-            }
-          }
-        );
-
-        body.appendChild(remove);
-      }
-
-      row.appendChild(body);
-      list.appendChild(row);
-    });
-  };
-
-  renderComments();
-
-  const form = createElement(
-    "form",
-    "community-comments-form"
-  );
-
-  const input = makeInput(
-    "text",
-    "Write a comment...",
-    "community-comments-input"
-  );
-
-  const send = makeButton(
-    "➤",
-    "community-comments-send"
-  );
-
-  send.type = "submit";
-
-  form.append(input, send);
-
-  form.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!requireLogin()) return;
-
-    const success = await addComment(
-      postId,
-      input.value
+    const page = createElement(
+      "main",
+      "cma-profile-page"
     );
 
-    if (success) {
-      input.value = "";
-      renderComments();
-      renderCommunityPage();
-    }
-  });
-
-  sheet.append(header, list, form);
-  overlay.appendChild(sheet);
-
-  overlay.addEventListener("click", event => {
-    if (event.target === overlay) {
-      closeCommunityModal();
-    }
-  });
-
-  document.body.appendChild(overlay);
-}
-
-// ---------------------------------------------------------
-// 42. PROFILE INFORMATION ROW
-// ---------------------------------------------------------
-
-function createProfileInfoRow(label, value) {
-  const row = createElement(
-    "div",
-    "community-profile-info-row"
-  );
-
-  row.append(
-    createElement(
-      "span",
-      "community-profile-info-label",
-      label
-    ),
-    createElement(
-      "span",
-      "community-profile-info-value",
-      value || "Not provided"
-    )
-  );
-
-  return row;
-}
-
-// ---------------------------------------------------------
-// 43. PROFILE HEADER
-// ---------------------------------------------------------
-
-function renderProfileHeader(profile, isOwn = false) {
-  const header = createElement(
-    "section",
-    "community-profile-header"
-  );
-
-  const cover = createElement(
-    "div",
-    "community-profile-cover"
-  );
-
-  const coverUrl = safeImage(profile?.cover_url);
-
-  if (coverUrl) {
-    cover.style.backgroundImage =
-      `url("${coverUrl}")`;
-  }
-
-  if (isOwn) {
-    cover.classList.add(
-      "community-profile-editable"
+    page.appendChild(
+      renderProfileHeader(profile, Boolean(isOwn))
     );
 
-    cover.addEventListener("click", () => {
-      chooseCommunityImage(async (url, file) => {
-        const success = await updateCoverPhoto(file);
-
-        if (success) {
-          renderCommunityPage();
-        }
-      }, "covers");
-    });
-  }
-
-  const avatarWrap = createElement(
-    "div",
-    "community-profile-avatar-wrap"
-  );
-
-  const avatar = createAuthorAvatar(
-    profile,
-    "profile"
-  );
-
-  if (isOwn) {
-    avatar.classList.add(
-      "community-profile-editable"
-    );
-
-    avatar.addEventListener("click", () => {
-      chooseCommunityImage(async (url, file) => {
-        const success = await updateProfilePicture(file);
-
-        if (success) {
-          renderCommunityPage();
-        }
-      }, "avatars");
-    });
-  }
-
-  avatarWrap.appendChild(avatar);
-
-  const details = createElement(
-    "div",
-    "community-profile-heading"
-  );
-
-  details.append(
-    createElement(
-      "h2",
-      "",
-      profile?.display_name || "Community Member"
-    )
-  );
-
-  if (profile?.short_description) {
-    details.appendChild(
-      createElement(
-        "p",
-        "",
-        profile.short_description
+    page.appendChild(
+      renderPersonalInformation(
+        profile,
+        isOwn ? currentPrivate : null
       )
     );
-  }
 
-  header.append(
-    cover,
-    avatarWrap,
-    details
-  );
+    if (isOwn) {
+      const composer = renderProfileComposer();
 
-  return header;
-}
+      if (composer) page.appendChild(composer);
+    }
 
-// ---------------------------------------------------------
-// 44. PROFILE PERSONAL INFORMATION
-// ---------------------------------------------------------
+    page.appendChild(renderProfileTabs());
 
-function renderProfileInfo(profile, isOwn = false, privateData = null) {
-  const section = createElement(
-    "section",
-    "community-profile-info"
-  );
-
-  const heading = createElement(
-    "div",
-    "community-profile-info-heading"
-  );
-
-  heading.appendChild(
-    createElement(
-      "h3",
-      "",
-      "Personal Information"
-    )
-  );
-
-  if (isOwn) {
-    const edit = makeButton(
-      "✎",
-      "community-profile-edit-button",
-      () => renderEditProfilePage()
+    page.appendChild(
+      renderProfileContent(profile)
     );
 
-    edit.setAttribute(
-      "aria-label",
+    root.appendChild(page);
+  }
+
+  function renderEditInformationPage() {
+    if (!requireLogin()) return;
+
+    const root = getCommunityRoot();
+    clearElement(root);
+
+    const page = createElement(
+      "main",
+      "cma-edit-information-page"
+    );
+
+    const header = createElement(
+      "div",
+      "cma-edit-information-header"
+    );
+
+    const back = makeButton(
+      "←",
+      "cma-edit-back-button",
+      () => {
+        state.section = "profile";
+        state.activeProfileId = currentUser.id;
+        renderCommunityPage();
+      }
+    );
+
+    const title = createElement(
+      "h2",
+      "cma-edit-information-title",
       "Edit Personal Information"
     );
 
-    heading.appendChild(edit);
-  }
+    header.append(back, title);
 
-  const rows = createElement(
-    "div",
-    "community-profile-info-list"
-  );
-
-  rows.append(
-    createProfileInfoRow(
-      "Institution",
-      profile?.school
-    ),
-    createProfileInfoRow(
-      "Mobile Number",
-      privateData?.phone
-    ),
-    createProfileInfoRow(
-      "Address",
-      privateData?.address
-    )
-  );
-
-  section.append(heading, rows);
-
-  return section;
-}
-
-// ---------------------------------------------------------
-// 45. PROFILE TABS
-// ---------------------------------------------------------
-
-function createProfileTabs(profileId) {
-  const tabs = createElement(
-    "div",
-    "community-profile-tabs"
-  );
-
-  const tabItems = [
-    ["posts", "Posts"],
-    ["photos", "Photos"],
-    ["reacted", "React On"],
-    ["friends", "Friends"]
-  ];
-
-  tabItems.forEach(([value, label]) => {
-    const button = makeButton(
-      label,
-      "community-profile-tab",
-      () => {
-        activeProfileTab = value;
-
-        $$(".community-profile-tab").forEach(tab => {
-          tab.classList.toggle(
-            "active",
-            tab.dataset.tab === value
-          );
-        });
-
-        const content = $(
-          ".community-profile-tab-content"
-        );
-
-        if (content) {
-          renderProfileTab(
-            content,
-            profileId,
-            value
-          );
-        }
-      }
+    const form = createElement(
+      "form",
+      "cma-edit-information-form"
     );
 
-    button.dataset.tab = value;
+    function addField(labelText, value, name, placeholder = "") {
+      const group = createElement(
+        "label",
+        "cma-edit-field"
+      );
 
-    if (activeProfileTab === value) {
-      button.classList.add("active");
+      group.appendChild(
+        createElement(
+          "span",
+          "cma-edit-field-label",
+          labelText
+        )
+      );
+
+      const input = makeInput(
+        placeholder,
+        "cma-edit-field-input"
+      );
+
+      input.name = name;
+      input.value = value || "";
+
+      group.appendChild(input);
+
+      form.appendChild(group);
+
+      return input;
     }
 
-    tabs.appendChild(button);
-  });
-
-  return tabs;
-}
-
-// ---------------------------------------------------------
-// 46. PROFILE TAB CONTENT
-// ---------------------------------------------------------
-
-function renderProfileTab(container, profileId, tab) {
-  clearElement(container);
-
-  if (tab === "friends") {
-    const friendList = friendships.filter(friend =>
-      friend.user_id === profileId ||
-      friend.friend_id === profileId
+    const fullName = addField(
+      "Full Name",
+      currentProfile?.display_name,
+      "display_name",
+      "Enter your full name"
     );
 
-    if (!friendList.length) {
-      container.appendChild(
+    const description = addField(
+      "Short Description",
+      currentProfile?.short_description,
+      "short_description",
+      "Write a short description"
+    );
+
+    const institution = addField(
+      "Institution",
+      currentProfile?.school,
+      "school",
+      "Enter your institution"
+    );
+
+    const phone = addField(
+      "Mobile Number",
+      currentPrivate?.phone,
+      "phone",
+      "Enter your mobile number"
+    );
+
+    const address = addField(
+      "Address",
+      currentPrivate?.address,
+      "address",
+      "Enter your address"
+    );
+
+    const save = makeButton(
+      "Save Changes",
+      "cma-save-information-button"
+    );
+
+    save.type = "submit";
+
+    form.appendChild(save);
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      save.disabled = true;
+
+      try {
+        const profileResult = await saveProfile({
+          display_name: fullName.value,
+          short_description: description.value,
+          school: institution.value
+        });
+
+        if (!profileResult) {
+          save.disabled = false;
+          return;
+        }
+
+        const privateResult = await savePrivateProfile({
+          phone: phone.value,
+          address: address.value
+        });
+
+        if (!privateResult) {
+          save.disabled = false;
+          return;
+        }
+
+        showNotice(
+          "Personal information saved successfully.",
+          "success"
+        );
+
+        state.section = "profile";
+        state.activeProfileId = currentUser.id;
+
+        await renderCommunityPage();
+      } catch (error) {
+        showNotice(getErrorMessage(error), "error");
+      } finally {
+        save.disabled = false;
+      }
+    });
+
+    page.append(header, form);
+    root.appendChild(page);
+  }
+
+  /* ==========================================
+     END OF PART 5
+     NEXT: FRIENDS + NOTIFICATIONS
+  ========================================== */
+     
+  /* ==========================================
+     PART 6/9 — FRIENDS + NOTIFICATIONS
+  ========================================== */
+
+  async function loadFriendRequests() {
+    if (!currentUser) {
+      friendRequests = [];
+      return [];
+    }
+
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_friend_requests")
+        .select("*")
+        .or(
+          `sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      friendRequests = asArray(data);
+      return friendRequests;
+    } catch (error) {
+      console.error("Friend requests loading error:", error);
+      return friendRequests;
+    }
+  }
+
+  async function loadFriendships() {
+    if (!currentUser) {
+      friendships = [];
+      return [];
+    }
+
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_friendships")
+        .select("*")
+        .eq("user_id", currentUser.id);
+
+      if (error) throw error;
+
+      friendships = asArray(data);
+      return friendships;
+    } catch (error) {
+      console.error("Friendships loading error:", error);
+      return friendships;
+    }
+  }
+
+  async function loadNotifications() {
+    if (!currentUser) {
+      notifications = [];
+      return [];
+    }
+
+    const client = requireDatabase();
+    if (!client) return [];
+
+    try {
+      const { data, error } = await client
+        .from("community_notifications")
+        .select("*")
+        .eq("recipient_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      notifications = asArray(data);
+      return notifications;
+    } catch (error) {
+      console.error("Notifications loading error:", error);
+      notifications = [];
+      return notifications;
+    }
+  }
+
+  async function createCommunityNotification(
+    recipientId,
+    message
+  ) {
+    if (
+      !currentUser ||
+      !recipientId ||
+      String(recipientId) === String(currentUser.id)
+    ) {
+      return null;
+    }
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client
+        .from("community_notifications")
+        .insert({
+          recipient_id: recipientId,
+          message: String(message || ""),
+          is_read: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (String(recipientId) === String(currentUser.id)) {
+        notifications.unshift(data);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Notification creation error:", error);
+      return null;
+    }
+  }
+
+  function getFriendRequestBetween(userA, userB) {
+    return friendRequests.find(request =>
+      (
+        String(request.sender_id) === String(userA) &&
+        String(request.recipient_id) === String(userB)
+      ) ||
+      (
+        String(request.sender_id) === String(userB) &&
+        String(request.recipient_id) === String(userA)
+      )
+    ) || null;
+  }
+
+  function areFriends(userA, userB) {
+    return friendships.some(friendship =>
+      String(friendship.user_id) === String(userA) &&
+      String(friendship.friend_id) === String(userB)
+    );
+  }
+
+  function getFriendStatus(userId) {
+    if (!currentUser || !userId) return "none";
+
+    if (String(currentUser.id) === String(userId)) {
+      return "self";
+    }
+
+    if (areFriends(currentUser.id, userId)) {
+      return "friends";
+    }
+
+    const request = getFriendRequestBetween(
+      currentUser.id,
+      userId
+    );
+
+    if (!request) return "none";
+
+    if (request.status === "accepted") {
+      return "friends";
+    }
+
+    if (String(request.sender_id) === String(currentUser.id)) {
+      return "sent";
+    }
+
+    if (String(request.recipient_id) === String(currentUser.id)) {
+      return "received";
+    }
+
+    return "none";
+  }
+
+  async function sendFriendRequest(userId) {
+    if (!requireLogin()) return null;
+
+    if (String(userId) === String(currentUser.id)) {
+      showNotice("You cannot add yourself.", "error");
+      return null;
+    }
+
+    if (getFriendStatus(userId) === "friends") {
+      showNotice("You are already friends.", "info");
+      return null;
+    }
+
+    const existing = getFriendRequestBetween(
+      currentUser.id,
+      userId
+    );
+
+    if (existing) {
+      if (
+        String(existing.recipient_id) === String(currentUser.id) &&
+        existing.status === "pending"
+      ) {
+        showNotice(
+          "This member has already sent you a request.",
+          "info"
+        );
+      } else {
+        showNotice("Friend request already exists.", "info");
+      }
+
+      return null;
+    }
+
+    const client = requireDatabase();
+    if (!client) return null;
+
+    try {
+      const { data, error } = await client
+        .from("community_friend_requests")
+        .insert({
+          sender_id: currentUser.id,
+          recipient_id: userId,
+          status: "pending"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      friendRequests.unshift(data);
+
+      await createCommunityNotification(
+        userId,
+        `${currentName()} sent you a friend request.`
+      );
+
+      showNotice("Friend request sent.", "success");
+
+      return data;
+    } catch (error) {
+      console.error("Friend request error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return null;
+    }
+  }
+
+  async function acceptFriendRequest(requestId) {
+    if (!requireLogin()) return false;
+
+    const request = friendRequests.find(
+      item => String(item.id) === String(requestId)
+    );
+
+    if (!request) {
+      showNotice("Friend request not found.", "error");
+      return false;
+    }
+
+    if (
+      String(request.recipient_id) !== String(currentUser.id) ||
+      request.status !== "pending"
+    ) {
+      showNotice("This request cannot be accepted.", "error");
+      return false;
+    }
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error: updateError } = await client
+        .from("community_friend_requests")
+        .update({ status: "accepted" })
+        .eq("id", requestId);
+
+      if (updateError) throw updateError;
+
+      const firstFriendship = {
+        user_id: currentUser.id,
+        friend_id: request.sender_id
+      };
+
+      const secondFriendship = {
+        user_id: request.sender_id,
+        friend_id: currentUser.id
+      };
+
+      const { error: friendshipError } = await client
+        .from("community_friendships")
+        .upsert(
+          [firstFriendship, secondFriendship],
+          { onConflict: "user_id,friend_id" }
+        );
+
+      if (friendshipError) throw friendshipError;
+
+      request.status = "accepted";
+
+      friendships = [
+        ...friendships.filter(item =>
+          !(
+            String(item.user_id) === String(currentUser.id) &&
+            String(item.friend_id) === String(request.sender_id)
+          )
+        ),
+        firstFriendship
+      ];
+
+      await createCommunityNotification(
+        request.sender_id,
+        `${currentName()} accepted your friend request.`
+      );
+
+      showNotice("Friend request accepted.", "success");
+
+      await Promise.all([
+        loadFriendRequests(),
+        loadFriendships()
+      ]);
+
+      renderCommunityPage();
+
+      return true;
+    } catch (error) {
+      console.error("Accept friend request error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  async function deleteFriendRequest(requestId) {
+    if (!requireLogin()) return false;
+
+    const request = friendRequests.find(
+      item => String(item.id) === String(requestId)
+    );
+
+    if (!request) return false;
+
+    const isParticipant =
+      String(request.sender_id) === String(currentUser.id) ||
+      String(request.recipient_id) === String(currentUser.id);
+
+    if (!isParticipant) {
+      showNotice("You cannot remove this request.", "error");
+      return false;
+    }
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_friend_requests")
+        .delete()
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      friendRequests = friendRequests.filter(
+        item => String(item.id) !== String(requestId)
+      );
+
+      showNotice("Friend request removed.", "success");
+
+      renderCommunityPage();
+
+      return true;
+    } catch (error) {
+      console.error("Delete friend request error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  async function removeFriend(userId) {
+    if (!requireLogin()) return false;
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_friendships")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("friend_id", userId);
+
+      if (error) throw error;
+
+      const { error: reverseError } = await client
+        .from("community_friendships")
+        .delete()
+        .eq("user_id", userId)
+        .eq("friend_id", currentUser.id);
+
+      if (reverseError) throw reverseError;
+
+      friendships = friendships.filter(item =>
+        !(
+          String(item.user_id) === String(currentUser.id) &&
+          String(item.friend_id) === String(userId)
+        )
+      );
+
+      showNotice("Friend removed.", "success");
+
+      renderCommunityPage();
+
+      return true;
+    } catch (error) {
+      console.error("Remove friend error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  function renderFriendMember(userId) {
+    const profile = getProfile(userId);
+
+    const card = createElement(
+      "div",
+      "cma-friend-member"
+    );
+
+    const identity = makeButton(
+      "",
+      "cma-friend-identity",
+      () => openCommunityProfile(userId)
+    );
+
+    identity.appendChild(
+      createMemberAvatar(userId, "small")
+    );
+
+    const details = createElement(
+      "div",
+      "cma-friend-details"
+    );
+
+    details.append(
+      createElement(
+        "span",
+        "cma-friend-name",
+        profile?.display_name || "Community Member"
+      ),
+      createElement(
+        "span",
+        "cma-friend-description",
+        profile?.short_description || "Community Member"
+      )
+    );
+
+    identity.appendChild(details);
+
+    const view = makeButton(
+      "View",
+      "cma-friend-view-button",
+      () => openCommunityProfile(userId)
+    );
+
+    card.append(identity, view);
+
+    return card;
+  }
+
+  function renderProfileFriends(userId) {
+    const section = createElement(
+      "section",
+      "cma-profile-friends"
+    );
+
+    const memberFriends = friendships
+      .filter(item =>
+        String(item.user_id) === String(userId)
+      )
+      .map(item => item.friend_id);
+
+    const uniqueFriends = [...new Set(memberFriends)];
+
+    if (!uniqueFriends.length) {
+      section.appendChild(
         createElement(
           "p",
-          "community-empty",
+          "cma-empty-state",
           "No friends to show yet."
         )
       );
 
-      return;
+      return section;
     }
 
-    friendList.forEach(friend => {
-      const otherId =
-        friend.user_id === profileId
-          ? friend.friend_id
-          : friend.user_id;
-
-      const profile = getProfile(otherId);
-
-      if (!profile) return;
-
-      const item = makeButton(
-        profile.display_name || "Member",
-        "community-friend-item",
-        () => window.cmaOpenCommunityProfile?.(otherId)
-      );
-
-      item.prepend(
-        createAuthorAvatar(profile, "small")
-      );
-
-      container.appendChild(item);
-    });
-
-    return;
-  }
-
-  let profilePosts = posts.filter(
-    post => post.user_id === profileId
-  );
-
-  if (tab === "photos") {
-    profilePosts = profilePosts.filter(
-      post => post.image_url
-    );
-  }
-
-  if (tab === "reacted") {
-    const reactedIds = new Set(
-      reactions
-        .filter(item => item.user_id === profileId)
-        .map(item => item.post_id)
-    );
-
-    profilePosts = posts.filter(
-      post => reactedIds.has(post.id)
-    );
-  }
-
-  if (!profilePosts.length) {
-    container.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        "Nothing to show here yet."
-      )
-    );
-
-    return;
-  }
-
-  profilePosts
-    .sort((a, b) =>
-      new Date(b.created_at) -
-      new Date(a.created_at)
-    )
-    .forEach(post => {
-      container.appendChild(
-        renderPostCard(post)
+    uniqueFriends.forEach(friendId => {
+      section.appendChild(
+        renderFriendMember(friendId)
       );
     });
-}
 
-// ---------------------------------------------------------
-// 47. MY PROFILE PAGE
-// ---------------------------------------------------------
+    return section;
+  }
 
-function renderMe(container) {
-  clearElement(container);
+  function renderFriendRequestCard(request) {
+    const card = createElement(
+      "div",
+      "cma-friend-request-card"
+    );
 
-  if (!currentUser) {
-    container.appendChild(
+    const senderId = request.sender_id;
+
+    const identity = makeButton(
+      "",
+      "cma-friend-identity",
+      () => openCommunityProfile(senderId)
+    );
+
+    identity.appendChild(
+      createMemberAvatar(senderId, "small")
+    );
+
+    identity.appendChild(
       createElement(
-        "p",
-        "community-empty",
-        LOGIN_ERROR
+        "span",
+        "cma-friend-name",
+        getMemberName(senderId)
       )
     );
 
-    return;
-  }
-
-  const profile = currentProfile || {
-    user_id: currentUser.id,
-    display_name: currentName()
-  };
-
-  const page = createElement(
-    "div",
-    "community-profile-page"
-  );
-
-  page.appendChild(
-    renderProfileHeader(profile, true)
-  );
-
-  page.appendChild(
-    renderProfileInfo(
-      profile,
-      true,
-      currentPrivate
-    )
-  );
-
-  page.appendChild(
-    createComposer("community_home")
-  );
-
-  const tabs = createProfileTabs(
-    currentUser.id
-  );
-
-  const content = createElement(
-    "div",
-    "community-profile-tab-content"
-  );
-
-  page.append(tabs, content);
-
-  container.appendChild(page);
-
-  renderProfileTab(
-    content,
-    currentUser.id,
-    activeProfileTab
-  );
-}
-
-// ---------------------------------------------------------
-// 48. OTHER MEMBER PROFILE
-// ---------------------------------------------------------
-
-async function renderUserProfile(
-  container,
-  userId,
-  backCallback = null
-) {
-  clearElement(container);
-
-  if (!userId) return;
-
-  activeProfileId = userId;
-
-  const loading = createElement(
-    "p",
-    "community-loading",
-    "Loading profile..."
-  );
-
-  container.appendChild(loading);
-
-  let profile = getProfile(userId);
-
-  if (!profile && db) {
-    const { data, error } = await db
-      .from("community_profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!error) {
-      profile = data;
-
-      if (profile) {
-        profiles.push(profile);
-      }
-    }
-  }
-
-  if (!profile) {
-    clearElement(container);
-
-    container.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        "This profile could not be found."
-      )
-    );
-
-    return;
-  }
-
-  clearElement(container);
-
-  const isOwn =
-    currentUser?.id === userId;
-
-  if (isOwn) {
-    renderMe(container);
-    return;
-  }
-
-  const page = createElement(
-    "div",
-    "community-profile-page"
-  );
-
-  page.appendChild(
-    renderProfileHeader(profile, false)
-  );
-
-  page.appendChild(
-    renderProfileInfo(
-      profile,
-      false,
-      profile
-    )
-  );
-
-  // Member actions
-  const actions = createElement(
-    "div",
-    "community-member-actions"
-  );
-
-  const friendButton = makeButton(
-    "Add Friend",
-    "community-add-friend-button",
-    async () => {
-      if (!requireLogin()) return;
-
-      await sendFriendRequest(userId);
-    }
-  );
-
-  const messageButton = makeButton(
-    "Message",
-    "community-message-button",
-    () => {
-      if (!requireLogin()) return;
-
-      openMessageConversation(userId);
-    }
-  );
-
-  actions.append(
-    friendButton,
-    messageButton
-  );
-
-  page.appendChild(actions);
-
-  const tabs = createProfileTabs(userId);
-
-  const content = createElement(
-    "div",
-    "community-profile-tab-content"
-  );
-
-  page.append(tabs, content);
-
-  container.appendChild(page);
-
-  renderProfileTab(
-    content,
-    userId,
-    activeProfileTab
-  );
-}
-
-// =========================================================
-// END OF PART 4
-// NEXT: PART 5 — FRIEND REQUESTS + FRIENDS PAGE
-// =========================================================
-  
-// =========================================================
-// PART 5 OF 8
-// FRIEND SYSTEM + MESSAGING MODULE CONNECTION
-// =========================================================
-
-// ---------------------------------------------------------
-// 49. LOAD FRIEND REQUESTS
-// ---------------------------------------------------------
-
-async function loadFriendRequests() {
-  friendRequests = [];
-
-  if (!db || !currentUser) return friendRequests;
-
-  const { data, error } = await db
-    .from("community_friend_requests")
-    .select("*")
-    .or(
-      `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
-    )
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Friend request load:", error);
-    return friendRequests;
-  }
-
-  friendRequests = data || [];
-  return friendRequests;
-}
-
-// ---------------------------------------------------------
-// 50. LOAD FRIENDSHIPS
-// ---------------------------------------------------------
-
-async function loadFriendships() {
-  friendships = [];
-
-  if (!db || !currentUser) return friendships;
-
-  const { data, error } = await db
-    .from("community_friendships")
-    .select("*")
-    .or(
-      `user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`
-    );
-
-  if (error) {
-    console.error("Friendship load:", error);
-    return friendships;
-  }
-
-  friendships = data || [];
-  return friendships;
-}
-
-// ---------------------------------------------------------
-// 51. FRIEND STATUS
-// ---------------------------------------------------------
-
-function areFriends(userId) {
-  if (!currentUser || !userId) return false;
-
-  return friendships.some(item =>
-    (
-      item.user_id === currentUser.id &&
-      item.friend_id === userId
-    ) ||
-    (
-      item.user_id === userId &&
-      item.friend_id === currentUser.id
-    )
-  );
-}
-
-function getSentFriendRequest(userId) {
-  return friendRequests.find(item =>
-    item.sender_id === currentUser?.id &&
-    item.receiver_id === userId &&
-    item.status === "pending"
-  ) || null;
-}
-
-function getReceivedFriendRequest(userId) {
-  return friendRequests.find(item =>
-    item.sender_id === userId &&
-    item.receiver_id === currentUser?.id &&
-    item.status === "pending"
-  ) || null;
-}
-
-// ---------------------------------------------------------
-// 52. SEND FRIEND REQUEST
-// ---------------------------------------------------------
-
-async function sendFriendRequest(receiverId) {
-  if (!requireLogin()) return false;
-
-  if (!receiverId || receiverId === currentUser.id) {
-    return false;
-  }
-
-  if (areFriends(receiverId)) {
-    showNotice("Already friends.", "info");
-    return false;
-  }
-
-  if (
-    getSentFriendRequest(receiverId) ||
-    getReceivedFriendRequest(receiverId)
-  ) {
-    showNotice("A pending request already exists.", "info");
-    return false;
-  }
-
-  const { data, error } = await db
-    .from("community_friend_requests")
-    .insert({
-      sender_id: currentUser.id,
-      receiver_id: receiverId,
-      status: "pending"
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Send request:", error);
-    showNotice("Could not send friend request.", "error");
-    return false;
-  }
-
-  friendRequests.unshift(data);
-
-  showNotice("Friend request sent.", "success");
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 53. ACCEPT FRIEND REQUEST
-// ---------------------------------------------------------
-
-async function acceptFriendRequest(requestId) {
-  if (!requireLogin()) return false;
-
-  const request = friendRequests.find(
-    item => item.id === requestId
-  );
-
-  if (
-    !request ||
-    request.receiver_id !== currentUser.id ||
-    request.status !== "pending"
-  ) {
-    return false;
-  }
-
-  const { data: updated, error } = await db
-    .from("community_friend_requests")
-    .update({ status: "accepted" })
-    .eq("id", requestId)
-    .eq("receiver_id", currentUser.id)
-    .eq("status", "pending")
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Accept request:", error);
-    showNotice("Could not accept request.", "error");
-    return false;
-  }
-
-  const { error: friendshipError } = await db
-    .from("community_friendships")
-    .upsert(
-      [
-        {
-          user_id: request.sender_id,
-          friend_id: request.receiver_id
-        },
-        {
-          user_id: request.receiver_id,
-          friend_id: request.sender_id
-        }
-      ],
-      {
-        onConflict: "user_id,friend_id",
-        ignoreDuplicates: true
-      }
-    );
-
-  if (friendshipError) {
-    console.error("Create friendship:", friendshipError);
-    showNotice(
-      "Request accepted, but friendship needs a refresh.",
-      "error"
-    );
-    return false;
-  }
-
-  friendRequests = friendRequests.map(item =>
-    item.id === requestId ? updated : item
-  );
-
-  await loadFriendships();
-
-  showNotice("You are now friends.", "success");
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 54. DELETE FRIEND REQUEST
-// ---------------------------------------------------------
-
-async function deleteFriendRequest(requestId) {
-  if (!requireLogin()) return false;
-
-  const request = friendRequests.find(
-    item => item.id === requestId
-  );
-
-  if (!request) return false;
-
-  if (
-    request.sender_id !== currentUser.id &&
-    request.receiver_id !== currentUser.id
-  ) {
-    return false;
-  }
-
-  const { error } = await db
-    .from("community_friend_requests")
-    .delete()
-    .eq("id", requestId);
-
-  if (error) {
-    console.error("Delete request:", error);
-    showNotice("Could not remove request.", "error");
-    return false;
-  }
-
-  friendRequests = friendRequests.filter(
-    item => item.id !== requestId
-  );
-
-  showNotice("Friend request removed.", "success");
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 55. REMOVE FRIEND
-// ---------------------------------------------------------
-
-async function removeFriend(friendId) {
-  if (!requireLogin()) return false;
-  if (!areFriends(friendId)) return false;
-
-  if (!window.confirm("Remove this friend?")) return false;
-
-  const { error } = await db
-    .from("community_friendships")
-    .delete()
-    .or(
-      `and(user_id.eq.${currentUser.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${currentUser.id})`
-    );
-
-  if (error) {
-    console.error("Remove friend:", error);
-    showNotice("Could not remove friend.", "error");
-    return false;
-  }
-
-  await loadFriendships();
-
-  showNotice("Friend removed.", "success");
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 56. GET FRIEND PROFILE
-// ---------------------------------------------------------
-
-function getFriendProfile(friendship) {
-  const otherId =
-    friendship.user_id === currentUser?.id
-      ? friendship.friend_id
-      : friendship.user_id;
-
-  return getProfile(otherId);
-}
-
-// ---------------------------------------------------------
-// 57. FRIEND ITEM
-// ---------------------------------------------------------
-
-function createFriendItem(profile, options = {}) {
-  const item = createElement(
-    "div",
-    "community-friend-item"
-  );
-
-  const identity = makeButton(
-    "",
-    "community-friend-identity",
-    () => {
-      window.cmaOpenCommunityProfile?.(profile.user_id);
-    }
-  );
-
-  identity.append(
-    createAuthorAvatar(profile, "small"),
-    createElement(
-      "span",
-      "community-friend-name",
-      profile.display_name || "Member"
-    )
-  );
-
-  item.appendChild(identity);
-
-  if (options.request) {
     const actions = createElement(
       "div",
-      "community-friend-actions"
+      "cma-friend-request-actions"
     );
 
-    actions.append(
-      makeButton(
-        "Accept",
-        "community-friend-accept",
-        () => acceptFriendRequest(options.request.id)
-      ),
-      makeButton(
-        "Delete",
-        "community-friend-delete",
-        () => deleteFriendRequest(options.request.id)
+    const accept = makeButton(
+      "Accept",
+      "cma-friend-accept-button",
+      () => acceptFriendRequest(request.id)
+    );
+
+    const remove = makeButton(
+      "Delete",
+      "cma-friend-delete-button",
+      () => deleteFriendRequest(request.id)
+    );
+
+    actions.append(accept, remove);
+    card.append(identity, actions);
+
+    return card;
+  }
+
+  function renderFriendsPage() {
+    const page = createElement(
+      "main",
+      "cma-friends-page"
+    );
+
+    page.appendChild(
+      createElement(
+        "h2",
+        "cma-page-title",
+        "Friends"
       )
     );
 
-    item.appendChild(actions);
-  }
+    if (!currentUser) {
+      page.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          LOGIN_ERROR
+        )
+      );
 
-  if (options.showRemove) {
-    item.appendChild(
-      makeButton(
-        "Remove",
-        "community-friend-remove",
-        () => removeFriend(profile.user_id)
-      )
+      return page;
+    }
+
+    const incoming = friendRequests.filter(request =>
+      String(request.recipient_id) === String(currentUser.id) &&
+      request.status === "pending"
     );
-  }
 
-  return item;
-}
-
-// ---------------------------------------------------------
-// 58. FRIENDS PAGE
-// ---------------------------------------------------------
-
-function renderFriendsPage(container) {
-  clearElement(container);
-
-  if (!currentUser) {
-    container.appendChild(
-      createElement("p", "community-empty", LOGIN_ERROR)
+    const requestSection = createElement(
+      "section",
+      "cma-friend-requests-section"
     );
-    return;
-  }
 
-  const page = createElement(
-    "section",
-    "community-friends-page"
-  );
-
-  page.appendChild(
-    createElement("h2", "community-section-title", "Friends")
-  );
-
-  // Incoming requests
-  const incoming = friendRequests.filter(item =>
-    item.receiver_id === currentUser.id &&
-    item.status === "pending"
-  );
-
-  const requestSection = createElement(
-    "section",
-    "community-friend-section"
-  );
-
-  requestSection.appendChild(
-    createElement(
-      "h3",
-      "",
-      `Friend Requests (${incoming.length})`
-    )
-  );
-
-  if (!incoming.length) {
     requestSection.appendChild(
       createElement(
-        "p",
-        "community-empty",
-        "No new friend requests."
+        "h3",
+        "cma-section-heading",
+        "Friend Requests"
       )
     );
-  }
 
-  incoming.forEach(request => {
-    const profile = getProfile(request.sender_id);
-
-    if (profile) {
+    if (!incoming.length) {
       requestSection.appendChild(
-        createFriendItem(profile, { request })
-      );
-    }
-  });
-
-  page.appendChild(requestSection);
-
-  // Accepted friends
-  const uniqueFriends = new Map();
-
-  friendships.forEach(friendship => {
-    const profile = getFriendProfile(friendship);
-
-    if (profile) {
-      uniqueFriends.set(profile.user_id, profile);
-    }
-  });
-
-  const friendsSection = createElement(
-    "section",
-    "community-friend-section"
-  );
-
-  friendsSection.appendChild(
-    createElement(
-      "h3",
-      "",
-      `My Friends (${uniqueFriends.size})`
-    )
-  );
-
-  const search = makeInput(
-    "search",
-    "Search friends...",
-    "community-friend-search"
-  );
-
-  const list = createElement(
-    "div",
-    "community-friends-list"
-  );
-
-  function renderList(query = "") {
-    clearElement(list);
-
-    const matches = [...uniqueFriends.values()].filter(profile =>
-      (profile.display_name || "")
-        .toLowerCase()
-        .includes(query.toLowerCase())
-    );
-
-    matches.forEach(profile => {
-      list.appendChild(
-        createFriendItem(profile, {
-          showRemove: true
-        })
-      );
-    });
-
-    if (!matches.length) {
-      list.appendChild(
         createElement(
           "p",
-          "community-empty",
-          "No matching friends found."
+          "cma-empty-state",
+          "No new friend requests."
+        )
+      );
+    } else {
+      incoming.forEach(request => {
+        requestSection.appendChild(
+          renderFriendRequestCard(request)
+        );
+      });
+    }
+
+    const friendsSection = createElement(
+      "section",
+      "cma-friends-list-section"
+    );
+
+    friendsSection.appendChild(
+      createElement(
+        "h3",
+        "cma-section-heading",
+        "Your Friends"
+      )
+    );
+
+    const friendIds = friendships
+      .filter(item =>
+        String(item.user_id) === String(currentUser.id)
+      )
+      .map(item => item.friend_id);
+
+    const uniqueIds = [...new Set(friendIds)];
+
+    if (!uniqueIds.length) {
+      friendsSection.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          "You have not added any friends yet."
+        )
+      );
+    } else {
+      uniqueIds.forEach(friendId => {
+        friendsSection.appendChild(
+          renderFriendMember(friendId)
+        );
+      });
+    }
+
+    page.append(requestSection, friendsSection);
+
+    return page;
+  }
+
+  function renderNotificationItem(notification) {
+    const item = makeButton(
+      "",
+      "cma-notification-item",
+      async () => {
+        await markNotificationRead(notification.id);
+      }
+    );
+
+    if (!notification.is_read) {
+      item.classList.add("unread");
+    }
+
+    item.appendChild(
+      createElement(
+        "p",
+        "cma-notification-message",
+        notification.message || "New notification"
+      )
+    );
+
+    item.appendChild(
+      createElement(
+        "span",
+        "cma-notification-time",
+        formatRelativeTime(notification.created_at)
+      )
+    );
+
+    return item;
+  }
+
+  async function markNotificationRead(notificationId) {
+    if (!requireLogin()) return false;
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId)
+        .eq("recipient_id", currentUser.id);
+
+      if (error) throw error;
+
+      notifications = notifications.map(item =>
+        String(item.id) === String(notificationId)
+          ? { ...item, is_read: true }
+          : item
+      );
+
+      renderCommunityPage();
+
+      return true;
+    } catch (error) {
+      console.error("Notification read error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  async function markAllNotificationsRead() {
+    if (!requireLogin()) return false;
+
+    const client = requireDatabase();
+    if (!client) return false;
+
+    try {
+      const { error } = await client
+        .from("community_notifications")
+        .update({ is_read: true })
+        .eq("recipient_id", currentUser.id)
+        .eq("is_read", false);
+
+      if (error) throw error;
+
+      notifications = notifications.map(item => ({
+        ...item,
+        is_read: true
+      }));
+
+      renderCommunityPage();
+
+      return true;
+    } catch (error) {
+      console.error("Mark all notifications error:", error);
+      showNotice(getErrorMessage(error), "error");
+      return false;
+    }
+  }
+
+  function renderNotificationsPage() {
+    const page = createElement(
+      "main",
+      "cma-notifications-page"
+    );
+
+    const header = createElement(
+      "div",
+      "cma-notifications-header"
+    );
+
+    header.appendChild(
+      createElement(
+        "h2",
+        "cma-page-title",
+        "Notifications"
+      )
+    );
+
+    if (notifications.some(item => !item.is_read)) {
+      header.appendChild(
+        makeButton(
+          "Mark all as read",
+          "cma-mark-all-read-button",
+          markAllNotificationsRead
         )
       );
     }
-  }
 
-  search.addEventListener("input", () => {
-    renderList(search.value.trim());
-  });
+    page.appendChild(header);
 
-  renderList();
-
-  friendsSection.append(search, list);
-  page.appendChild(friendsSection);
-
-  container.appendChild(page);
-}
-
-// ---------------------------------------------------------
-// 59. UPDATE FRIEND BUTTON ON MEMBER PROFILE
-// ---------------------------------------------------------
-
-function updateFriendButton(button, userId) {
-  if (!button) return;
-
-  button.onclick = null;
-
-  if (!currentUser) {
-    button.textContent = "Add Friend";
-    button.onclick = () => requireLogin();
-    return;
-  }
-
-  if (areFriends(userId)) {
-    button.textContent = "Friends";
-    button.onclick = () => removeFriend(userId);
-    return;
-  }
-
-  if (getSentFriendRequest(userId)) {
-    button.textContent = "Request Sent";
-    button.onclick = () => showNotice(
-      "Friend request is pending.",
-      "info"
-    );
-    return;
-  }
-
-  const received = getReceivedFriendRequest(userId);
-
-  if (received) {
-    button.textContent = "Accept Request";
-    button.onclick = () => acceptFriendRequest(received.id);
-    return;
-  }
-
-  button.textContent = "Add Friend";
-  button.onclick = () => sendFriendRequest(userId);
-}
-
-// ---------------------------------------------------------
-// 60. OPEN MESSAGING MODULE
-// ---------------------------------------------------------
-
-function openMessageConversation(userId) {
-  if (!requireLogin()) return;
-
-  if (!userId || userId === currentUser.id) return;
-
-  if (!window.CMAMessaging) {
-    showNotice(
-      "Messaging is not available yet.",
-      "info"
-    );
-    return;
-  }
-
-  if (
-    typeof window.CMAMessaging.openConversation !== "function"
-  ) {
-    showNotice(
-      "Messaging module is not ready.",
-      "error"
-    );
-    return;
-  }
-
-  window.CMAMessaging.openConversation(userId);
-}
-
-// =========================================================
-// END OF PART 5
-// NEXT: PART 6 — CREATOR PANEL + NOTIFICATIONS
-// =========================================================
-  
-// =========================================================
-// PART 6 OF 8
-// CREATOR PANEL + NOTIFICATIONS
-// =========================================================
-
-// ---------------------------------------------------------
-// 61. CREATOR DESTINATIONS
-// ---------------------------------------------------------
-
-const CREATOR_DESTINATIONS = [
-  {
-    value: "creator",
-    label: "Creator Panel"
-  },
-  {
-    value: "home",
-    label: "Community Homepage"
-  },
-  {
-    value: "study",
-    label: "Study Materials"
-  },
-  {
-    value: "exam",
-    label: "Exam Preparation"
-  },
-  {
-    value: "online",
-    label: "Online Batches"
-  },
-  {
-    value: "offline",
-    label: "Offline Batches"
-  }
-];
-
-// ---------------------------------------------------------
-// 62. CHECK CREATOR PERMISSION
-// ---------------------------------------------------------
-
-function canPublishCommunityContent() {
-  return Boolean(
-    currentUser &&
-    currentRole &&
-    ["admin", "moderator", "developer"].includes(
-      String(currentRole).toLowerCase()
-    )
-  );
-}
-
-// ---------------------------------------------------------
-// 63. CREATOR DESTINATION SELECT
-// ---------------------------------------------------------
-
-function createCreatorDestinationSelect() {
-  const select = createElement(
-    "select",
-    "community-creator-destination"
-  );
-
-  CREATOR_DESTINATIONS.forEach(destination => {
-    const option = createElement("option");
-    option.value = destination.value;
-    option.textContent = destination.label;
-    select.appendChild(option);
-  });
-
-  return select;
-}
-
-// ---------------------------------------------------------
-// 64. CREATOR PANEL COMPOSER
-// ---------------------------------------------------------
-
-function createCreatorComposer() {
-  const composer = createElement(
-    "section",
-    "community-creator-composer"
-  );
-
-  composer.appendChild(
-    createElement(
-      "h3",
-      "",
-      "Create Creator Update"
-    )
-  );
-
-  const destination = createCreatorDestinationSelect();
-
-  const caption = makeInput(
-    "text",
-    "Write your update...",
-    "community-creator-caption"
-  );
-
-  caption.maxLength = 5000;
-
-  const imagePreview = createElement(
-    "div",
-    "community-creator-image-preview"
-  );
-
-  const imageButton = makeButton(
-    "Add Photo",
-    "community-creator-image-button"
-  );
-
-  const publishButton = makeButton(
-    "Publish",
-    "community-creator-publish"
-  );
-
-  let selectedImage = null;
-
-  imageButton.addEventListener("click", () => {
-    chooseCommunityImage(file => {
-      selectedImage = file;
-
-      imagePreview.innerHTML = "";
-
-      const preview = createElement("img");
-      preview.src = URL.createObjectURL(file);
-      preview.alt = "Selected creator image";
-
-      imagePreview.appendChild(preview);
-    }, "creator");
-  });
-
-  publishButton.addEventListener("click", async () => {
-    if (!canPublishCommunityContent()) {
-      showNotice(
-        "You do not have permission to publish.",
-        "error"
+    if (!currentUser) {
+      page.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          LOGIN_ERROR
+        )
       );
-      return;
+
+      return page;
     }
 
-    const text = caption.value.trim();
-
-    if (!text && !selectedImage) {
-      showNotice(
-        "Write something or add a photo first.",
-        "error"
+    if (!notifications.length) {
+      page.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          "You have no notifications yet."
+        )
       );
-      return;
+
+      return page;
     }
-
-    publishButton.disabled = true;
-    publishButton.textContent = "Publishing...";
-
-    try {
-      let imageUrl = null;
-
-      if (selectedImage) {
-        imageUrl = await uploadCommunityImage(
-          selectedImage,
-          "creator"
-        );
-      }
-
-      const success = await publishPost({
-        caption: text,
-        imageUrl,
-        scope: destination.value
-      });
-
-      if (success) {
-        caption.value = "";
-        selectedImage = null;
-        imagePreview.innerHTML = "";
-
-        showNotice(
-          "Your update has been published.",
-          "success"
-        );
-      }
-    } catch (error) {
-      console.error("Creator publish:", error);
-
-      showNotice(
-        "Could not publish your update.",
-        "error"
-      );
-    } finally {
-      publishButton.disabled = false;
-      publishButton.textContent = "Publish";
-    }
-  });
-
-  composer.append(
-    destination,
-    caption,
-    imageButton,
-    imagePreview,
-    publishButton
-  );
-
-  return composer;
-}
-
-// ---------------------------------------------------------
-// 65. CREATOR PANEL PAGE
-// ---------------------------------------------------------
-
-function renderCreatorPanel(container) {
-  clearElement(container);
-
-  if (!currentUser) {
-    container.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        LOGIN_ERROR
-      )
-    );
-    return;
-  }
-
-  const page = createElement(
-    "section",
-    "community-creator-page"
-  );
-
-  page.appendChild(
-    createElement(
-      "h2",
-      "community-section-title",
-      "Creator Panel"
-    )
-  );
-
-  if (!canPublishCommunityContent()) {
-    page.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        "Creator Panel is available to authorized creators only."
-      )
-    );
-
-    container.appendChild(page);
-    return;
-  }
-
-  page.appendChild(createCreatorComposer());
-
-  const feed = createElement(
-    "div",
-    "community-creator-feed"
-  );
-
-  renderFeed(feed, "creator");
-
-  page.appendChild(feed);
-  container.appendChild(page);
-}
-
-// ---------------------------------------------------------
-// 66. CREATE NOTIFICATION
-// ---------------------------------------------------------
-
-async function createCommunityNotification({
-  recipientId,
-  message,
-  notificationType = "general",
-  relatedId = null
-}) {
-  if (!currentUser || !recipientId) return false;
-
-  if (recipientId === currentUser.id) return false;
-
-  const payload = {
-    recipient_id: recipientId,
-    sender_id: currentUser.id,
-    message,
-    notification_type: notificationType,
-    related_id: relatedId,
-    is_read: false
-  };
-
-  const { error } = await db
-    .from("community_notifications")
-    .insert(payload);
-
-  if (error) {
-    console.error(
-      "Notification create error:",
-      error
-    );
-
-    return false;
-  }
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 67. LOAD NOTIFICATIONS
-// ---------------------------------------------------------
-
-async function loadNotifications() {
-  notifications = [];
-
-  if (!db || !currentUser) return notifications;
-
-  const { data, error } = await db
-    .from("community_notifications")
-    .select("*")
-    .eq("recipient_id", currentUser.id)
-    .order("created_at", {
-      ascending: false
-    });
-
-  if (error) {
-    console.error(
-      "Notifications load error:",
-      error
-    );
-
-    return notifications;
-  }
-
-  notifications = data || [];
-
-  return notifications;
-}
-
-// ---------------------------------------------------------
-// 68. UNREAD NOTIFICATION COUNT
-// ---------------------------------------------------------
-
-function getUnreadNotificationCount() {
-  return notifications.filter(
-    item => !item.is_read
-  ).length;
-}
-
-// ---------------------------------------------------------
-// 69. MARK ONE NOTIFICATION AS READ
-// ---------------------------------------------------------
-
-async function markNotificationRead(notificationId) {
-  if (!requireLogin()) return false;
-
-  const { error } = await db
-    .from("community_notifications")
-    .update({
-      is_read: true
-    })
-    .eq("id", notificationId)
-    .eq("recipient_id", currentUser.id);
-
-  if (error) {
-    console.error(
-      "Notification read error:",
-      error
-    );
-
-    return false;
-  }
-
-  notifications = notifications.map(item =>
-    item.id === notificationId
-      ? { ...item, is_read: true }
-      : item
-  );
-
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 70. MARK ALL NOTIFICATIONS AS READ
-// ---------------------------------------------------------
-
-async function markAllNotificationsRead() {
-  if (!requireLogin()) return false;
-
-  const { error } = await db
-    .from("community_notifications")
-    .update({
-      is_read: true
-    })
-    .eq("recipient_id", currentUser.id)
-    .eq("is_read", false);
-
-  if (error) {
-    console.error(
-      "Mark all read error:",
-      error
-    );
-
-    showNotice(
-      "Could not update notifications.",
-      "error"
-    );
-
-    return false;
-  }
-
-  notifications = notifications.map(item => ({
-    ...item,
-    is_read: true
-  }));
-
-  renderCommunityPage();
-
-  return true;
-}
-
-// ---------------------------------------------------------
-// 71. NOTIFICATION ITEM
-// ---------------------------------------------------------
-
-function createNotificationItem(notification) {
-  const item = createElement(
-    "button",
-    "community-notification-item"
-  );
-
-  if (!notification.is_read) {
-    item.classList.add("unread");
-  }
-
-  const message = createElement(
-    "span",
-    "community-notification-message",
-    notification.message || "New notification"
-  );
-
-  const time = createElement(
-    "span",
-    "community-notification-time",
-    formatRelativeTime(notification.created_at)
-  );
-
-  item.append(message, time);
-
-  item.addEventListener("click", async () => {
-    if (!notification.is_read) {
-      await markNotificationRead(notification.id);
-    }
-
-    if (
-      notification.notification_type === "friend_request" &&
-      notification.sender_id
-    ) {
-      window.cmaOpenCommunityProfile?.(
-        notification.sender_id
-      );
-    }
-
-    if (
-      notification.notification_type === "comment" ||
-      notification.notification_type === "reaction"
-    ) {
-      if (notification.related_id) {
-        const post = posts.find(
-          item => item.id === notification.related_id
-        );
-
-        if (post) {
-          openComments(post.id);
-        }
-      }
-    }
-  });
-
-  return item;
-}
-
-// ---------------------------------------------------------
-// 72. NOTIFICATIONS PAGE
-// ---------------------------------------------------------
-
-function renderNotificationsPage(container) {
-  clearElement(container);
-
-  if (!currentUser) {
-    container.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        LOGIN_ERROR
-      )
-    );
-
-    return;
-  }
-
-  const page = createElement(
-    "section",
-    "community-notifications-page"
-  );
-
-  const header = createElement(
-    "div",
-    "community-notifications-header"
-  );
-
-  header.appendChild(
-    createElement(
-      "h2",
-      "community-section-title",
-      "Notifications"
-    )
-  );
-
-  const unread = getUnreadNotificationCount();
-
-  if (unread > 0) {
-    header.appendChild(
-      makeButton(
-        "Mark all as read",
-        "community-mark-all-read",
-        markAllNotificationsRead
-      )
-    );
-  }
-
-  page.appendChild(header);
-
-  if (!notifications.length) {
-    page.appendChild(
-      createElement(
-        "p",
-        "community-empty",
-        "You have no notifications yet."
-      )
-    );
-  } else {
-    const list = createElement(
-      "div",
-      "community-notification-list"
-    );
 
     notifications.forEach(notification => {
-      list.appendChild(
-        createNotificationItem(notification)
+      page.appendChild(
+        renderNotificationItem(notification)
       );
     });
 
-    page.appendChild(list);
+    return page;
   }
 
-  container.appendChild(page);
-}
+  /* ==========================================
+     END OF PART 6
+     NEXT: SEARCH + MESSAGING INTEGRATION
+  ========================================== */
+       
+  /* ==========================================
+     PART 7/9 — SEARCH + MESSAGING
+  ========================================== */
 
-// =========================================================
-// END OF PART 6
-// NEXT: PART 7 — SEARCH PAGE + PROFILE SEARCH
-// =========================================================
-    
+  const RECENT_SEARCH_KEY = "cma_community_recent_searches";
 
-// =========================================================
-// PART 7 OF 8
-// FINAL COMMUNITY SEARCH SYSTEM
-// =========================================================
+  function getRecentSearches() {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(RECENT_SEARCH_KEY) || "[]"
+      );
 
-// ---------------------------------------------------------
-// 73. SEARCH SETTINGS
-// ---------------------------------------------------------
+      return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+      return [];
+    }
+  }
 
-const COMMUNITY_RECENT_SEARCH_KEY =
-  "cma_community_recent_searches";
+  function saveRecentSearch(query) {
+    const value = String(query || "").trim();
 
-const COMMUNITY_MAX_RECENT_SEARCHES = 8;
+    if (!value) return;
 
-// ---------------------------------------------------------
-// 74. GET RECENT SEARCHES
-// ---------------------------------------------------------
-
-function getRecentCommunitySearches() {
-  try {
-    const saved = localStorage.getItem(
-      COMMUNITY_RECENT_SEARCH_KEY
+    const recent = getRecentSearches().filter(
+      item => item.toLowerCase() !== value.toLowerCase()
     );
 
-    const parsed = saved
-      ? JSON.parse(saved)
-      : [];
+    recent.unshift(value);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-  } catch (error) {
-    console.error("Recent search error:", error);
-    return [];
-  }
-}
-
-// ---------------------------------------------------------
-// 75. SAVE RECENT SEARCH
-// ---------------------------------------------------------
-
-function saveRecentCommunitySearch(query) {
-  const value = String(query || "").trim();
-
-  if (!value) return;
-
-  let recent = getRecentCommunitySearches();
-
-  recent = recent.filter(
-    item =>
-      item.toLowerCase() !== value.toLowerCase()
-  );
-
-  recent.unshift(value);
-
-  recent = recent.slice(
-    0,
-    COMMUNITY_MAX_RECENT_SEARCHES
-  );
-
-  try {
     localStorage.setItem(
-      COMMUNITY_RECENT_SEARCH_KEY,
-      JSON.stringify(recent)
-    );
-  } catch (error) {
-    console.error("Save search error:", error);
-  }
-}
-
-// ---------------------------------------------------------
-// 76. CLEAR RECENT SEARCHES
-// ---------------------------------------------------------
-
-function clearRecentCommunitySearches() {
-  try {
-    localStorage.removeItem(
-      COMMUNITY_RECENT_SEARCH_KEY
-    );
-  } catch (error) {
-    console.error("Clear search error:", error);
-  }
-}
-
-// ---------------------------------------------------------
-// 77. REMOVE ONE RECENT SEARCH
-// ---------------------------------------------------------
-
-function removeRecentCommunitySearch(query) {
-  const updated = getRecentCommunitySearches().filter(
-    item => item !== query
-  );
-
-  try {
-    localStorage.setItem(
-      COMMUNITY_RECENT_SEARCH_KEY,
-      JSON.stringify(updated)
-    );
-  } catch (error) {
-    console.error("Remove recent search:", error);
-  }
-}
-
-// ---------------------------------------------------------
-// 78. SEARCH PROFILES
-// ---------------------------------------------------------
-
-async function searchCommunityProfiles(query) {
-  const value = String(query || "")
-    .trim()
-    .toLowerCase();
-
-  if (!value) return [];
-
-  await loadPublicProfiles();
-
-  return profiles.filter(profile => {
-    const name = String(
-      profile.display_name || ""
-    ).toLowerCase();
-
-    const memberId = String(
-      profile.member_id || ""
-    ).toLowerCase();
-
-    return (
-      name.includes(value) ||
-      memberId.includes(value)
-    );
-  });
-}
-
-// ---------------------------------------------------------
-// 79. SEARCH POSTS
-// ---------------------------------------------------------
-
-async function searchCommunityPosts(query) {
-  const value = String(query || "")
-    .trim()
-    .toLowerCase();
-
-  if (!value) return [];
-
-  await loadPosts();
-
-  return posts
-    .filter(post => {
-      const content = String(
-        post.content || ""
-      ).toLowerCase();
-
-      return content.includes(value);
-    })
-    .sort((a, b) =>
-      new Date(b.created_at) -
-      new Date(a.created_at)
-    );
-}
-
-// ---------------------------------------------------------
-// 80. PROFILE SEARCH RESULT
-// ---------------------------------------------------------
-
-function createSearchProfileItem(profile) {
-  const item = createElement(
-    "button",
-    "community-search-profile-item"
-  );
-
-  const identity = createElement(
-    "div",
-    "community-search-profile-identity"
-  );
-
-  const details = createElement(
-    "div",
-    "community-search-profile-details"
-  );
-
-  identity.appendChild(
-    createAuthorAvatar(profile, "small")
-  );
-
-  details.appendChild(
-    createElement(
-      "strong",
-      "",
-      profile.display_name || "Member"
-    )
-  );
-
-  if (profile.member_id) {
-    details.appendChild(
-      createElement(
-        "span",
-        "community-search-member-id",
-        `Member ID: ${profile.member_id}`
-      )
+      RECENT_SEARCH_KEY,
+      JSON.stringify(recent.slice(0, 10))
     );
   }
 
-  if (profile.short_description) {
-    details.appendChild(
-      createElement(
-        "span",
-        "community-search-profile-description",
+  function clearRecentSearches() {
+    localStorage.removeItem(RECENT_SEARCH_KEY);
+    renderCommunitySearchPage();
+  }
+
+  function normalizeSearch(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function searchProfilesLocally(query) {
+    const value = normalizeSearch(query);
+
+    if (!value) return [];
+
+    const combinedProfiles = uniqueBy(
+      [
+        ...(currentProfile ? [currentProfile] : []),
+        ...profiles
+      ],
+      "user_id"
+    );
+
+    return combinedProfiles.filter(profile => {
+      const name = normalizeSearch(profile.display_name);
+      const memberId = normalizeSearch(profile.member_id);
+      const description = normalizeSearch(
         profile.short_description
-      )
+      );
+
+      return (
+        name.includes(value) ||
+        memberId.includes(value) ||
+        description.includes(value)
+      );
+    });
+  }
+
+  function searchPostsLocally(query) {
+    const value = normalizeSearch(query);
+
+    if (!value) return [];
+
+    return sortNewest(
+      posts.filter(post => {
+        const content = normalizeSearch(post.content);
+
+        return content.includes(value);
+      })
     );
   }
 
-  identity.appendChild(details);
-  item.appendChild(identity);
+  async function searchProfilesOnline(query) {
+    const value = String(query || "").trim();
 
-  item.addEventListener("click", () => {
-    window.cmaOpenCommunityProfile?.(
-      profile.user_id
-    );
-  });
+    if (!value) return [];
 
-  return item;
-}
+    const client = requireDatabase();
+    if (!client) return searchProfilesLocally(value);
 
-// ---------------------------------------------------------
-// 81. SEARCH TABS
-// ---------------------------------------------------------
+    try {
+      const { data, error } = await client
+        .from("community_profiles")
+        .select("*")
+        .ilike("display_name", `%${value}%`)
+        .limit(100);
 
-function createCommunitySearchTabs(
-  activeTab,
-  onChange
-) {
-  const tabs = createElement(
-    "div",
-    "community-search-tabs"
-  );
+      if (error) throw error;
 
-  const tabDefinitions = [
-    {
-      id: "profiles",
-      label: "♙ Profiles"
-    },
-    {
-      id: "posts",
-      label: "▤ Posts"
+      const remoteProfiles = asArray(data);
+
+      profiles = uniqueBy(
+        [...remoteProfiles, ...profiles],
+        "user_id"
+      );
+
+      return searchProfilesLocally(value);
+    } catch (error) {
+      console.error("Online profile search error:", error);
+
+      return searchProfilesLocally(value);
     }
-  ];
+  }
 
-  tabDefinitions.forEach(definition => {
-    const button = makeButton(
-      definition.label,
-      "community-search-tab"
-    );
+  async function searchPostsOnline(query) {
+    const value = String(query || "").trim();
 
-    if (activeTab === definition.id) {
-      button.classList.add("active");
-    }
+    if (!value) return [];
 
-    button.addEventListener("click", () => {
-      onChange(definition.id);
-    });
+    const client = requireDatabase();
+    if (!client) return searchPostsLocally(value);
 
-    tabs.appendChild(button);
-  });
+    try {
+      const { data, error } = await client
+        .from("community_posts")
+        .select("*")
+        .ilike("content", `%${value}%`)
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-  return tabs;
-}
+      if (error) throw error;
 
-// ---------------------------------------------------------
-// 82. RENDER SEARCH RESULTS
-// ---------------------------------------------------------
+      const remotePosts = asArray(data);
 
-async function renderCommunitySearchResults(
-  container,
-  query,
-  tab
-) {
-  clearElement(container);
-
-  if (!query) return;
-
-  const loading = createElement(
-    "p",
-    "community-search-loading",
-    "Searching..."
-  );
-
-  container.appendChild(loading);
-
-  if (tab === "profiles") {
-    const results =
-      await searchCommunityProfiles(query);
-
-    clearElement(container);
-
-    if (!results.length) {
-      container.appendChild(
-        createElement(
-          "p",
-          "community-empty",
-          "No profiles found."
+      posts = sortNewest(
+        uniqueBy(
+          [...remotePosts, ...posts],
+          "id"
         )
       );
 
-      return;
+      return searchPostsLocally(value);
+    } catch (error) {
+      console.error("Online post search error:", error);
+
+      return searchPostsLocally(value);
     }
-
-    results.forEach(profile => {
-      container.appendChild(
-        createSearchProfileItem(profile)
-      );
-    });
-
-    return;
   }
 
-  if (tab === "posts") {
-    const results =
-      await searchCommunityPosts(query);
-
-    clearElement(container);
-
-    if (!results.length) {
-      container.appendChild(
-        createElement(
-          "p",
-          "community-empty",
-          "No posts found."
-        )
-      );
-
-      return;
-    }
-
-    results.forEach(post => {
-      container.appendChild(
-        renderPostCard(post)
-      );
-    });
-  }
-}
-
-// ---------------------------------------------------------
-// 83. RECENT SEARCHES UI
-// ---------------------------------------------------------
-
-function renderRecentCommunitySearches(
-  container,
-  onSelect
-) {
-  clearElement(container);
-
-  const recent = getRecentCommunitySearches();
-
-  if (!recent.length) return;
-
-  const header = createElement(
-    "div",
-    "community-search-recent-header"
-  );
-
-  header.appendChild(
-    createElement(
-      "h3",
-      "",
-      "Recent Searches"
-    )
-  );
-
-  const clearButton = makeButton(
-    "Clear All",
-    "community-search-clear",
-    () => {
-      clearRecentCommunitySearches();
-
-      renderRecentCommunitySearches(
-        container,
-        onSelect
-      );
-    }
-  );
-
-  header.appendChild(clearButton);
-  container.appendChild(header);
-
-  recent.forEach(value => {
-    const row = createElement(
+  function renderSearchHeader() {
+    const header = createElement(
       "div",
-      "community-search-recent-item"
+      "cma-search-header"
     );
 
-    const selectButton = makeButton(
-      "",
-      "community-search-recent-query",
-      () => onSelect(value)
-    );
-
-    selectButton.append(
-      createElement("span", "", "◷"),
-      createElement("span", "", value)
-    );
-
-    const removeButton = makeButton(
-      "×",
-      "community-search-recent-remove",
+    const back = makeButton(
+      "←",
+      "cma-search-back-button",
       () => {
-        removeRecentCommunitySearch(value);
-
-        renderRecentCommunitySearches(
-          container,
-          onSelect
-        );
+        state.section = state.previousPage || "home";
+        state.searchQuery = "";
+        renderCommunityPage();
       }
     );
 
-    row.append(
-      selectButton,
-      removeButton
+    back.setAttribute("aria-label", "Go back");
+
+    const input = makeInput(
+      "Search profiles or posts...",
+      "cma-search-input"
     );
 
-    container.appendChild(row);
-  });
-}
+    input.value = state.searchQuery || "";
 
-// ---------------------------------------------------------
-// 84. FULL SCREEN SEARCH PAGE
-// ---------------------------------------------------------
-
-function renderSearchPage(
-  container,
-  initialQuery = ""
-) {
-  clearElement(container);
-
-  const page = createElement(
-    "section",
-    "community-search-page"
-  );
-
-  const header = createElement(
-    "header",
-    "community-search-header"
-  );
-
-  const backButton = makeButton(
-    "←",
-    "community-search-back"
-  );
-
-  backButton.setAttribute(
-    "aria-label",
-    "Go back"
-  );
-
-  backButton.addEventListener("click", () => {
-    state.section = state.previousPage || "home";
-
-    renderCommunityPage();
-  });
-
-  const searchInput = makeInput(
-    "search",
-    "Search profiles or posts...",
-    "community-search-input"
-  );
-
-  searchInput.value = initialQuery;
-
-  header.append(
-    backButton,
-    searchInput
-  );
-
-  const recentArea = createElement(
-    "div",
-    "community-search-recent-area"
-  );
-
-  const tabsArea = createElement(
-    "div",
-    "community-search-tabs-area"
-  );
-
-  const resultArea = createElement(
-    "div",
-    "community-search-result-area"
-  );
-
-  page.append(
-    header,
-    recentArea,
-    tabsArea,
-    resultArea
-  );
-
-  container.appendChild(page);
-
-  let activeTab = "profiles";
-  let currentQuery = "";
-  let searchVersion = 0;
-
-  // Draw tabs and handle tab switching.
-  function showTabs() {
-    clearElement(tabsArea);
-
-    tabsArea.appendChild(
-      createCommunitySearchTabs(
-        activeTab,
-        async selectedTab => {
-          activeTab = selectedTab;
-
-          showTabs();
-
-          await runSearchResults();
-        }
-      )
+    const clear = makeButton(
+      "×",
+      "cma-search-clear-button",
+      () => {
+        state.searchQuery = "";
+        renderCommunitySearchPage();
+      }
     );
+
+    clear.setAttribute("aria-label", "Clear search");
+
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        performCommunitySearch(input.value);
+      }
+    });
+
+    header.append(back, input, clear);
+
+    return { header, input };
   }
 
-  // Render currently selected tab.
-  async function runSearchResults() {
-    const version = ++searchVersion;
-
-    clearElement(resultArea);
-
-    const loading = createElement(
-      "p",
-      "community-search-loading",
-      "Searching..."
+  function renderRecentSearches() {
+    const section = createElement(
+      "section",
+      "cma-recent-searches"
     );
 
-    resultArea.appendChild(loading);
+    const heading = createElement(
+      "div",
+      "cma-recent-searches-heading"
+    );
 
-    let results = [];
+    heading.appendChild(
+      createElement(
+        "h3",
+        "cma-section-heading",
+        "Recent Searches"
+      )
+    );
 
-    if (activeTab === "profiles") {
-      results = await searchCommunityProfiles(
-        currentQuery
-      );
-    } else {
-      results = await searchCommunityPosts(
-        currentQuery
+    const recent = getRecentSearches();
+
+    if (recent.length) {
+      heading.appendChild(
+        makeButton(
+          "Clear All",
+          "cma-clear-recent-button",
+          clearRecentSearches
+        )
       );
     }
 
-    // Ignore older results if the query or tab changed.
-    if (version !== searchVersion) return;
+    section.appendChild(heading);
 
-    clearElement(resultArea);
-
-    if (!results.length) {
-      resultArea.appendChild(
+    if (!recent.length) {
+      section.appendChild(
         createElement(
           "p",
-          "community-empty",
-          activeTab === "profiles"
-            ? "No profiles found."
-            : "No posts found."
+          "cma-empty-state",
+          "Your recent searches will appear here."
         )
       );
 
-      return;
+      return section;
     }
 
-    if (activeTab === "profiles") {
-      results.forEach(profile => {
-        resultArea.appendChild(
-          createSearchProfileItem(profile)
-        );
-      });
-    } else {
-      results.forEach(post => {
-        resultArea.appendChild(
-          renderPostCard(post)
-        );
-      });
-    }
-  }
-
-  // Start a new search.
-  async function performSearch(value) {
-    const query = String(value || "").trim();
-
-    if (!query) {
-      currentQuery = "";
-      searchVersion++;
-
-      clearElement(tabsArea);
-      clearElement(resultArea);
-
-      renderRecentCommunitySearches(
-        recentArea,
-        performSearch
+    recent.forEach(query => {
+      const item = makeButton(
+        `◷  ${query}`,
+        "cma-recent-search-item",
+        () => performCommunitySearch(query)
       );
 
-      return;
-    }
+      section.appendChild(item);
+    });
 
-    currentQuery = query;
-    activeTab = "profiles";
+    return section;
+  }
 
-    saveRecentCommunitySearch(query);
-
-    renderRecentCommunitySearches(
-      recentArea,
-      performSearch
+  function renderSearchTabs() {
+    const tabs = createElement(
+      "div",
+      "cma-search-tabs"
     );
 
-    showTabs();
-
-    await runSearchResults();
-  }
-
-  // Search when Enter is pressed.
-  searchInput.addEventListener(
-    "keydown",
-    event => {
-      if (event.key === "Enter") {
-        performSearch(searchInput.value);
-      }
-    }
-  );
-
-  // Hide results when input is cleared.
-  searchInput.addEventListener(
-    "input",
-    () => {
-      if (!searchInput.value.trim()) {
-        performSearch("");
-      }
-    }
-  );
-
-  // Show recent searches before searching.
-  renderRecentCommunitySearches(
-    recentArea,
-    value => {
-      searchInput.value = value;
-      performSearch(value);
-    }
-  );
-
-  if (initialQuery.trim()) {
-    performSearch(initialQuery);
-  }
-}
-
-// ---------------------------------------------------------
-// 85. OPEN COMMUNITY SEARCH
-// ---------------------------------------------------------
-
-function openCommunitySearch() {
-  state.previousPage =
-    state.section || "home";
-
-  state.section = "search";
-
-  renderCommunityPage();
-}
-
-// =========================================================
-// END OF PART 7
-// NEXT: PART 8 — MAIN PAGE + NAVIGATION + INTEGRATION
-// =========================================================
-  
-/* =========================================================
-   PART 8/8 — MAIN RENDERER, NAVIGATION, EDIT PROFILE, CSS
-   ========================================================= */
-
-/* ---------- 86. COMMUNITY PAGE HELPERS ---------- */
-
-function communityButton(text, className, onClick) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = className || "cma-btn";
-  button.textContent = text;
-  button.addEventListener("click", onClick);
-  return button;
-}
-
-function communityHeading(text) {
-  const heading = document.createElement("h2");
-  heading.className = "cma-page-heading";
-  heading.textContent = text;
-  return heading;
-}
-
-function communityEmpty(text) {
-  const element = document.createElement("div");
-  element.className = "cma-empty";
-  element.textContent = text;
-  return element;
-}
-
-function setCommunitySection(section) {
-  state.section = section;
-  renderCommunityPage();
-}
-
-/* ---------- 87. FEED SCOPE SUPPORT ---------- */
-
-/* Supports both the Homepage feed and Creator Panel feed. */
-renderFeed = function (container, scope) {
-  clearElement(container);
-
-  let feedPosts = getCommunityPosts(scope);
-
-  if (scope === "creator") {
-    feedPosts = feedPosts.filter(function (post) {
-      const author = getProfile(post.user_id);
-      return author && (
-        author.role === "admin" ||
-        author.role === "moderator" ||
-        author.role === "developer"
+    ["Profiles", "Posts"].forEach(tab => {
+      const button = makeButton(
+        tab,
+        "cma-search-tab",
+        () => {
+          state.activeSearchTab = tab;
+          renderCommunitySearchPage();
+        }
       );
+
+      if (state.activeSearchTab === tab) {
+        button.classList.add("active");
+      }
+
+      tabs.appendChild(button);
     });
+
+    return tabs;
   }
 
-  if (!feedPosts.length) {
-    container.appendChild(
-      communityEmpty(
-        scope === "creator"
-          ? "No creator updates yet."
-          : "No posts yet. Be the first to share something!"
+  function renderSearchProfile(profile) {
+    const card = makeButton(
+      "",
+      "cma-search-profile-card",
+      () => openCommunityProfile(profile.user_id)
+    );
+
+    const avatar = createMemberAvatar(
+      profile.user_id,
+      "small"
+    );
+
+    const details = createElement(
+      "div",
+      "cma-search-profile-details"
+    );
+
+    details.appendChild(
+      createElement(
+        "span",
+        "cma-search-profile-name",
+        profile.display_name || "Community Member"
       )
     );
-    return;
+
+    details.appendChild(
+      createElement(
+        "span",
+        "cma-search-profile-member-id",
+        `Member ID: ${getMemberId(profile)}`
+      )
+    );
+
+    if (profile.short_description) {
+      details.appendChild(
+        createElement(
+          "span",
+          "cma-search-profile-description",
+          profile.short_description
+        )
+      );
+    }
+
+    card.append(avatar, details);
+
+    return card;
   }
 
-  feedPosts.forEach(function (post) {
-    container.appendChild(renderPostCard(post));
-  });
-};
+  function renderSearchResults() {
+    const results = createElement(
+      "section",
+      "cma-search-results"
+    );
 
-/* ---------- 88. OTHER MEMBER PROFILE PAGE ---------- */
+    const query = state.searchQuery;
 
-renderUserProfile = async function (container, userId, backCallback) {
-  clearElement(container);
+    if (!query) return results;
 
-  const backButton = communityButton("← Back", "cma-back-button", function () {
-    if (typeof backCallback === "function") {
-      backCallback();
-    } else {
-      setCommunitySection("home");
+    if (state.activeSearchTab === "Profiles") {
+      const matchingProfiles = searchProfilesLocally(query);
+
+      if (!matchingProfiles.length) {
+        results.appendChild(
+          createElement(
+            "p",
+            "cma-empty-state",
+            "No matching profiles found."
+          )
+        );
+      } else {
+        matchingProfiles.forEach(profile => {
+          results.appendChild(
+            renderSearchProfile(profile)
+          );
+        });
+      }
     }
-  });
 
-  container.appendChild(backButton);
+    if (state.activeSearchTab === "Posts") {
+      const matchingPosts = searchPostsLocally(query);
 
-  let profile = getProfile(userId);
+      if (!matchingPosts.length) {
+        results.appendChild(
+          createElement(
+            "p",
+            "cma-empty-state",
+            "No matching posts found."
+          )
+        );
+      } else {
+        results.appendChild(
+          renderFeed(matchingPosts)
+        );
+      }
+    }
 
-  if (!profile) {
-    const { data, error } = await db
-      .from("community_profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+    return results;
+  }
 
-    if (error || !data) {
-      container.appendChild(communityEmpty("Member profile could not be found."));
+  async function performCommunitySearch(query) {
+    const value = String(query || "").trim();
+
+    state.searchQuery = value;
+    state.activeSearchTab = "Profiles";
+
+    if (!value) {
+      renderCommunitySearchPage();
       return;
     }
 
-    profile = data;
+    saveRecentSearch(value);
+
+    const version = ++state.searchVersion;
+
+    renderCommunitySearchPage();
+
+    await Promise.all([
+      searchProfilesOnline(value),
+      searchPostsOnline(value)
+    ]);
+
+    if (version !== state.searchVersion) return;
+
+    renderCommunitySearchPage();
   }
 
-  const profileArea = document.createElement("div");
-  profileArea.className = "cma-profile-page";
+  function renderCommunitySearchPage() {
+    const root = getCommunityRoot();
 
-  renderProfileHeader(profile, false).forEach(function (element) {
-    profileArea.appendChild(element);
-  });
+    clearElement(root);
 
-  /*
-   * Other members' phone numbers and home addresses are not
-   * displayed publicly. Public profile information stays limited
-   * to profile details intended for community browsing.
-   */
-  const info = document.createElement("section");
-  info.className = "cma-profile-info";
+    const page = createElement(
+      "main",
+      "cma-search-page"
+    );
 
-  info.appendChild(communityHeading(profile.display_name || "Member"));
+    const searchUI = renderSearchHeader();
 
-  if (profile.member_id) {
-    const memberId = document.createElement("p");
-    memberId.className = "cma-member-id";
-    memberId.textContent = "Member ID: " + profile.member_id;
-    info.appendChild(memberId);
-  }
+    page.appendChild(searchUI.header);
 
-  if (profile.short_description) {
-    const description = document.createElement("p");
-    description.className = "cma-profile-description";
-    description.textContent = profile.short_description;
-    info.appendChild(description);
-  }
+    const hasQuery = Boolean(
+      String(state.searchQuery || "").trim()
+    );
 
-  if (profile.school) {
-    const institution = document.createElement("p");
-    institution.className = "cma-profile-public-info";
-    institution.textContent = "Institution: " + profile.school;
-    info.appendChild(institution);
-  }
-
-  const actions = document.createElement("div");
-  actions.className = "cma-profile-actions";
-
-  const friendButton = communityButton(
-    "Add Friend",
-    "cma-btn cma-btn-primary",
-    function () {
-      updateFriendButton(friendButton, userId);
-    }
-  );
-
-  const messageButton = communityButton(
-    "Message",
-    "cma-btn cma-btn-outline",
-    function () {
-      openMessageConversation(userId);
-    }
-  );
-
-  actions.appendChild(friendButton);
-  actions.appendChild(messageButton);
-  info.appendChild(actions);
-
-  profileArea.appendChild(info);
-
-  updateFriendButton(friendButton, userId);
-
-  const tabs = createProfileTabs(userId);
-  profileArea.appendChild(tabs);
-
-  const tabContent = document.createElement("div");
-  tabContent.className = "cma-profile-tab-content";
-  profileArea.appendChild(tabContent);
-
-  container.appendChild(profileArea);
-
-  renderProfileTab(tabContent, userId, activeProfileTab || "posts");
-};
-
-/* ---------- 89. EDIT PERSONAL INFORMATION PAGE ---------- */
-
-function renderEditProfilePage() {
-  state.section = "edit-profile";
-
-  const root = getCommunityRoot();
-  clearElement(root);
-
-  const page = document.createElement("section");
-  page.className = "cma-edit-page";
-
-  const top = document.createElement("div");
-  top.className = "cma-edit-top";
-
-  top.appendChild(
-    communityButton("←", "cma-back-icon", function () {
-      state.section = "profile";
-      renderCommunityPage();
-    })
-  );
-
-  const title = document.createElement("h2");
-  title.textContent = "Edit Personal Information";
-  top.appendChild(title);
-
-  page.appendChild(top);
-
-  const form = document.createElement("form");
-  form.className = "cma-edit-form";
-
-  function addField(labelText, name, value, placeholder, multiline) {
-    const wrapper = document.createElement("label");
-    wrapper.className = "cma-form-field";
-
-    const label = document.createElement("span");
-    label.textContent = labelText;
-    wrapper.appendChild(label);
-
-    let field;
-
-    if (multiline) {
-      field = document.createElement("textarea");
-      field.rows = 3;
+    if (!hasQuery) {
+      page.appendChild(renderRecentSearches());
     } else {
-      field = document.createElement("input");
-      field.type = name === "phone" ? "tel" : "text";
+      page.appendChild(renderSearchTabs());
+      page.appendChild(renderSearchResults());
     }
 
-    field.name = name;
-    field.value = value || "";
-    field.placeholder = placeholder || "";
-    field.autocomplete = "off";
+    root.appendChild(page);
 
-    wrapper.appendChild(field);
-    form.appendChild(wrapper);
+    searchUI.input.focus();
 
-    return field;
+    if (state.searchQuery) {
+      searchUI.input.setSelectionRange(
+        state.searchQuery.length,
+        state.searchQuery.length
+      );
+    }
   }
 
-  const fullName = addField(
-    "Full Name",
-    "full_name",
-    currentProfile?.display_name || "",
-    "Enter your full name"
-  );
+  function openCommunitySearch() {
+    state.previousPage = state.section || "home";
+    state.section = "search";
+    state.searchQuery = "";
 
-  const shortDescription = addField(
-    "Short Description",
-    "short_description",
-    currentProfile?.short_description || "",
-    "Write a short introduction",
-    true
-  );
+    renderCommunitySearchPage();
+  }
 
-  const institution = addField(
-    "Institution",
-    "school",
-    currentProfile?.school || "",
-    "Enter your institution"
-  );
+  /* ==========================================
+     MESSAGING SYSTEM INTEGRATION
+  ========================================== */
 
-  const mobile = addField(
-    "Mobile Number",
-    "phone",
-    currentPrivate?.phone || "",
-    "Your mobile number"
-  );
-
-  const address = addField(
-    "Address",
-    "address",
-    currentPrivate?.address || "",
-    "Your address",
-    true
-  );
-
-  const privacyNote = document.createElement("p");
-  privacyNote.className = "cma-private-note";
-  privacyNote.textContent =
-    "Your mobile number and address are private account information. They are not shown on your public profile.";
-  form.appendChild(privacyNote);
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "cma-btn cma-btn-primary cma-save-button";
-  saveButton.textContent = "Save Changes";
-  form.appendChild(saveButton);
-
-  form.addEventListener("submit", async function (event) {
-    event.preventDefault();
-
+  function openMessageConversation(userId) {
     if (!requireLogin()) return;
 
-    saveButton.disabled = true;
-    saveButton.textContent = "Saving...";
-
-    try {
-      const profileResult = await saveProfile({
-        display_name: fullName.value.trim(),
-        short_description: shortDescription.value.trim(),
-        school: institution.value.trim()
-      });
-
-      const privateResult = await savePrivateProfile({
-        phone: mobile.value.trim(),
-        address: address.value.trim()
-      });
-
-      if (profileResult === false || privateResult === false) {
-        throw new Error("Could not save your information.");
-      }
-
-      await loadMyProfile();
-
-      showNotice("Personal information saved successfully.");
-      state.section = "profile";
-      renderCommunityPage();
-    } catch (error) {
-      console.error("Community profile save error:", error);
-      showNotice(error.message || "Could not save your information.");
-      saveButton.disabled = false;
-      saveButton.textContent = "Save Changes";
-    }
-  });
-
-  page.appendChild(form);
-  root.appendChild(page);
-}
-
-/* ---------- 90. COMMUNITY HEADER ---------- */
-
-function createCommunityHeader() {
-  const header = document.createElement("header");
-  header.className = "cma-community-header";
-
-  const title = document.createElement("div");
-  title.className = "cma-header-title";
-
-  const whiteText = document.createElement("span");
-  whiteText.textContent = "Change Maker ";
-
-  const greenText = document.createElement("span");
-  greenText.textContent = "Community";
-  greenText.className = "cma-green-text";
-
-  title.appendChild(whiteText);
-  title.appendChild(greenText);
-
-  const searchButton = communityButton(
-    "⌕",
-    "cma-header-search",
-    function () {
-      openCommunitySearch();
-    }
-  );
-
-  searchButton.setAttribute("aria-label", "Search Community");
-
-  header.appendChild(title);
-  header.appendChild(searchButton);
-
-  return header;
-}
-
-/* ---------- 91. COMMUNITY BOTTOM NAVIGATION ---------- */
-
-function createCommunityBottomNav() {
-  const nav = document.createElement("nav");
-  nav.className = "cma-bottom-nav";
-
-  const items = [
-    { id: "home", icon: "⌂", label: "Home" },
-    { id: "profile", icon: "●", label: "Profile" },
-    { id: "friends", icon: "♧", label: "Friends" },
-    { id: "creator", icon: "✦", label: "Creator Panel" },
-    { id: "notifications", icon: "♧", label: "Notification" }
-  ];
-
-  items.forEach(function (item) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className =
-      "cma-nav-item" +
-      (state.section === item.id ? " active" : "");
-
-    const icon = document.createElement("span");
-    icon.className = "cma-nav-icon";
-    icon.textContent = item.icon;
-
-    const label = document.createElement("span");
-    label.className = "cma-nav-label";
-    label.textContent = item.label;
-
-    button.appendChild(icon);
-    button.appendChild(label);
-
-    button.addEventListener("click", function () {
-      setCommunitySection(item.id);
-    });
-
-    if (item.id === "notifications") {
-      const count = getUnreadNotificationCount();
-
-      if (count > 0) {
-        const badge = document.createElement("span");
-        badge.className = "cma-notification-badge";
-        badge.textContent = count > 9 ? "9+" : String(count);
-        button.appendChild(badge);
-      }
+    if (!userId) {
+      showNotice("Member not found.", "error");
+      return;
     }
 
-    nav.appendChild(button);
-  });
-
-  return nav;
-}
-
-/* ---------- 92. HOMEPAGE ---------- */
-
-function renderCommunityHome(container) {
-  container.appendChild(communityHeading("Community"));
-
-  const composer = createComposer();
-
-  if (composer) {
-    container.appendChild(composer);
-  }
-
-  const feed = document.createElement("div");
-  feed.className = "cma-community-feed";
-  container.appendChild(feed);
-
-  renderFeed(feed);
-}
-
-/* ---------- 93. MAIN COMMUNITY PAGE RENDERER ---------- */
-
-async function renderCommunityPage() {
-  const root = getCommunityRoot();
-
-  if (!root) {
-    console.error("Community root element was not found.");
-    return;
-  }
-
-  clearElement(root);
-
-  if (!communityInitialized) {
-    communityInitialized = true;
-
-    try {
-      await refreshCommunityData();
-      await loadFriendRequests();
-      await loadFriendships();
-      await loadNotifications();
-    } catch (error) {
-      console.error("Community initialization error:", error);
+    if (String(userId) === String(currentUser.id)) {
+      showNotice("You cannot message yourself.", "error");
+      return;
     }
-  }
 
-  if (state.section === "search") {
-    renderSearchPage(
-      root,
-      currentSearchQuery || ""
+    state.previousPage = "profile";
+    state.activeProfileId = userId;
+
+    if (
+      typeof window.cmaOpenMessageConversation === "function"
+    ) {
+      window.cmaOpenMessageConversation(userId);
+      return;
+    }
+
+    if (
+      typeof window.openCommunityConversation === "function"
+    ) {
+      window.openCommunityConversation(userId);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("cma:open-message", {
+        detail: { userId }
+      })
     );
-    return;
+
+    showNotice(
+      "Messaging module is not connected yet.",
+      "info"
+    );
   }
 
-  if (state.section === "edit-profile") {
-    renderEditProfilePage();
-    return;
+  /* ==========================================
+     END OF PART 7
+     NEXT: COMMUNITY HOME + CREATOR PANEL
+  ========================================== */
+         
+  /* ==========================================
+     PART 8/9 — HOME + CREATOR + NAVIGATION
+  ========================================== */
+
+  function renderCommunityHeader() {
+    const header = createElement(
+      "header",
+      "cma-community-header"
+    );
+
+    const title = createElement(
+      "div",
+      "cma-community-brand"
+    );
+
+    title.innerHTML =
+      '<span>Change Maker</span> ' +
+      '<span class="cma-brand-green">Community</span>';
+
+    const searchButton = makeButton(
+      "⌕",
+      "cma-header-search-button",
+      openCommunitySearch
+    );
+
+    searchButton.setAttribute(
+      "aria-label",
+      "Search Community"
+    );
+
+    header.append(title, searchButton);
+
+    return header;
   }
 
-  root.appendChild(createCommunityHeader());
+  function renderCommunityNavigation() {
+    const nav = createElement(
+      "nav",
+      "cma-community-navigation"
+    );
 
-  const main = document.createElement("main");
-  main.className = "cma-community-main";
-  root.appendChild(main);
+    const items = [
+      {
+        id: "home",
+        icon: "⌂",
+        label: "Home"
+      },
+      {
+        id: "profile",
+        icon: "◉",
+        label: "Profile"
+      },
+      {
+        id: "friends",
+        icon: "♧",
+        label: "Friends"
+      },
+      {
+        id: "creator",
+        icon: "✦",
+        label: "Creator Panel"
+      },
+      {
+        id: "notifications",
+        icon: "♧",
+        label: "Notification"
+      }
+    ];
 
-  if (state.section === "home") {
-    renderCommunityHome(main);
-  } else if (state.section === "profile") {
-    if (!currentUser) {
-      main.appendChild(communityEmpty("Please sign in to view your profile."));
-    } else {
-      renderMe(main);
-    }
-  } else if (state.section === "member-profile") {
-    if (activeProfileId) {
-      await renderUserProfile(
-        main,
-        activeProfileId,
-        function () {
-          state.section = "home";
-          activeProfileId = null;
+    items.forEach(item => {
+      const button = makeButton(
+        "",
+        "cma-nav-item",
+        () => {
+          if (
+            ["profile", "friends", "creator", "notifications"]
+              .includes(item.id) &&
+            !requireLogin()
+          ) {
+            return;
+          }
+
+          if (
+            item.id === "creator" &&
+            !isCreator()
+          ) {
+            showNotice(
+              "Creator Panel is available to authorized creators only.",
+              "error"
+            );
+            return;
+          }
+
+          if (item.id === "profile") {
+            state.activeProfileId = currentUser
+              ? currentUser.id
+              : null;
+          }
+
+          state.section = item.id;
           renderCommunityPage();
         }
       );
+
+      const icon = createElement(
+        "span",
+        "cma-nav-icon",
+        item.icon
+      );
+
+      const label = createElement(
+        "span",
+        "cma-nav-label",
+        item.label
+      );
+
+      button.append(icon, label);
+
+      const isActive =
+        state.section === item.id ||
+        (
+          item.id === "home" &&
+          state.section === "community"
+        );
+
+      if (isActive) {
+        button.classList.add("active");
+      }
+
+      nav.appendChild(button);
+    });
+
+    return nav;
+  }
+
+  function renderHomePostComposer() {
+    if (!currentUser) {
+      const prompt = createElement(
+        "div",
+        "cma-login-post-prompt"
+      );
+
+      prompt.appendChild(
+        createElement(
+          "p",
+          "",
+          "Sign in to share a post with the Community."
+        )
+      );
+
+      prompt.appendChild(
+        makeButton(
+          "Go to Account",
+          "cma-primary-button",
+          () => {
+            window.location.href = "index.html";
+          }
+        )
+      );
+
+      return prompt;
     }
-  } else if (state.section === "friends") {
-    await renderFriendsPage(main);
-  } else if (state.section === "creator") {
-    await renderCreatorPanel(main);
-  } else if (state.section === "notifications") {
-    await renderNotificationsPage(main);
-  } else {
-    state.section = "home";
-    renderCommunityHome(main);
+
+    const composer = createElement(
+      "section",
+      "cma-post-composer"
+    );
+
+    const top = createElement(
+      "div",
+      "cma-composer-top"
+    );
+
+    top.appendChild(
+      createMemberAvatar(currentUser.id, "small")
+    );
+
+    const caption = makeTextarea(
+      "What's on your mind?",
+      "cma-composer-textarea"
+    );
+
+    top.appendChild(caption);
+
+    const preview = createElement(
+      "div",
+      "cma-composer-image-preview"
+    );
+
+    let selectedImageUrl = null;
+
+    const actions = createElement(
+      "div",
+      "cma-composer-actions"
+    );
+
+    const imageButton = makeButton(
+      "＋ Photo",
+      "cma-secondary-button",
+      () => {
+        chooseCommunityImage(
+          url => {
+            selectedImageUrl = url;
+
+            clearElement(preview);
+
+            const image = createElement(
+              "img",
+              "cma-composer-preview-image"
+            );
+
+            image.src = url;
+            image.alt = "Selected post image";
+
+            preview.appendChild(image);
+
+            preview.appendChild(
+              makeButton(
+                "Remove",
+                "cma-remove-image-button",
+                () => {
+                  selectedImageUrl = null;
+                  clearElement(preview);
+                }
+              )
+            );
+          },
+          "posts"
+        );
+      }
+    );
+
+    const publishButton = makeButton(
+      "Post",
+      "cma-primary-button",
+      async () => {
+        const content = caption.value.trim();
+
+        if (!content && !selectedImageUrl) {
+          showNotice(
+            "Write something or add a photo first.",
+            "error"
+          );
+          return;
+        }
+
+        publishButton.disabled = true;
+
+        const result = await publishPost({
+          caption: content,
+          imageUrl: selectedImageUrl,
+          scope: POST_SCOPES.COMMUNITY
+        });
+
+        publishButton.disabled = false;
+
+        if (result) {
+          caption.value = "";
+          selectedImageUrl = null;
+          clearElement(preview);
+          await refreshCommunityData();
+          renderCommunityPage();
+        }
+      }
+    );
+
+    actions.append(imageButton, publishButton);
+
+    composer.append(top, preview, actions);
+
+    return composer;
   }
 
-  root.appendChild(createCommunityBottomNav());
-}
+  function renderCommunityHomePage() {
+    const page = createElement(
+      "main",
+      "cma-community-home-page"
+    );
 
-/* ---------- 94. GLOBAL PROFILE NAVIGATION ---------- */
+    const heading = createElement(
+      "div",
+      "cma-home-heading"
+    );
 
-window.cmaOpenCommunityProfile = function (userId) {
-  if (!userId) return;
+    heading.appendChild(
+      createElement(
+        "h2",
+        "cma-page-title",
+        "Community"
+      )
+    );
 
-  if (currentUser && userId === currentUser.id) {
-    state.section = "profile";
-    activeProfileId = null;
-  } else {
-    state.section = "member-profile";
-    activeProfileId = userId;
+    heading.appendChild(
+      createElement(
+        "p",
+        "cma-page-subtitle",
+        "Connect, share and learn together."
+      )
+    );
+
+    page.append(
+      heading,
+      renderHomePostComposer(),
+      renderFeed(posts, POST_SCOPES.COMMUNITY)
+    );
+
+    return page;
   }
 
-  renderCommunityPage();
-};
+  /* ==========================================
+     CREATOR PANEL
+  ========================================== */
 
-/* ---------- 95. SEARCH NAVIGATION ---------- */
+  function renderCreatorComposer() {
+    const composer = createElement(
+      "section",
+      "cma-creator-composer"
+    );
 
-window.cmaOpenCommunitySearch = function () {
-  openCommunitySearch();
-};
+    composer.appendChild(
+      createElement(
+        "h3",
+        "cma-section-heading",
+        "Create an Update"
+      )
+    );
 
-/* ---------- 96. COMMUNITY CSS ---------- */
+    const destinationLabel = createElement(
+      "label",
+      "cma-field-label",
+      "Publish Destination"
+    );
 
-(function addCommunityStyles() {
-  if (document.getElementById("cma-community-styles")) return;
+    const destination = document.createElement("select");
+    destination.className = "cma-creator-destination";
 
-  const style = document.createElement("style");
-  style.id = "cma-community-styles";
+    const destinations = [
+      {
+        value: POST_SCOPES.CREATOR,
+        label: "Creator Panel"
+      },
+      {
+        value: POST_SCOPES.HOME,
+        label: "Home"
+      },
+      {
+        value: POST_SCOPES.STUDY,
+        label: "Study Materials"
+      },
+      {
+        value: POST_SCOPES.EXAM,
+        label: "Exam Preparation"
+      },
+      {
+        value: POST_SCOPES.ONLINE,
+        label: "Online Batches"
+      },
+      {
+        value: POST_SCOPES.OFFLINE,
+        label: "Offline Batches"
+      }
+    ];
 
-  style.textContent = `
-  :root {
-    --cma-bg: #073746;
-    --cma-deep: #052D3B;
-    --cma-panel: #08494B;
-    --cma-card: #103E4C;
-    --cma-border: #245563;
-    --cma-green: #08C99A;
-    --cma-mint: #68DDB9;
-    --cma-white: #ffffff;
-    --cma-muted: #A8C0CE;
+    destinations.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.value;
+      option.textContent = item.label;
+      destination.appendChild(option);
+    });
+
+    destinationLabel.appendChild(destination);
+
+    const caption = makeTextarea(
+      "Write your update...",
+      "cma-creator-textarea"
+    );
+
+    const imagePreview = createElement(
+      "div",
+      "cma-creator-image-preview"
+    );
+
+    let selectedImageUrl = null;
+
+    const actions = createElement(
+      "div",
+      "cma-creator-actions"
+    );
+
+    const addPhoto = makeButton(
+      "＋ Add Photo",
+      "cma-secondary-button",
+      () => {
+        chooseCommunityImage(
+          url => {
+            selectedImageUrl = url;
+
+            clearElement(imagePreview);
+
+            const image = createElement(
+              "img",
+              "cma-creator-preview-image"
+            );
+
+            image.src = url;
+            image.alt = "Creator post image";
+
+            imagePreview.appendChild(image);
+
+            imagePreview.appendChild(
+              makeButton(
+                "Remove Photo",
+                "cma-remove-image-button",
+                () => {
+                  selectedImageUrl = null;
+                  clearElement(imagePreview);
+                }
+              )
+            );
+          },
+          "creator"
+        );
+      }
+    );
+
+    const publish = makeButton(
+      "Publish Update",
+      "cma-primary-button",
+      async () => {
+        const content = caption.value.trim();
+
+        if (!content && !selectedImageUrl) {
+          showNotice(
+            "Write an update or add a photo first.",
+            "error"
+          );
+          return;
+        }
+
+        const scope = destination.value;
+
+        if (
+          !Object.values(POST_SCOPES).includes(scope) ||
+          scope === POST_SCOPES.COMMUNITY
+        ) {
+          showNotice(
+            "Please select a valid publishing destination.",
+            "error"
+          );
+          return;
+        }
+
+        if (!isCreator()) {
+          showNotice(
+            "You do not have permission to publish here.",
+            "error"
+          );
+          return;
+        }
+
+        publish.disabled = true;
+
+        const result = await publishPost({
+          caption: content,
+          imageUrl: selectedImageUrl,
+          scope
+        });
+
+        publish.disabled = false;
+
+        if (result) {
+          caption.value = "";
+          selectedImageUrl = null;
+          clearElement(imagePreview);
+
+          await refreshCommunityData();
+          renderCommunityPage();
+        }
+      }
+    );
+
+    actions.append(addPhoto, publish);
+
+    composer.append(
+      destinationLabel,
+      caption,
+      imagePreview,
+      actions
+    );
+
+    return composer;
   }
 
-  #communityPage,
-  #communityRoot,
-  .cma-community-root {
-    background: var(--cma-bg);
-    color: var(--cma-white);
-    font-family: "Nunito Sans", Arial, sans-serif;
-    min-height: 100vh;
+  function renderCreatorPanelPage() {
+    const page = createElement(
+      "main",
+      "cma-creator-page"
+    );
+
+    page.appendChild(
+      createElement(
+        "h2",
+        "cma-page-title",
+        "Creator Panel"
+      )
+    );
+
+    if (!isCreator()) {
+      page.appendChild(
+        createElement(
+          "p",
+          "cma-empty-state",
+          "This section is available to authorized creators only."
+        )
+      );
+
+      return page;
+    }
+
+    page.appendChild(
+      renderCreatorComposer()
+    );
+
+    page.appendChild(
+      createElement(
+        "h3",
+        "cma-section-heading",
+        "Latest Creator Updates"
+      )
+    );
+
+    const creatorPosts = sortNewest(
+      posts.filter(post => {
+        return (
+          post.post_scope === POST_SCOPES.CREATOR &&
+          isCreator(post.user_id)
+        );
+      })
+    );
+
+    page.appendChild(
+      renderFeed(creatorPosts)
+    );
+
+    return page;
   }
 
-  .cma-community-header {
-    width: 100%;
-    min-height: 58px;
-    padding: 12px 16px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--cma-deep);
-    border-bottom: 1px solid var(--cma-border);
-  }
-
-  .cma-header-title {
-    font-size: 19px;
-    font-weight: 800;
-    white-space: nowrap;
-  }
-
-  .cma-green-text {
-    color: var(--cma-green);
-  }
-
-  .cma-header-search,
-  .cma-back-icon {
-    border: 0;
-    background: transparent;
-    color: var(--cma-white);
-    font-size: 27px;
-    cursor: pointer;
-    min-width: 38px;
-    min-height: 38px;
-  }
-
-  .cma-community-main {
-    width: 100%;
-    max-width: 760px;
-    box-sizing: border-box;
-    padding: 14px 12px 100px;
-    margin: 0 auto;
-  }
-
-  .cma-page-heading {
-    color: var(--cma-white);
-    font-size: 19px;
-    font-weight: 800;
-    margin: 10px 0 14px;
-  }
-
-  .cma-bottom-nav {
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    min-height: 66px;
-    padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
-    background: var(--cma-deep);
-    border-top: 1px solid var(--cma-border);
-  }
-
-  .cma-nav-item {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 4px 1px;
-    border: 0;
-    background: transparent;
-    color: var(--cma-muted);
-    font: inherit;
-    cursor: pointer;
-  }
-
-  .cma-nav-item.active {
-    color: var(--cma-green);
-  }
-
-  .cma-nav-icon {
-    font-size: 20px;
-    line-height: 22px;
-  }
-
-  .cma-nav-label {
-    font-size: 10px;
-    line-height: 13px;
-    white-space: nowrap;
-  }
-
-  .cma-notification-badge {
-    position: absolute;
-    top: 0;
-    right: 16%;
-    min-width: 15px;
-    padding: 1px 4px;
-    border-radius: 12px;
-    background: var(--cma-green);
-    color: var(--cma-deep);
-    font-size: 9px;
-    font-weight: 800;
-  }
-
-  .cma-btn {
-    border: 1px solid var(--cma-border);
-    border-radius: 12px;
-    padding: 10px 14px;
-    background: var(--cma-panel);
-    color: var(--cma-white);
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .cma-btn-primary {
-    background: var(--cma-green);
-    border-color: var(--cma-green);
-    color: var(--cma-deep);
-  }
-
-  .cma-btn-outline {
-    background: transparent;
-    border-color: var(--cma-green);
-    color: var(--cma-green);
-  }
-
-  .cma-back-button {
-    margin: 4px 0 12px;
-    background: transparent;
-    border: 0;
-    color: var(--cma-green);
-    font: inherit;
-    font-weight: 700;
-  }
-
-  .cma-empty {
-    padding: 22px 14px;
-    margin: 12px 0;
-    border: 1px solid var(--cma-border);
-    border-radius: 14px;
-    background: var(--cma-card);
-    color: var(--cma-muted);
-    text-align: center;
-    font-size: 14px;
-  }
-
-  .cma-profile-page {
-    width: 100%;
-  }
-
-  .cma-profile-info,
-  .cma-edit-page {
-    background: var(--cma-card);
-    border: 1px solid var(--cma-border);
-    border-radius: 16px;
-    padding: 14px;
-    margin: 12px 0;
-  }
-
-  .cma-member-id,
-  .cma-profile-description,
-  .cma-profile-public-info {
-    color: var(--cma-muted);
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  .cma-profile-actions {
-    display: flex;
-    gap: 9px;
-    margin-top: 14px;
-  }
-
-  .cma-profile-actions button {
-    flex: 1;
-  }
-
-  .cma-profile-tab-content {
-    margin-top: 12px;
-  }
-
-  .cma-edit-top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .cma-edit-top h2 {
-    margin: 0;
-    font-size: 18px;
-  }
-
-  .cma-edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .cma-form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    color: var(--cma-white);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .cma-form-field input,
-  .cma-form-field textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    border: 1px solid var(--cma-border);
-    border-radius: 11px;
-    outline: none;
-    background: var(--cma-deep);
-    color: var(--cma-white);
-    font: inherit;
-    font-weight: 400;
-  }
-
-  .cma-form-field input:focus,
-  .cma-form-field textarea:focus {
-    border-color: var(--cma-green);
-  }
-
-  .cma-private-note {
-    margin: 0;
-    color: var(--cma-muted);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .cma-save-button {
-    width: 100%;
-    min-height: 46px;
-    margin-top: 5px;
-  }
-
-  .cma-save-button:disabled {
-    opacity: .6;
-    cursor: wait;
-  }
-
-  .cma-community-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .cma-post-card {
-    padding: 12px;
-    border: 1px solid var(--cma-border);
-    border-radius: 15px;
-    background: var(--cma-card);
-    overflow: hidden;
-  }
-
-  .cma-post-author {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-
-  .cma-post-caption {
-    color: var(--cma-white);
-    font-size: 14px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-
-  .cma-post-image {
-    display: block;
-    width: 100%;
-    max-height: 430px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-top: 9px;
-  }
-
-  .cma-reaction-bar {
-    display: flex;
-    gap: 8px;
-    margin: 10px 0;
-  }
-
-  .cma-reaction-button {
-    width: 29px;
-    height: 29px;
-    border: 0;
-    border-radius: 50%;
-    background: rgba(5,45,59,.8);
-    color: white;
-    cursor: pointer;
-  }
-
-  .cma-reaction-button.active {
-    outline: 2px solid var(--cma-green);
-    background: var(--cma-panel);
-  }
-
-  .cma-comment-preview {
-    padding: 9px;
-    border: 1px solid var(--cma-border);
+  /* ==========================================
+     END OF PART 8
+     NEXT: CSS + INITIALIZATION + EXPORTS
+  ========================================== */
    
-    border-radius: 10px;
-    background: rgba(5,45,59,.55);
-    font-size: 12px;
-  }
+  /* ==========================================
+     PART 9/9 — FINAL CSS + RENDERER + INIT
+  ========================================== */
 
-  .cma-write-comment {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-top: 10px;
-  }
-
-  .cma-write-comment input {
-    flex: 1;
-    min-width: 0;
-    padding: 10px;
-    border: 1px solid var(--cma-border);
-    border-radius: 20px;
-    background: var(--cma-deep);
-    color: white;
-  }
-
-  .cma-write-comment button {
-    border: 0;
-    background: transparent;
-    color: var(--cma-green);
-    font-size: 20px;
-  }
-
-  .cma-edit-page textarea {
-    resize: vertical;
-  }
-
-  @media (min-width: 700px) {
-    .cma-community-main {
-      padding-left: 20px;
-      padding-right: 20px;
+  function installCommunityStyles() {
+    if (document.getElementById("cma-community-styles")) {
+      return;
     }
 
-    .cma-bottom-nav {
-      left: 50%;
-      right: auto;
-      width: min(760px, 100%);
-      transform: translateX(-50%);
-      border-left: 1px solid var(--cma-border);
-      border-right: 1px solid var(--cma-border);
+    const style = document.createElement("style");
+    style.id = "cma-community-styles";
+
+    style.textContent = `
+      :root {
+        --cma-bg: #073746;
+        --cma-deep: #052D3B;
+        --cma-panel: #08494B;
+        --cma-card: #103E4C;
+        --cma-border: #245563;
+        --cma-green: #08C99A;
+        --cma-mint: #68DDB9;
+        --cma-white: #FFFFFF;
+        --cma-muted: #A8C0CE;
+      }
+
+      #communityRoot,
+      .cma-community-root {
+        width: 100%;
+        min-height: 100vh;
+        background: var(--cma-bg);
+        color: var(--cma-white);
+        font-family: "Nunito Sans", Arial, sans-serif;
+        box-sizing: border-box;
+        padding-bottom: 82px;
+      }
+
+      #communityRoot *,
+      .cma-community-root * {
+        box-sizing: border-box;
+      }
+
+      #communityRoot button,
+      .cma-community-root button,
+      #communityRoot input,
+      #communityRoot textarea,
+      #communityRoot select {
+        font: inherit;
+      }
+
+      #communityRoot button,
+      .cma-community-root button {
+        cursor: pointer;
+      }
+
+      .cma-community-header {
+        width: 100%;
+        min-height: 58px;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--cma-deep);
+        border-bottom: 1px solid var(--cma-border);
+      }
+
+      .cma-community-brand {
+        font-size: 19px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .cma-brand-green {
+        color: var(--cma-green);
+      }
+
+      .cma-header-search-button {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--cma-white);
+        font-size: 27px;
+      }
+
+      .cma-community-navigation {
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        min-height: 67px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: 2px;
+        padding: 7px 3px calc(7px + env(safe-area-inset-bottom));
+        background: var(--cma-deep);
+        border-top: 1px solid var(--cma-border);
+      }
+
+      .cma-nav-item {
+        min-width: 0;
+        flex: 1;
+        min-height: 49px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 3px 1px;
+        border: 0;
+        background: transparent;
+        color: var(--cma-muted);
+      }
+
+      .cma-nav-icon {
+        font-size: 20px;
+        line-height: 22px;
+      }
+
+      .cma-nav-label {
+        font-size: 10px;
+        line-height: 13px;
+        white-space: nowrap;
+      }
+
+      .cma-nav-item.active {
+        color: var(--cma-green);
+      }
+
+      .cma-community-home-page,
+      .cma-creator-page,
+      .cma-friends-page,
+      .cma-notifications-page,
+      .cma-profile-page,
+      .cma-edit-information-page {
+        width: 100%;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 14px 12px 24px;
+      }
+
+      .cma-page-title {
+        margin: 4px 0 5px;
+        font-size: 21px;
+        font-weight: 800;
+      }
+
+      .cma-page-subtitle {
+        margin: 0 0 14px;
+        color: var(--cma-muted);
+        font-size: 13px;
+      }
+
+      .cma-section-heading {
+        margin: 10px 0;
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .cma-post-composer,
+      .cma-login-post-prompt,
+      .cma-creator-composer {
+        margin: 12px 0;
+        padding: 12px;
+        background: var(--cma-card);
+        border: 1px solid var(--cma-border);
+        border-radius: 16px;
+      }
+
+      .cma-composer-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+      }
+
+      .cma-composer-textarea,
+      .cma-creator-textarea,
+      .cma-field-input,
+      .cma-field-textarea,
+      .cma-search-input {
+        width: 100%;
+        min-width: 0;
+        color: var(--cma-white);
+        background: var(--cma-deep);
+        border: 1px solid var(--cma-border);
+        border-radius: 12px;
+        outline: none;
+        padding: 11px;
+      }
+
+      .cma-composer-textarea,
+      .cma-creator-textarea {
+        min-height: 78px;
+        resize: vertical;
+      }
+
+      .cma-composer-textarea:focus,
+      .cma-creator-textarea:focus,
+      .cma-field-input:focus,
+      .cma-field-textarea:focus,
+      .cma-search-input:focus {
+        border-color: var(--cma-green);
+      }
+
+      .cma-composer-actions,
+      .cma-creator-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .cma-primary-button,
+      .cma-secondary-button {
+        min-height: 37px;
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-weight: 800;
+      }
+
+      .cma-primary-button {
+        color: var(--cma-deep);
+        background: var(--cma-green);
+        border: 1px solid var(--cma-green);
+      }
+
+      .cma-secondary-button {
+        color: var(--cma-mint);
+        background: transparent;
+        border: 1px solid var(--cma-border);
+      }
+
+      .cma-primary-button:disabled,
+      .cma-secondary-button:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+      }
+
+      .cma-post-card {
+        margin: 12px 0;
+        padding: 11px;
+        background: var(--cma-card);
+        border: 1px solid var(--cma-border);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .cma-post-header {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .cma-post-author,
+      .cma-search-profile-name {
+        color: var(--cma-white);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .cma-post-time,
+      .cma-search-profile-member-id {
+        display: block;
+        color: var(--cma-muted);
+        font-size: 10px;
+      }
+
+      .cma-post-menu-button {
+        margin-left: auto;
+        border: 0;
+        background: transparent;
+        color: var(--cma-muted);
+        font-size: 21px;
+      }
+
+      .cma-post-caption {
+        margin: 11px 0;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+
+      .cma-post-media,
+      .cma-post-image {
+        width: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 11px;
+        background: var(--cma-deep);
+      }
+
+      .cma-reaction-bar {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 0 6px;
+      }
+
+      .cma-reaction-button {
+        width: 29px;
+        height: 29px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(5,45,59,.75);
+        font-size: 15px;
+      }
+
+      .cma-reaction-button.active {
+        background: rgba(8,201,154,.22);
+        outline: 1px solid var(--cma-green);
+      }
+
+      .cma-comment-preview {
+        margin: 7px 0;
+        padding: 9px;
+        background: var(--cma-deep);
+        border: 1px solid var(--cma-border);
+        border-radius: 11px;
+      }
+
+      .cma-comment-author {
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .cma-comment-time {
+        margin-left: 5px;
+        color: var(--cma-muted);
+        font-size: 10px;
+      }
+
+      .cma-comment-text {
+        margin-top: 4px;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .cma-view-comments {
+        padding: 5px 0;
+        color: var(--cma-mint);
+        border: 0;
+        background: transparent;
+        font-size: 11px;
+      }
+
+      .cma-comment-composer {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 8px;
+      }
+
+      .cma-comment-input {
+        min-width: 0;
+        flex: 1;
+        padding: 9px 11px;
+        color: var(--cma-white);
+        background: var(--cma-deep);
+        border: 1px solid var(--cma-border);
+        border-radius: 22px;
+        outline: none;
+      }
+
+      .cma-comment-send {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 50%;
+        color: var(--cma-deep);
+        background: var(--cma-green);
+      }
+
+      .cma-member-avatar {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 50%;
+        background: var(--cma-panel);
+        color: var(--cma-green);
+        font-weight: 800;
+      }
+
+      .cma-member-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cma-profile-cover {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 13px;
+        background: var(--cma-panel);
+      }
+
+      .cma-profile-avatar {
+        width: 90px;
+        height: 90px;
+        margin-top: -43px;
+        margin-left: 17px;
+        border: 4px solid var(--cma-bg);
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--cma-panel);
+      }
+
+      .cma-profile-name {
+        margin: 8px 0 3px;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .cma-profile-description,
+      .cma-profile-member-id {
+        color: var(--cma-muted);
+        font-size: 12px;
+      }
+
+      .cma-profile-actions {
+        display: flex;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .cma-personal-information,
+      .cma-profile-tabs,
+      .cma-friend-card,
+      .cma-notification-card,
+      .cma-search-profile-card {
+        margin: 10px 0;
+        padding: 11px;
+        background: var(--cma-card);
+        border: 1px solid var(--cma-border);
+        border-radius: 13px;
+      }
+
+      .cma-profile-tabs,
+      .cma-search-tabs {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: 5px;
+      }
+
+      .cma-profile-tab,
+      .cma-search-tab {
+        flex: 1;
+        padding: 9px 4px;
+        color: var(--cma-muted);
+        background: transparent;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        font-size: 12px;
+      }
+
+      .cma-profile-tab.active,
+      .cma-search-tab.active {
+        color: var(--cma-green);
+        border-bottom-color: var(--cma-green);
+      }
+
+      .cma-edit-information-page {
+        padding-top: 18px;
+      }
+
+      .cma-edit-header,
+      .cma-search-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .cma-edit-back-button,
+      .cma-search-back-button,
+      .cma-search-clear-button {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        color: var(--cma-white);
+        background: transparent;
+        border: 0;
+        font-size: 23px;
+      }
+
+      .cma-edit-field {
+        margin: 14px 0;
+      }
+
+      .cma-field-label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--cma-mint);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .cma-edit-save-button {
+        width: 100%;
+        min-height: 43px;
+        margin-top: 12px;
+      }
+
+      .cma-search-page {
+        width: 100%;
+        min-height: 100vh;
+        padding: 13px;
+        background: var(--cma-bg);
+      }
+
+      .cma-search-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        padding: 5px 0 12px;
+        background: var(--cma-bg);
+      }
+
+      .cma-search-input {
+        flex: 1;
+        border-radius: 22px;
+      }
+
+      .cma-recent-searches-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .cma-clear-recent-button {
+        color: var(--cma-mint);
+        background: transparent;
+        border: 0;
+        font-size: 11px;
+      }
+
+      .cma-recent-search-item {
+        display: block;
+        width: 100%;
+        padding: 12px 5px;
+        text-align: left;
+        color: var(--cma-white);
+        background: transparent;
+        border: 0;
+        border-bottom: 1px solid var(--cma-border);
+        font-size: 13px;
+      }
+
+      .cma-search-profile-card {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        text-align: left;
+        color: var(--cma-white);
+      }
+
+      .cma-search-profile-details {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .cma-search-profile-description {
+        color: var(--cma-muted);
+        font-size: 11px;
+      }
+
+      .cma-friend-card {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .cma-friend-actions {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+
+      .cma-notification-card {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12px;
+      }
+
+      .cma-notification-card.unread {
+        border-left: 3px solid var(--cma-green);
+      }
+
+      .cma-empty-state {
+        padding: 22px 12px;
+        text-align: center;
+        color: var(--cma-muted);
+        font-size: 13px;
+      }
+
+      .cma-creator-destination {
+        width: 100%;
+        padding: 11px;
+        color: var(--cma-white);
+        background: var(--cma-deep);
+        border: 1px solid var(--cma-border);
+        border-radius: 10px;
+      }
+
+      .cma-creator-image-preview img,
+      .cma-composer-image-preview img {
+        display: block;
+        width: 100%;
+        max-height: 260px;
+        margin-top: 9px;
+        object-fit: contain;
+        border-radius: 10px;
+      }
+
+      .cma-bottom-sheet,
+      .cma-modal-overlay {
+        position: fixed;
+        z-index: 200;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(0,0,0,.65);
+      }
+
+      .cma-bottom-sheet-content,
+      .cma-modal-content {
+        width: 100%;
+        max-width: 650px;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 17px;
+        color: var(--cma-white);
+        background: var(--cma-deep);
+        border: 1px solid var(--cma-border);
+        border-radius: 19px 19px 0 0;
+      }
+
+      .cma-toast {
+        position: fixed;
+        z-index: 500;
+        left: 50%;
+        bottom: 85px;
+        transform: translateX(-50%);
+        max-width: calc(100% - 30px);
+        padding: 11px 16px;
+        color: var(--cma-white);
+        background: var(--cma-panel);
+        border: 1px solid var(--cma-border);
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.25);
+        font-size: 12px;
+      }
+
+      @media (min-width: 700px) {
+        .cma-community-home-page,
+        .cma-creator-page,
+        .cma-friends-page,
+        .cma-notifications-page,
+        .cma-profile-page,
+        .cma-edit-information-page {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+
+        .cma-community-navigation {
+          left: 50%;
+          right: auto;
+          width: min(100%, 720px);
+          transform: translateX(-50%);
+          border-left: 1px solid var(--cma-border);
+          border-right: 1px solid var(--cma-border);
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function appendPageResult(root, result) {
+    if (
+      result instanceof HTMLElement &&
+      result.parentElement !== root
+    ) {
+      root.appendChild(result);
     }
   }
-  `;
 
-  document.head.appendChild(style);
+  async function renderCommunityPage() {
+    installCommunityStyles();
+
+    const root = getCommunityRoot();
+
+    if (!root) {
+      console.error("Community root element was not found.");
+      return;
+    }
+
+    if (!state.initialized) {
+      try {
+        await refreshCommunityData();
+      } catch (error) {
+        console.error("Community initialization error:", error);
+      }
+
+      state.initialized = true;
+    }
+
+    clearElement(root);
+
+    if (state.section === "search") {
+      renderCommunitySearchPage();
+      return;
+    }
+
+    let pageResult = null;
+
+    try {
+      switch (state.section) {
+        case "profile": {
+          if (!requireLogin()) {
+            state.section = "home";
+            pageResult = renderCommunityHomePage();
+            break;
+          }
+
+          const profileId =
+            state.activeProfileId || currentUser.id;
+
+          pageResult = await renderUserProfile(profileId);
+          break;
+        }
+
+        case "friends": {
+          if (!requireLogin()) {
+            state.section = "home";
+            pageResult = renderCommunityHomePage();
+            break;
+          }
+
+          await loadFriendRequests();
+          await loadFriendships();
+
+          pageResult = renderFriendsPage();
+          break;
+        }
+
+        case "creator": {
+          if (!requireLogin()) {
+            state.section = "home";
+            pageResult = renderCommunityHomePage();
+            break;
+          }
+
+          await loadCreatorRoles();
+          pageResult = renderCreatorPanelPage();
+          break;
+        }
+
+        case "notifications": {
+          if (!requireLogin()) {
+            state.section = "home";
+            pageResult = renderCommunityHomePage();
+            break;
+          }
+
+          await loadNotifications();
+          pageResult = renderNotificationsPage();
+          break;
+        }
+
+        case "edit-information": {
+          if (!requireLogin()) {
+            state.section = "home";
+            pageResult = renderCommunityHomePage();
+            break;
+          }
+
+          pageResult = renderEditInformationPage();
+          break;
+        }
+
+        case "home":
+        case "community":
+        default:
+          state.section = "home";
+          pageResult = renderCommunityHomePage();
+          break;
+      }
+    } catch (error) {
+      console.error("Community page rendering error:", error);
+
+      pageResult = createElement(
+        "div",
+        "cma-empty-state",
+        "Something went wrong while loading this page. Please try again."
+      );
+    }
+
+    appendPageResult(root, pageResult);
+
+    const header = renderCommunityHeader();
+    root.insertBefore(header, root.firstChild);
+
+    const navigation = renderCommunityNavigation();
+    root.appendChild(navigation);
+  }
+
+  /* ==========================================
+     PROFILE + SEARCH GLOBAL FUNCTIONS
+  ========================================== */
+
+  window.renderCommunityPage = renderCommunityPage;
+
+  window.cmaOpenCommunityProfile = function (userId) {
+    if (!userId) return;
+
+    state.activeProfileId = userId;
+    state.section = "profile";
+
+    renderCommunityPage();
+  };
+
+  window.cmaOpenCommunitySearch = openCommunitySearch;
+
+  window.cmaOpenMessageConversation =
+    window.cmaOpenMessageConversation ||
+    openMessageConversation;
+
+  /* ==========================================
+     COMMUNITY INITIALIZATION
+  ========================================== */
+
+  async function initializeCommunity() {
+    installCommunityStyles();
+
+    const root = getCommunityRoot();
+
+    if (!root) return;
+
+    await renderCommunityPage();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeCommunity,
+      { once: true }
+    );
+  } else {
+    initializeCommunity();
+  }
+
+  /* ==========================================
+     END OF COMMUNITY.JS
+  ========================================== */
+
 })();
-
-/* ---------- 97. EXPORT FOR router.js ---------- */
-
-window.renderCommunityPage = renderCommunityPage;
-
-/* First render is triggered by router.js when ?page=community */
-if (window.location.search.includes("page=community")) {
-  renderCommunityPage();
-}
-
-/* ================= END OF PART 8 ================= */
- 
+       
