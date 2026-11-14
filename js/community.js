@@ -1,3345 +1,3107 @@
-/* ==================================================
-   CHANGE MAKER ACADEMY
-   COMMUNITY SYSTEM — CORRECTED VERSION
-   PART 1 OF 4
-================================================== */
+(function () {
+  "use strict";
 
-(function(){
-"use strict";
+  const db = window.cmaSupabase;
+  const BUCKET = "community-media";
 
-// ================================================
-// SUPABASE
-// ================================================
+  let currentUser = null;
+  let currentProfile = null;
+  let currentPrivate = null;
+  let currentRole = null;
 
-const db = window.cmaSupabase;
-const BUCKET = "community-media";
+  let posts = [];
+  let reactions = [];
+  let comments = [];
+  let profiles = [];
 
-let currentUser = null;
-let currentProfile = {};
-let currentPrivate = {};
-let currentRole = null;
+  let selectedAvatar = null;
+  let selectedCover = null;
+  let activePost = null;
+  let currentFeedSearchQuery = "";
 
-let posts = [];
-let reactions = [];
-let comments = [];
-let profiles = {};
+  const EMOJIS = ["👍", "❤️", "😂", "😮"];
 
-let selectedAvatar = null;
-let selectedCover = null;
-let activePost = null;
+  const LOGIN_ERROR =
+    "Login Error! Please go back to homepage, select Account, sign up your account and sign in to continue.";
 
-let currentFeedSearchQuery = "";
+  const $ = (selector, parent = document) =>
+    parent.querySelector(selector);
 
-const EMOJIS = ["👍","❤️","😂","🔥"];
+  const $$ = (selector, parent = document) =>
+    [...parent.querySelectorAll(selector)];
 
-const LOGIN_ERROR =
-"Login Error! Please go back to homepage, select Account, sign up your account and sign in to continue.";
+  function createElement(tag, className = "", text = "") {
+    const element = document.createElement(tag);
 
-
-// ================================================
-// HELPERS
-// ================================================
-
-function createElement(tag,className,text){
-
- const node = document.createElement(tag);
-
- if(className) node.className = className;
-
- if(text !== undefined) node.textContent = text;
-
- return node;
-}
-
-function makeButton(text,className){
-
- const node = createElement("button",className,text);
-
- node.type = "button";
-
- return node;
-}
-
-function showNotice(message){
-
- const box = document.querySelector(".community-notice");
-
- if(!box){
-  console.log(message);
-  return;
- }
-
- box.textContent = message;
- box.classList.add("show");
-
- clearTimeout(box._timer);
-
- box._timer = setTimeout(()=>{
-  box.classList.remove("show");
- },4000);
-}
-
-function dateText(value){
-
- if(!value) return "Recently";
-
- const date = new Date(value);
-
- return isNaN(date.getTime())
-  ? "Recently"
-  : date.toLocaleString();
-}
-
-function initial(name){
-
- return String(name || "U")
-  .trim()
-  .charAt(0)
-  .toUpperCase() || "U";
-}
-
-function currentName(){
-
- return currentProfile.display_name ||
-  currentUser?.user_metadata?.full_name ||
-  currentUser?.email?.split("@")[0] ||
-  "Student";
-}
-
-function isCreator(){
-
- return ["admin","moderator","developer"].includes(
-  String(currentRole || "").toLowerCase()
- );
-}
-
-function requireLogin(){
-
- if(currentUser) return true;
-
- showNotice(LOGIN_ERROR);
-
- return false;
-}
-
-function safeImage(url){
-
- return typeof url === "string" &&
-  /^https?:\/\//i.test(url);
-}
-
-function escapeText(value){
-
- return String(value || "");
-}
-
-
-// ================================================
-// AUTH
-// ================================================
-
-async function loadSession(){
-
- if(!db){
-  throw new Error("Supabase client is not connected.");
- }
-
- const {data,error} = await db.auth.getSession();
-
- if(error) throw error;
-
- currentUser = data.session?.user || null;
-
- return currentUser;
-}
-
-
-// ================================================
-// PROFILE
-// ================================================
-
-async function loadProfile(){
-
- currentProfile = {};
- currentPrivate = {};
-
- if(!currentUser) return;
-
- const {data,error} = await db
-  .from("community_profiles")
-  .select("*")
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
-
- if(error) throw error;
-
- currentProfile = data || {};
-
- const {
-  data:privateData,
-  error:privateError
- } = await db
-  .from("community_private_profiles")
-  .select("*")
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
-
- if(privateError) throw privateError;
-
- currentPrivate = privateData || {};
-}
-
-
-// ================================================
-// CREATOR ROLE
-// ================================================
-
-async function loadRole(){
-
- currentRole = null;
-
- if(!currentUser) return;
-
- const {data,error} = await db
-  .from("community_creator_roles")
-  .select("role")
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
-
- if(error) throw error;
-
- currentRole = data?.role || null;
-}
-
-
-// ================================================
-// LOAD POSTS
-// ================================================
-
-async function loadPosts(){
-
- const {data,error} = await db
-  .from("community_posts")
-  .select("*")
-  .order("created_at",{ascending:false});
-
- if(error) throw error;
-
- posts = data || [];
-}
-
-
-// ================================================
-// LOAD REACTIONS
-// ================================================
-
-async function loadReactions(){
-
- reactions = [];
-
- if(!currentUser) return;
-
- const {data,error} = await db
-  .from("community_reactions")
-  .select("*")
-  .eq("user_id",currentUser.id);
-
- if(error) throw error;
-
- reactions = data || [];
-}
-
-
-// ================================================
-// LOAD COMMENTS
-// ================================================
-
-async function loadComments(){
-
- const {data,error} = await db
-  .from("community_comments")
-  .select("*")
-  .order("created_at",{ascending:true});
-
- if(error) throw error;
-
- comments = data || [];
-}
-
-
-// ================================================
-// LOAD PUBLIC PROFILES
-// ================================================
-
-async function loadProfiles(){
-
- profiles = {};
-
- const ids = [...new Set(
-  posts.map(post=>post.user_id).filter(Boolean)
- )];
-
- if(!ids.length) return;
-
- const {data,error} = await db
-  .from("community_profiles")
-  .select("user_id,display_name,avatar_url")
-  .in("user_id",ids);
-
- if(error) throw error;
-
- (data || []).forEach(profile=>{
-  profiles[profile.user_id] = profile;
- });
-}
-
-
-// ================================================
-// REFRESH DATABASE
-// ================================================
-
-async function refreshData(){
-
- await loadSession();
-
- await Promise.all([
-  loadPosts(),
-  loadComments()
- ]);
-
- await Promise.all([
-  loadProfile(),
-  loadRole(),
-  loadReactions(),
-  loadProfiles()
- ]);
-}
-
-
-// ================================================
-// IMAGE UPLOAD
-// ================================================
-
-async function uploadImage(file,folder){
-
- if(!currentUser){
-  throw new Error(LOGIN_ERROR);
- }
-
- if(!file) return null;
-
- const allowed = [
-  "image/jpeg",
-  "image/png",
-  "image/webp"
- ];
-
- if(!allowed.includes(file.type)){
-  throw new Error(
-   "Only JPG, PNG and WEBP images are allowed."
-  );
- }
-
- if(file.size > 5 * 1024 * 1024){
-  throw new Error("Image size must be 5 MB or less.");
- }
-
- const extension = file.name
-  .split(".")
-  .pop()
-  .toLowerCase();
-
- const path =
-  currentUser.id + "/" +
-  folder + "/" +
-  Date.now() + "-" +
-  Math.random().toString(36).slice(2) +
-  "." + extension;
-
- const {error} = await db.storage
-  .from(BUCKET)
-  .upload(path,file,{
-   cacheControl:"3600",
-   upsert:false,
-   contentType:file.type
-  });
-
- if(error) throw error;
-
- const {data} = db.storage
-  .from(BUCKET)
-  .getPublicUrl(path);
-
- return data.publicUrl;
-}
-
-
-// ================================================
-// SAVE PROFILE
-// ================================================
-
-async function saveProfile(values){
-
- if(!requireLogin()) return;
-
- let avatarUrl = currentProfile.avatar_url || null;
- let coverUrl = currentProfile.cover_url || null;
-
- if(selectedAvatar){
-  avatarUrl = await uploadImage(
-   selectedAvatar,
-   "profile"
-  );
- }
-
- if(selectedCover){
-  coverUrl = await uploadImage(
-   selectedCover,
-   "cover"
-  );
- }
-
- const profileData = {
-  user_id:currentUser.id,
-  display_name:values.name.trim(),
-  short_description:values.description.trim(),
-  school:values.school.trim(),
-  avatar_url:avatarUrl,
-  cover_url:coverUrl
- };
-
- const {error} = await db
-  .from("community_profiles")
-  .upsert(profileData,{
-   onConflict:"user_id"
-  });
-
- if(error) throw error;
-
- const privateData = {
-  user_id:currentUser.id,
-  phone:values.phone.trim(),
-  address:values.address.trim()
- };
-
- const {error:privateError} = await db
-  .from("community_private_profiles")
-  .upsert(privateData,{
-   onConflict:"user_id"
-  });
-
- if(privateError) throw privateError;
-
- selectedAvatar = null;
- selectedCover = null;
-
- await loadProfile();
- await loadProfiles();
-}
-
-
-// ================================================
-// PUBLISH POST
-// ================================================
-
-/*
- post_scope:
- community_home = all logged-in users can publish
- creator_panel  = Admin / Moderator / Developer only
-*/
-
-async function publishPost(caption,file,postScope){
-
- if(!requireLogin()) return;
-
- const scope = postScope || "community_home";
-
- if(
-  scope !== "community_home" &&
-  !isCreator()
- ){
-  throw new Error(
-   "Only Admin, Moderator and Developer can publish outside Community Homepage."
-  );
- }
-
- if(!caption.trim() && !file){
-  throw new Error(
-   "Write something or select a photo."
-  );
- }
-
- let imageUrl = null;
-
- if(file){
-  imageUrl = await uploadImage(file,"posts");
- }
-
- const {error} = await db
-  .from("community_posts")
-  .insert({
-   user_id:currentUser.id,
-   post_type:imageUrl ? "photo" : "text",
-   caption:caption.trim(),
-   image_url:imageUrl,
-   post_scope:scope
-  });
-
- if(error) throw error;
-
- await loadPosts();
- await loadProfiles();
-}
-
-
-// ================================================
-// MY REACTION
-// ================================================
-
-function myReaction(postId){
-
- return reactions.find(item=>
-  String(item.post_id) === String(postId)
- );
-}
-
-
-// ================================================
-// TOGGLE REACTION
-// ================================================
-
-async function toggleReaction(postId,emoji){
-
- if(!requireLogin()) return;
-
- const existing = myReaction(postId);
-
- if(existing){
-
-  if(existing.reaction_type === emoji){
-
-   const {error} = await db
-    .from("community_reactions")
-    .delete()
-    .eq("id",existing.id)
-    .eq("user_id",currentUser.id);
-
-   if(error) throw error;
-
-  }else{
-
-   const {error} = await db
-    .from("community_reactions")
-    .update({
-     reaction_type:emoji
-    })
-    .eq("id",existing.id)
-    .eq("user_id",currentUser.id);
-
-   if(error) throw error;
-  }
-
- }else{
-
-  const {error} = await db
-   .from("community_reactions")
-   .insert({
-    post_id:postId,
-    user_id:currentUser.id,
-    reaction_type:emoji
-   });
-
-  if(error) throw error;
- }
-
- await loadReactions();
-}
-
-
-// ================================================
-// ADD COMMENT
-// ================================================
-
-async function addComment(postId,text){
-
- if(!requireLogin()) return;
-
- const cleanText = String(text || "").trim();
-
- if(!cleanText) return;
-
- if(cleanText.length > 500){
-  throw new Error("Comment must be 500 characters or less.");
- }
-
- const {error} = await db
-  .from("community_comments")
-  .insert({
-   post_id:postId,
-   user_id:currentUser.id,
-   comment_text:cleanText
-  });
-
- if(error) throw error;
-
- await loadComments();
- await loadProfiles();
-}
-  // ================================================
-// PROFILE FIELD
-// ================================================
-
-function addProfileField(form,label,value,type){
-
- const wrapper = createElement("label","");
-
- wrapper.style.cssText = `
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  color:var(--white);
-  font-size:13px;
- `;
-
- wrapper.appendChild(
-  createElement("span","",label)
- );
-
- const input = createElement("input");
-
- input.type = type || "text";
- input.value = value || "";
-
- input.style.cssText = `
-  width:100%;
-  box-sizing:border-box;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  background:var(--panel);
-  color:var(--white);
-  font:inherit;
- `;
-
- wrapper.appendChild(input);
- form.appendChild(wrapper);
-
- return input;
-}
-
-
-// ================================================
-// IMAGE FIELD
-// ================================================
-
-function addImageField(form,label,callback){
-
- const wrapper = createElement("label","");
-
- wrapper.style.cssText = `
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  color:var(--white);
-  font-size:13px;
- `;
-
- wrapper.appendChild(
-  createElement("span","",label)
- );
-
- const input = createElement("input");
-
- input.type = "file";
- input.accept = "image/jpeg,image/png,image/webp";
-
- input.addEventListener("change",()=>{
-
-  const file = input.files?.[0];
-
-  if(!file) return;
-
-  if(file.size > 5 * 1024 * 1024){
-   showNotice("Image must be 5 MB or less.");
-   input.value = "";
-   return;
-  }
-
-  if(![
-   "image/jpeg",
-   "image/png",
-   "image/webp"
-  ].includes(file.type)){
-   showNotice("Choose JPG, PNG or WEBP.");
-   input.value = "";
-   return;
-  }
-
-  callback(file);
- });
-
- wrapper.appendChild(input);
- form.appendChild(wrapper);
-}
-
-
-// ================================================
-// PROFILE TABS
-// ================================================
-
-function createProfileTabs(container){
-
- const tabs = createElement(
-  "div",
-  "community-profile-tabs"
- );
-
- tabs.style.cssText = `
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:22px 0 15px;
- `;
-
- const content = createElement(
-  "div",
-  "community-profile-tab-content"
- );
-
- container.appendChild(tabs);
- container.appendChild(content);
-
- const items = [
-  ["React On","reacted"],
-  ["Photos","photos"],
-  ["Posts","posts"]
- ];
-
- items.forEach((item,index)=>{
-
-  const button = makeButton(
-   item[0],
-   "community-profile-tab"
-  );
-
-  if(index === 0){
-   button.classList.add("active");
-  }
-
-  button.addEventListener("click",()=>{
-
-   tabs.querySelectorAll("button").forEach(node=>{
-    node.classList.remove("active");
-   });
-
-   button.classList.add("active");
-
-   renderProfileTab(content,item[1]);
-  });
-
-  tabs.appendChild(button);
- });
-
- renderProfileTab(content,"reacted");
-}
-   // ================================================
-// RENDER PROFILE TAB
-// ================================================
-
-function renderProfileTab(container,type){
-
- container.innerHTML = "";
-
- container.dataset.activeTab = type;
-
- if(!currentUser) return;
-
- // PHOTOS
-
- if(type === "photos"){
-
-  const photos = posts.filter(post=>
-   post.user_id === currentUser.id &&
-   post.image_url
-  );
-
-  if(!photos.length){
-
-   container.appendChild(
-    createElement(
-     "p",
-     "community-empty",
-     "No photos yet."
-    )
-   );
-
-   return;
-  }
-
-  const grid = createElement(
-   "div",
-   "community-photo-grid"
-  );
-
-  grid.style.cssText = `
-   display:grid;
-   grid-template-columns:repeat(3,minmax(0,1fr));
-   gap:7px;
-  `;
-
-  photos.forEach(post=>{
-
-   const image = createElement(
-    "img",
-    "community-post-image"
-   );
-
-   image.src = post.image_url;
-   image.alt = post.caption || "My photo";
-   image.loading = "lazy";
-
-   image.style.cssText = `
-    width:100%;
-    aspect-ratio:1;
-    object-fit:cover;
-    border-radius:10px;
-    cursor:pointer;
-   `;
-
-   image.addEventListener("click",()=>{
-
-    const target = document.getElementById(
-     "community-post-" + post.id
-    );
-
-    if(target){
-     target.scrollIntoView({
-      behavior:"smooth",
-      block:"center"
-     });
-    }else{
-     showNotice(
-      post.caption || "Your photo"
-     );
-    }
-   });
-
-   grid.appendChild(image);
-  });
-
-  container.appendChild(grid);
-
-  return;
- }
-
-
- // REACTED POSTS
-
- if(type === "reacted"){
-
-  const myItems = reactions
-   .map(reaction=>
-    posts.find(post=>
-     String(post.id) === String(reaction.post_id)
-    )
-   )
-   .filter(Boolean);
-
-  if(!myItems.length){
-
-   container.appendChild(
-    createElement(
-     "p",
-     "community-empty",
-     "You haven't reacted to any posts yet."
-    )
-   );
-
-   return;
-  }
-
-  myItems.forEach(post=>{
-   renderPostCard(container,post,false);
-  });
-
-  return;
- }
-
-
- // MY POSTS
-
- if(type === "posts"){
-
-  container.appendChild(
-   createElement("h3","","My Posts")
-  );
-
-  const mine = posts
-   .filter(post=>
-    post.user_id === currentUser.id
-   )
-   .sort((a,b)=>
-    new Date(b.created_at) -
-    new Date(a.created_at)
-   );
-
-  if(!mine.length){
-
-   container.appendChild(
-    createElement(
-     "p",
-     "community-empty",
-     "You haven't published any posts yet."
-    )
-   );
-
-   return;
-  }
-
-  mine.forEach(post=>{
-   renderPostCard(container,post,true);
-  });
- }
-}
-
-
-// ================================================
-// ME PAGE
-// ================================================
-
-async function renderMe(container){
-
- container.innerHTML = "";
-
- if(!currentUser){
-  container.appendChild(
-   createElement("p","community-empty",LOGIN_ERROR)
-  );
-  return;
- }
-
- container.appendChild(
-  createElement("h3","community-me-title","My Profile")
- );
-
- // COVER PHOTO: controls stay hidden until the cover is clicked.
- const cover = createElement("div","community-profile-cover");
- cover.setAttribute("role","button");
- cover.setAttribute("tabindex","0");
- cover.setAttribute("aria-label","Click to edit cover photo");
- cover.style.cssText = `
-  position:relative;
-  width:100%;
-  min-height:155px;
-  border-radius:16px;
-  background:var(--panel) center/cover no-repeat;
-  cursor:pointer;
-  overflow:hidden;
- `;
- if(safeImage(currentProfile.cover_url)){
-  cover.style.backgroundImage = `url("${currentProfile.cover_url}")`;
- }
- container.appendChild(cover);
-
- // PROFILE PICTURE: controls stay hidden until the picture is clicked.
- const avatar = createElement("div","community-avatar");
- avatar.setAttribute("role","button");
- avatar.setAttribute("tabindex","0");
- avatar.setAttribute("aria-label","Click to edit profile picture");
- avatar.style.cssText = `
-  width:86px;
-  height:86px;
-  margin:-45px 0 10px 18px;
-  position:relative;
-  z-index:2;
-  border:4px solid var(--bg);
-  border-radius:50%;
-  overflow:hidden;
-  background:var(--panel);
-  cursor:pointer;
-  box-sizing:content-box;
- `;
-
- if(safeImage(currentProfile.avatar_url)){
-  const image = createElement("img");
-  image.src = currentProfile.avatar_url;
-  image.alt = "Profile";
-  image.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-  avatar.appendChild(image);
- }else{
-  avatar.textContent = initial(currentName());
- }
- container.appendChild(avatar);
-
- // Build a private editor for one image. It appears only after that image is clicked.
- function createImageEditor(target,kind){
-
-  const isCover = kind === "cover";
-  const folder = isCover ? "cover" : "profile";
-  const column = isCover ? "cover_url" : "avatar_url";
-  const label = isCover ? "Cover Photo" : "Profile Picture";
-
-  const editor = createElement("div","community-image-editor");
-  editor.style.cssText = `
-   display:none;
-   flex-wrap:wrap;
-   align-items:center;
-   gap:9px;
-   margin:8px 0 12px;
-   padding:12px;
-   border:1px solid var(--border);
-   border-radius:13px;
-   background:var(--panel);
-  `;
-
-  const editButton = makeButton("Edit " + label,"community-image-edit-btn");
-  const fileInput = createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/jpeg,image/png,image/webp";
-  fileInput.style.display = "none";
-  fileInput.setAttribute("aria-label","Choose " + label);
-
-  const saveButton = makeButton("Save Selection","community-image-save-btn");
-  saveButton.style.display = "none";
-
-  const cancelButton = makeButton("Cancel","community-image-cancel-btn");
-
-  editor.appendChild(editButton);
-  editor.appendChild(fileInput);
-  editor.appendChild(saveButton);
-  editor.appendChild(cancelButton);
-
-  let chosenFile = null;
-  const originalBackground = isCover ? target.style.backgroundImage : "";
-  const originalAvatarHTML = isCover ? "" : target.innerHTML;
-
-  function openEditor(){
-   editor.style.display = "flex";
-  }
-
-  function closeEditor(){
-   editor.style.display = "none";
-   fileInput.value = "";
-   chosenFile = null;
-   saveButton.style.display = "none";
-   if(isCover){
-    target.style.backgroundImage = originalBackground;
-   }else{
-    target.innerHTML = originalAvatarHTML;
-   }
-  }
-
-  target.addEventListener("click",openEditor);
-  target.addEventListener("keydown",event=>{
-   if(event.key === "Enter" || event.key === " "){
-    event.preventDefault();
-    openEditor();
-   }
-  });
-
-  editButton.addEventListener("click",event=>{
-   event.stopPropagation();
-   fileInput.click();
-  });
-
-  fileInput.addEventListener("change",()=>{
-   const file = fileInput.files?.[0];
-   if(!file) return;
-
-   if(file.size > 5 * 1024 * 1024){
-    showNotice("Image must be 5 MB or less.");
-    fileInput.value = "";
-    return;
-   }
-
-   if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
-    showNotice("Choose JPG, PNG or WEBP.");
-    fileInput.value = "";
-    return;
-   }
-
-   chosenFile = file;
-   const reader = new FileReader();
-   reader.onload = event=>{
-    if(isCover){
-     target.style.backgroundImage = `url("${event.target.result}")`;
-    }else{
-     target.innerHTML = "";
-     const previewImage = createElement("img");
-     previewImage.src = event.target.result;
-     previewImage.alt = "Selected profile picture";
-     previewImage.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-     target.appendChild(previewImage);
-    }
-    saveButton.style.display = "inline-flex";
-   };
-   reader.readAsDataURL(file);
-  });
-
-  saveButton.addEventListener("click",async event=>{
-   event.stopPropagation();
-   if(!chosenFile || !requireLogin()) return;
-
-   saveButton.disabled = true;
-   saveButton.textContent = "Saving...";
-
-   try{
-    const imageUrl = await uploadImage(chosenFile,folder);
-    const profileData = {
-     user_id:currentUser.id,
-     [column]:imageUrl
-    };
-
-    const {error} = await db
-     .from("community_profiles")
-     .upsert(profileData,{onConflict:"user_id"});
-
-    if(error) throw error;
-
-    await loadProfile();
-    await loadProfiles();
-    await renderMe(container);
-    showNotice(label + " updated successfully.");
-
-   }catch(error){
-    console.error(error);
-    showNotice(error.message || label + " could not be updated.");
-    saveButton.disabled = false;
-    saveButton.textContent = "Save Selection";
-   }
-  });
-
-  cancelButton.addEventListener("click",event=>{
-   event.stopPropagation();
-   closeEditor();
-  });
-
-  if(isCover){
-   editor.style.position = "absolute";
-   editor.style.bottom = "8px";
-   editor.style.left = "8px";
-   editor.style.zIndex = "4";
-   editor.style.margin = "0";
-   target.appendChild(editor);
-  }else{
-   target.insertAdjacentElement("afterend",editor);
-  }
- }
-
- createImageEditor(cover,"cover");
- createImageEditor(avatar,"avatar");
-
- // INFO
- const infoSection = createElement("section","community-profile-info");
- infoSection.style.cssText = `
-  margin-top:8px;
-  padding:15px;
-  border:1px solid var(--border);
-  border-radius:15px;
-  background:var(--card);
- `;
-
- infoSection.appendChild(
-  createElement("h3","community-profile-info-title","Info")
- );
- infoSection.appendChild(
-  createElement("h3","community-profile-name",currentName())
- );
- infoSection.appendChild(
-  createElement(
-   "p",
-   "community-profile-description",
-   currentProfile.short_description || "No description added."
-  )
- );
-
- // Keep existing profile information editing, but remove always-visible image upload fields.
- const form = createElement("form","community-profile-form");
- form.style.cssText = `
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin-top:14px;
- `;
-
- const name = addProfileField(form,"Name",currentProfile.display_name);
- const description = addProfileField(form,"Short Description",currentProfile.short_description);
- const school = addProfileField(form,"Institution",currentProfile.school);
- const phone = addProfileField(form,"Mobile Number",currentPrivate.phone,"tel");
- const address = addProfileField(form,"Address",currentPrivate.address);
-
- const saveInfo = makeButton("Save Info","community-publish-btn");
- saveInfo.type = "submit";
- form.appendChild(saveInfo);
-
- form.addEventListener("submit",async event=>{
-  event.preventDefault();
-  saveInfo.disabled = true;
-  saveInfo.textContent = "Saving...";
-
-  try{
-   await saveProfile({
-    name:name.value,
-    description:description.value,
-    school:school.value,
-    phone:phone.value,
-    address:address.value
-   });
-   await renderMe(container);
-   showNotice("Profile information saved successfully.");
-  }catch(error){
-   console.error(error);
-   showNotice(error.message || "Profile information could not be saved.");
-  }finally{
-   saveInfo.disabled = false;
-   saveInfo.textContent = "Save Info";
-  }
- });
-
- infoSection.appendChild(form);
- container.appendChild(infoSection);
-
- // Same post composer as the Community Homepage.
- createComposer(container,"community_home",async()=>{
-  await renderMe(container);
- });
-
- // Order requested: React On, Photos, Posts.
- createProfileTabs(container);
-}
-
-// ================================================
-// POST CARD
-// ================================================
-
-function renderPostCard(container,post,ownPost){
-
- const card = createElement(
-  "article",
-  "community-post"
- );
-
- card.id = "community-post-" + post.id;
-
- const profile = profiles[post.user_id] || {};
-
- const author =
-  profile.display_name ||
-  "Community Member";
-
-
- // POST HEADER
-
- const top = createElement(
-  "div",
-  "community-post-top"
- );
-
- const avatar = createElement(
-  "div",
-  "community-avatar"
- );
-
- if(safeImage(profile.avatar_url)){
-
-  const image = createElement("img");
-
-  image.src = profile.avatar_url;
-  image.alt = author;
-
-  image.style.cssText = `
-   width:100%;
-   height:100%;
-   object-fit:cover;
-   border-radius:50%;
-  `;
-
-  avatar.appendChild(image);
-
- }else{
-
-  avatar.textContent = initial(author);
- }
-
- top.appendChild(avatar);
-
- const info = createElement(
-  "div",
-  "community-author-info"
- );
-
- info.appendChild(
-  createElement("strong","",author)
- );
-
- info.appendChild(
-  createElement(
-   "small",
-   "",
-   dateText(post.created_at)
-  )
- );
-
- top.appendChild(info);
-
- card.appendChild(top);
-
-
- // CAPTION
-
- if(post.caption){
-
-  card.appendChild(
-   createElement(
-    "p",
-    "community-caption",
-    post.caption
-   )
-  );
- }
-
-
- // IMAGE
-
- if(safeImage(post.image_url)){
-
-  const image = createElement(
-   "img",
-   "community-post-image"
-  );
-
-  image.src = post.image_url;
-  image.alt = "Community post";
-  image.loading = "lazy";
-
-  card.appendChild(image);
- }
-
-
- // REACTIONS
-
- const reactionRow = createElement(
-  "div",
-  "community-reactions"
- );
-
- EMOJIS.forEach(emoji=>{
-
-  const button = makeButton(
-   emoji,
-   "community-reaction community-reaction-button"
-  );
-
-  const selected =
-   myReaction(post.id)?.reaction_type === emoji;
-
-  if(selected){
-   button.classList.add("selected");
-  }
-
-  button.addEventListener("click",async()=>{
-
-   if(!requireLogin()) return;
-
-   button.disabled = true;
-
-   try{
-
-    await toggleReaction(post.id,emoji);
-
-    await refreshData();
-
-    const feed = card.closest(
-     ".community-feed-panel"
-    );
-
-    if(feed){
-
-     await renderFeed(feed);
-
-    }else{
-
-     const profileContent = card.closest(
-      ".community-profile-tab-content"
-     );
-
-     if(profileContent){
-
-      renderProfileTab(
-       profileContent,
-       profileContent.dataset.activeTab || "posts"
-      );
-     }
+    if (className) {
+      element.className = className;
     }
 
-   }catch(error){
-
-    console.error(error);
-
-    showNotice(
-     error.message ||
-     "Reaction failed."
-    );
-
-   }finally{
-
-    button.disabled = false;
-   }
-  });
-
-  reactionRow.appendChild(button);
- });
-
- card.appendChild(reactionRow);
-
-
- // COMMENT BUTTON
-
- const actionRow = createElement(
-  "div",
-  "community-post-actions"
- );
-
- const commentButton = makeButton(
-  "Comment",
-  "community-comment-toggle"
- );
-
- commentButton.addEventListener("click",()=>{
-
-  if(!requireLogin()) return;
-
-  openComments(post);
- });
-
- actionRow.appendChild(commentButton);
-
- card.appendChild(actionRow);
-
-
- // COMMENT PREVIEW
-
- const preview = createElement(
-  "div",
-  "community-comments-preview"
- );
-
- comments
-  .filter(comment=>
-   String(comment.post_id) === String(post.id)
-  )
-  .slice(0,2)
-  .forEach(comment=>{
-
-   const commentProfile =
-    profiles[comment.user_id] || {};
-
-   const line = createElement(
-    "div",
-    "community-comment-preview-item"
-   );
-
-   line.textContent =
-    (commentProfile.display_name || "Member") +
-    ": " +
-    comment.comment_text;
-
-   preview.appendChild(line);
-  });
-
- card.appendChild(preview);
-
-
- // DELETE OWN POST
-
- if(ownPost){
-
-  const remove = makeButton(
-   "Delete Post",
-   "community-delete-post"
-  );
-
-  remove.addEventListener("click",async()=>{
-
-   if(!requireLogin()) return;
-
-   if(!confirm(
-    "Are you sure you want to delete this post?"
-   )){
-    return;
-   }
-
-   remove.disabled = true;
-
-   try{
-
-    const {error} = await db
-     .from("community_posts")
-     .delete()
-     .eq("id",post.id)
-     .eq("user_id",currentUser.id);
-
-    if(error) throw error;
-
-    await refreshData();
-
-    showNotice("Post deleted successfully.");
-
-    const feed = document.querySelector(
-     ".community-feed-panel"
-    );
-
-    if(feed){
-     await renderFeed(feed);
+    if (text !== undefined && text !== null) {
+      element.textContent = text;
     }
 
-    const profileContent = document.querySelector(
-     ".community-profile-tab-content"
-    );
-
-    if(profileContent){
-
-     renderProfileTab(
-      profileContent,
-      profileContent.dataset.activeTab || "posts"
-     );
-    }
-
-   }catch(error){
-
-    console.error(error);
-
-    showNotice(
-     error.message ||
-     "Delete failed."
-    );
-
-   }finally{
-
-    remove.disabled = false;
-   }
-  });
-
-  card.appendChild(remove);
- }
-
- container.appendChild(card);
-}
-
-
-// ================================================
-// COMMENT WINDOW
-// ================================================
-
-function openComments(post){
-
- activePost = post;
-
- const overlay = createElement(
-  "div",
-  "community-comment-overlay"
- );
-
- overlay.style.cssText = `
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  background:rgba(0,0,0,.65);
- `;
-
- const sheet = createElement(
-  "section",
-  "community-comment-sheet"
- );
-
- sheet.style.cssText = `
-  width:100%;
-  max-width:650px;
-  max-height:80vh;
-  min-height:55vh;
-  overflow:auto;
-  box-sizing:border-box;
-  padding:16px;
-  background:var(--bg);
-  color:var(--white);
-  border-radius:20px 20px 0 0;
- `;
-    // HEADER
-
- const header = createElement(
-  "div",
-  "community-comment-sheet-header"
- );
-
- header.style.cssText = `
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:15px;
- `;
-
- header.appendChild(
-  createElement("strong","","Comments")
- );
-
- const close = makeButton(
-  "✕",
-  "community-comment-close"
- );
-
- close.addEventListener("click",()=>{
-  overlay.remove();
- });
-
- header.appendChild(close);
-
- sheet.appendChild(header);
-
-
- // COMMENT LIST
-
- const list = createElement(
-  "div",
-  "community-comment-sheet-list"
- );
-
- function drawComments(){
-
-  list.innerHTML = "";
-
-  const items = comments.filter(comment=>
-   String(comment.post_id) === String(post.id)
-  );
-
-  if(!items.length){
-
-   list.appendChild(
-    createElement(
-     "p",
-     "community-empty",
-     "No comments yet."
-    )
-   );
-
-   return;
+    return element;
   }
 
-  items.forEach(comment=>{
-
-   const profile =
-    profiles[comment.user_id] || {};
-
-   const row = createElement(
-    "div",
-    "community-comment-preview-item"
-   );
-
-   row.textContent =
-    (profile.display_name || "Community Member") +
-    ": " +
-    comment.comment_text;
-
-   list.appendChild(row);
-  });
- }
-
- drawComments();
-
- sheet.appendChild(list);
-
-
- // COMMENT FORM
-
- const form = createElement(
-  "form",
-  "community-comment-sheet-form"
- );
-
- form.style.cssText = `
-  display:flex;
-  gap:8px;
-  margin-top:15px;
- `;
-
- const input = createElement("input");
-
- input.type = "text";
- input.placeholder = "Write a comment...";
- input.maxLength = 500;
- input.required = true;
-           
- input.style.cssText = `
-  flex:1;
-  min-width:0;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:25px;
-  background:var(--panel);
-  color:var(--white);
- `;
-
- const send = makeButton(
-  "Send",
-  "community-comment-sheet-send"
- );
-
- send.type = "submit";
-
- form.appendChild(input);
- form.appendChild(send);
-
- form.addEventListener("submit",async event=>{
-
-  event.preventDefault();
-
-  if(!requireLogin()) return;
-
-  send.disabled = true;
-
-  try{
-
-   await addComment(post.id,input.value);
-
-   input.value = "";
-
-   drawComments();
-
-   const feed = document.querySelector(
-    ".community-feed-panel"
-   );
-
-   if(feed){
-    await renderFeed(feed);
-   }
-
-   showNotice("Comment added.");
-
-  }catch(error){
-
-   console.error(error);
-
-   showNotice(
-    error.message ||
-    "Comment failed."
-   );
-
-  }finally{
-
-   send.disabled = false;
-  }
- });
-
- sheet.appendChild(form);
-
-
- // CLOSE ON BACKDROP
-
- overlay.appendChild(sheet);
-
- overlay.addEventListener("click",event=>{
-
-  if(event.target === overlay){
-   overlay.remove();
-  }
- });
-
- document.body.appendChild(overlay);
-}
-
-
-// ================================================
-// CREATE POST COMPOSER
-// ================================================
-
-function createComposer(container,postScope,onPublished){
-
- if(!currentUser) return;
-
- const scope = postScope || "community_home";
-
- // Everyone can publish on Community Home; privileged roles elsewhere.
- if(scope !== "community_home" && !isCreator()) return;
-
- const composer = createElement("section","community-composer");
-
- composer.appendChild(
-  createElement("h3","community-composer-title","Create a Post")
- );
-
- const textarea = createElement("textarea");
- textarea.placeholder = "What's on your mind?";
- textarea.maxLength = 2000;
- composer.appendChild(textarea);
-
- const preview = createElement("img","community-preview");
- preview.alt = "Selected image preview";
- preview.style.cssText = "display:none;width:100%;max-height:230px;object-fit:contain;";
- composer.appendChild(preview);
-
- // One compact row: Add Photo on the left, Publish on the right.
- const bottom = createElement("div","community-composer-bottom");
-
- const photoLabel = createElement("label","community-photo-label");
- const photoText = createElement("span","","▧ Add Photo");
- const fileInput = createElement("input");
- fileInput.type = "file";
- fileInput.accept = "image/jpeg,image/png,image/webp";
- fileInput.setAttribute("aria-label","Add a photo");
-
- photoLabel.appendChild(photoText);
- photoLabel.appendChild(fileInput);
- bottom.appendChild(photoLabel);
-
- let chosenFile = null;
-
- fileInput.addEventListener("change",()=>{
-
-  chosenFile = fileInput.files?.[0] || null;
-
-  if(!chosenFile){
-   preview.removeAttribute("src");
-   preview.style.display = "none";
-   photoText.textContent = "▧ Add Photo";
-   return;
-  }
-
-  if(chosenFile.size > 5 * 1024 * 1024){
-   chosenFile = null;
-   fileInput.value = "";
-   photoText.textContent = "▧ Add Photo";
-   showNotice("Image must be 5 MB or less.");
-   return;
-  }
-
-  if(!["image/jpeg","image/png","image/webp"].includes(chosenFile.type)){
-   chosenFile = null;
-   fileInput.value = "";
-   photoText.textContent = "▧ Add Photo";
-   showNotice("Choose JPG, PNG or WEBP.");
-   return;
-  }
-
-  photoText.textContent = "▧ " + chosenFile.name;
-
-  const reader = new FileReader();
-  reader.onload = event=>{
-   preview.src = event.target.result;
-   preview.style.display = "block";
-  };
-  reader.readAsDataURL(chosenFile);
- });
-
- const publish = makeButton("Publish","community-publish-btn");
- publish.addEventListener("click",async()=>{
-
-  if(!requireLogin()) return;
-
-  publish.disabled = true;
-  publish.textContent = "Publishing...";
-
-  try{
-   await publishPost(textarea.value,chosenFile,scope);
-
-   textarea.value = "";
-   fileInput.value = "";
-   chosenFile = null;
-   preview.removeAttribute("src");
-   preview.style.display = "none";
-   photoText.textContent = "▧ Add Photo";
-
-   await refreshData();
-
-   if(typeof onPublished === "function"){
-    await onPublished();
-   }else{
-    await renderFeed(container,scope);
-   }
-
-   showNotice("Post published successfully.");
-
-  }catch(error){
-   console.error(error);
-   showNotice(error.message || "Publish failed.");
-
-  }finally{
-   publish.disabled = false;
-   publish.textContent = "Publish";
-  }
- });
-
- bottom.appendChild(publish);
- composer.appendChild(bottom);
- container.appendChild(composer);
-}
-
-
-// ================================================
-// COMMUNITY FEED
-// ================================================
-
-async function renderFeed(container,postScope){
-
- if(!container) return;
-
- const scope = postScope || "community_home";
-
- container.innerHTML = "";
-
- // ALL LOGGED-IN USERS CAN POST ON HOME
-
- // CREATOR ROLES ONLY OUTSIDE COMMUNITY HOME
-
- createComposer(container,scope);
-
- // Feed heading belongs below the post composer, matching the target layout.
- container.appendChild(
-  createElement(
-   "h3",
-   "community-feed-title",
-   scope === "community_home"
-    ? "Community Feed"
-    : "Creator Panel Posts"
-  )
- );
-
-
- // SEARCH
-
- const search = createElement(
-  "input",
-  "community-feed-search"
- );
-
- search.type = "search";
- search.placeholder = "Search posts...";
-
- search.value = currentFeedSearchQuery;
-
- search.style.cssText = `
-  width:100%;
-  box-sizing:border-box;
-  padding:12px;
-  margin:12px 0;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background:var(--panel);
-  color:var(--white);
- `;
-
- container.appendChild(search);
-
-
- // POST LIST
-
- const list = createElement(
-  "div",
-  "community-feed"
- );
-
- container.appendChild(list);
-
-
- function draw(){
-
-  list.innerHTML = "";
-
-  const query = search.value
-   .trim()
-   .toLowerCase();
-
-  currentFeedSearchQuery = search.value;
-
-  const filtered = posts.filter(post=>{
-
-   const postScopeValue =
-    post.post_scope || "community_home";
-
-   // Keep each scope separate
-
-   if(postScopeValue !== scope){
-    return false;
-   }
-
-   const profile = profiles[post.user_id] || {};
-
-   const captionMatch =
-    String(post.caption || "")
-     .toLowerCase()
-     .includes(query);
-
-   const nameMatch =
-    String(profile.display_name || "")
-     .toLowerCase()
-     .includes(query);
-
-   return captionMatch || nameMatch;
-  });
-
-
-  if(!filtered.length){
-
-   list.appendChild(
-    createElement(
-     "p",
-     "community-empty",
-     query
-      ? "No posts found."
-      : "No posts yet."
-    )
-   );
-
-   return;
-  }
-
-
-  filtered.forEach(post=>{
-
-   renderPostCard(
-    list,
-    post,
-    currentUser &&
-    post.user_id === currentUser.id
-   );
-  });
- }
-
- search.addEventListener("input",draw);
-
- draw();
-}
-
-
-// ================================================
-// CREATOR PANEL
-// ================================================
-
-async function renderCreator(container){
-
- container.innerHTML = "";
-
- container.appendChild(
-  createElement(
-   "h3",
-   "",
-   "Creator Panel"
-  )
- );
-
- container.appendChild(
-  createElement(
-   "p",
-   "",
-   "Explore Community posts, react and comment."
-  )
- );
-
-
- if(!currentUser){
-
-  container.appendChild(
-   createElement(
-    "p",
-    "community-empty",
-    LOGIN_ERROR
-   )
-  );
-
-  return;
- }
-
-
- if(isCreator()){
-
-  container.appendChild(
-   createElement(
-    "p",
-    "community-demo-tag",
-    "Authorized Role: " + currentRole
-   )
-  );
-
- }else{
-
-  container.appendChild(
-   createElement(
-    "p",
-    "community-empty",
-    "You can browse posts, react and comment. Publishing outside Community Homepage is available only to authorized Creators."
-   )
-  );
- }
-
-
- const feed = createElement(
-  "div",
-  "community-feed-panel"
- );
-
- container.appendChild(feed);
-
-
- // Creator-only publishing
-
- await renderFeed(
-  feed,
-  "creator_panel"
- );
-}
-
-
-// ================================================
-// NOTIFICATION BADGE COUNT
-// ================================================
-
-async function getUnreadNotificationCount(){
-
- if(!currentUser) return 0;
-
- const {count,error} = await db
-  .from("community_notifications")
-  .select("*",{
-   count:"exact",
-   head:true
-  })
-  .eq("recipient_id",currentUser.id)
-  .eq("is_read",false);
-
- if(error){
-  console.error(error);
-  return 0;
- }
-
- return count || 0;
-}
-
-
-// ================================================
-// NOTIFICATIONS
-// ================================================
-
-async function renderNotifications(container){
-
- container.innerHTML = "";
-
- container.appendChild(
-  createElement(
-   "h3",
-   "",
-   "Notifications"
-  )
- );
-
- if(!currentUser){
-
-  container.appendChild(
-   createElement(
-    "p",
-    "community-empty",
-    LOGIN_ERROR
-   )
-  );
-
-  return;
- }
-
-
- const {data,error} = await db
-  .from("community_notifications")
-  .select("*")
-  .eq("recipient_id",currentUser.id)
-  .order("created_at",{
-   ascending:false
-  });
-
- if(error){
-
-  showNotice(error.message);
-
-  return;
- }
-
-
- if(!data?.length){
-
-  container.appendChild(
-   createElement(
-    "p",
-    "community-empty",
-    "No notifications yet."
-   )
-  );
-
-  return;
- }
-
-
- data.forEach(item=>{
-
-  const card = createElement(
-   "div",
-   "community-notification-item"
-  );
-
-  card.style.cssText = `
-   padding:13px;
-   margin-bottom:10px;
-   border:1px solid var(--border);
-   border-radius:12px;
-   background:var(--panel);
-   color:var(--white);
-  `;
-
-  card.appendChild(
-   createElement(
-    "div",
-    "",
-    item.notification_type || "Notification"
-   )
-  );
-
-  card.appendChild(
-   createElement(
-    "small",
-    "",
-    dateText(item.created_at)
-   )
-  );
-
-
-  if(!item.is_read){
-
-   const mark = makeButton(
-    "Mark as read",
-    "community-notification-read"
-   );
-
-   mark.addEventListener("click",async()=>{
-
-    mark.disabled = true;
-
-    try{
-
-     const {error:updateError} = await db
-      .from("community_notifications")
-      .update({
-       is_read:true
-      })
-      .eq("id",item.id)
-      .eq("recipient_id",currentUser.id);
-
-     if(updateError) throw updateError;
-
-     await renderNotifications(container);
-
-     showNotice("Notification marked as read.");
-
-    }catch(error){
-
-     console.error(error);
-
-     showNotice(
-      error.message ||
-      "Unable to update notification."
-     );
-
-    }finally{
-
-     mark.disabled = false;
-    }
-   });
-
-   card.appendChild(mark);
-  }
-
-  container.appendChild(card);
- });
-}
-
-
-// ==============================
-// PAGE, NAVIGATION & INITIALIZATION
-// ==============================
-
-let communityRenderPromise = null;
-
-async function renderCommunityPage() {
-
-  const route = new URLSearchParams(window.location.search).get("page");
-
-  if (route !== "community") return;
-
-  const page = document.getElementById("pageContent");
-
-  if (!page) {
-    console.error("Community container #pageContent was not found.");
-    return;
-  }
-
-  if (communityRenderPromise) return communityRenderPromise;
-
-  communityRenderPromise = (async function () {
-
-  page.innerHTML = "";
-
-  document.body.classList.add("community-active");
-
-
-  // ================================================
-  // COMMUNITY LAYOUT CSS
-  // ================================================
-
-  if (!document.getElementById("community-target-layout-style")) {
-
-    const style = document.createElement("style");
-
-    style.id = "community-target-layout-style";
-
-    style.textContent = `
-      body.community-active #pageContent {
-        display:flex !important;
-        flex-direction:column !important;
-        width:100% !important;
-        max-width:100% !important;
-        box-sizing:border-box !important;
-      }
-
-      body.community-active #pageContent .community-header {
-        display:flex !important;
-        flex-direction:row !important;
-        flex-wrap:nowrap !important;
-        align-items:center !important;
-        justify-content:space-between !important;
-        gap:8px !important;
-        width:100% !important;
-        box-sizing:border-box !important;
-        margin:0 0 8px !important;
-        padding:10px 0 !important;
-        border-bottom:1px solid var(--border,#245563) !important;
-      }
-
-      body.community-active #pageContent .community-brand {
-        flex:1 1 auto !important;
-        min-width:0 !important;
-        color:var(--white,#fff) !important;
-        font-size:clamp(17px,4.7vw,22px) !important;
-        line-height:1.15 !important;
-        font-weight:1000 !important;
-        letter-spacing:-.35px !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-brand span {
-        color:var(--green,#08C99A) !important;
-      }
-
-      body.community-active #pageContent .community-header-actions {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:flex-end !important;
-        flex:0 0 auto !important;
-        gap:6px !important;
-      }
-
-      body.community-active #pageContent .community-icon-btn {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:28px !important;
-        height:36px !important;
-        flex:0 0 28px !important;
-        padding:0 !important;
-        border:1px solid #9ba5a8 !important;
-        border-radius:2px !important;
-        background:#fff !important;
-        color:#071225 !important;
-        box-shadow:none !important;
-      }
-
-      body.community-active #pageContent .community-icon-btn svg {
-        display:block !important;
-        width:21px !important;
-        height:21px !important;
-        fill:none !important;
-        stroke:#071225 !important;
-        stroke-width:2.2 !important;
-        stroke-linecap:round !important;
-        stroke-linejoin:round !important;
-      }
-
-      body.community-active #pageContent .community-search {
-        width:min(52vw,220px) !important;
-        min-width:0 !important;
-        box-sizing:border-box !important;
-        padding:8px 10px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:8px !important;
-        background:var(--panel,#08494B) !important;
-        color:var(--white,#fff) !important;
-        font:inherit !important;
-        font-size:12px !important;
-      }
-
-      body.community-active #pageContent .community-nav {
-        position:relative !important;
-        inset:auto !important;
-        z-index:2 !important;
-        display:grid !important;
-        grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-        align-items:stretch !important;
-        gap:4px !important;
-        width:100% !important;
-        box-sizing:border-box !important;
-        margin:0 0 18px !important;
-        padding:0 0 14px !important;
-        border:0 !important;
-        border-bottom:1px solid var(--border,#245563) !important;
-        background:transparent !important;
-        box-shadow:none !important;
-        overflow:visible !important;
-      }
-
-      body.community-active #pageContent .community-nav-button {
-        position:relative !important;
-        display:flex !important;
-        flex-direction:column !important;
-        align-items:center !important;
-        justify-content:center !important;
-        gap:6px !important;
-        width:100% !important;
-        min-width:0 !important;
-        min-height:72px !important;
-        margin:0 !important;
-        padding:7px 2px !important;
-        border:0 !important;
-        border-radius:17px !important;
-        background:transparent !important;
-        color:var(--muted,#A8C0CE) !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:12px !important;
-        font-weight:800 !important;
-        white-space:nowrap !important;
-        box-shadow:none !important;
-      }
-
-      body.community-active #pageContent .community-nav-button.active {
-        background:rgba(8,201,154,.13) !important;
-        color:var(--mint,#68DDB9) !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon-wrap {
-        position:relative !important;
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:25px !important;
-        height:25px !important;
-        flex:0 0 25px !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:24px !important;
-        height:24px !important;
-        font-size:22px !important;
-        line-height:1 !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon svg {
-        display:block !important;
-        width:23px !important;
-        height:23px !important;
-        fill:none !important;
-        stroke:currentColor !important;
-        stroke-width:1.9 !important;
-        stroke-linecap:round !important;
-        stroke-linejoin:round !important;
-      }
-
-      body.community-active #pageContent .community-nav-label {
-        display:block !important;
-        width:100% !important;
-        font-size:clamp(10px,2.8vw,12px) !important;
-        line-height:1.2 !important;
-        font-weight:800 !important;
-        text-align:center !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-notification-dot {
-        position:absolute !important;
-        top:2px !important;
-        right:0 !important;
-        left:auto !important;
-        width:7px !important;
-        height:7px !important;
-        border:1px solid var(--bg,#073746) !important;
-        border-radius:50% !important;
-        background:#ff3b45 !important;
-        transform:none !important;
-      }
-
-      body.community-active #pageContent .community-main {
-        display:block !important;
-        width:100% !important;
-        max-width:100% !important;
-        min-width:0 !important;
-        box-sizing:border-box !important;
-        margin:0 !important;
-        padding:0 !important;
-      }
-
-      body.community-active #pageContent .community-feed-panel {
-        width:100% !important;
-        min-width:0 !important;
-      }
-
-      body.community-active #pageContent .community-feed-search {
-        display:none !important;
-      }
-
-      body.community-active #pageContent .community-composer {
-        display:flex !important;
-        flex-direction:column !important;
-        align-items:stretch !important;
-                            width:100% !important;
-        box-sizing:border-box !important;
-        margin:18px 0 20px !important;
-        padding:17px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:18px !important;
-        background:var(--card,#103E4C) !important;
-      }
-
-      body.community-active #pageContent .community-brand {
-        flex:1 1 auto !important;
-        min-width:0 !important;
-        color:var(--white,#fff) !important;
-        font-size:clamp(17px,4.7vw,22px) !important;
-        line-height:1.15 !important;
-        font-weight:1000 !important;
-        letter-spacing:-.35px !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-brand span {
-        color:var(--green,#08C99A) !important;
-      }
-
-      body.community-active #pageContent .community-header-actions {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:flex-end !important;
-        flex:0 0 auto !important;
-        gap:6px !important;
-      }
-
-      body.community-active #pageContent .community-icon-btn {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:28px !important;
-        height:36px !important;
-        flex:0 0 28px !important;
-        padding:0 !important;
-        border:1px solid #9ba5a8 !important;
-        border-radius:2px !important;
-        background:#fff !important;
-        color:#071225 !important;
-        box-shadow:none !important;
-      }
-
-      body.community-active #pageContent .community-icon-btn svg {
-        display:block !important;
-        width:21px !important;
-        height:21px !important;
-        fill:none !important;
-        stroke:#071225 !important;
-        stroke-width:2.2 !important;
-        stroke-linecap:round !important;
-        stroke-linejoin:round !important;
-      }
-
-      body.community-active #pageContent .community-search {
-        width:min(52vw,220px) !important;
-        min-width:0 !important;
-        box-sizing:border-box !important;
-        padding:8px 10px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:8px !important;
-        background:var(--panel,#08494B) !important;
-        color:var(--white,#fff) !important;
-        font:inherit !important;
-        font-size:12px !important;
-      }
-
-      body.community-active #pageContent .community-nav {
-        position:relative !important;
-        inset:auto !important;
-        z-index:2 !important;
-        display:grid !important;
-        grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-        align-items:stretch !important;
-        gap:4px !important;
-        width:100% !important;
-        box-sizing:border-box !important;
-        margin:0 0 18px !important;
-        padding:0 0 14px !important;
-        border:0 !important;
-        border-bottom:1px solid var(--border,#245563) !important;
-        background:transparent !important;
-        box-shadow:none !important;
-        overflow:visible !important;
-      }
-
-      body.community-active #pageContent .community-nav-button {
-        position:relative !important;
-        display:flex !important;
-        flex-direction:column !important;
-        align-items:center !important;
-        justify-content:center !important;
-        gap:6px !important;
-        width:100% !important;
-        min-width:0 !important;
-        min-height:72px !important;
-        margin:0 !important;
-        padding:7px 2px !important;
-        border:0 !important;
-        border-radius:17px !important;
-        background:transparent !important;
-        color:var(--muted,#A8C0CE) !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:12px !important;
-        font-weight:800 !important;
-        white-space:nowrap !important;
-        box-shadow:none !important;
-      }
-
-      body.community-active #pageContent .community-nav-button.active {
-        background:rgba(8,201,154,.13) !important;
-        color:var(--mint,#68DDB9) !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon-wrap {
-        position:relative !important;
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:25px !important;
-        height:25px !important;
-        flex:0 0 25px !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon {
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:24px !important;
-        height:24px !important;
-        font-size:22px !important;
-        line-height:1 !important;
-      }
-
-      body.community-active #pageContent .community-nav-icon svg {
-        display:block !important;
-        width:23px !important;
-        height:23px !important;
-        fill:none !important;
-        stroke:currentColor !important;
-        stroke-width:1.9 !important;
-        stroke-linecap:round !important;
-        stroke-linejoin:round !important;
-      }
-
-      body.community-active #pageContent .community-nav-label {
-        display:block !important;
-        width:100% !important;
-        font-size:clamp(10px,2.8vw,12px) !important;
-        line-height:1.2 !important;
-        font-weight:800 !important;
-        text-align:center !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-notification-dot {
-        position:absolute !important;
-        top:2px !important;
-        right:0 !important;
-        left:auto !important;
-        width:7px !important;
-        height:7px !important;
-        border:1px solid var(--bg,#073746) !important;
-        border-radius:50% !important;
-        background:#ff3b45 !important;
-        transform:none !important;
-      }
-
-      body.community-active #pageContent .community-main {
-        display:block !important;
-        width:100% !important;
-        max-width:100% !important;
-        min-width:0 !important;
-        box-sizing:border-box !important;
-        margin:0 !important;
-        padding:0 !important;
-      }
-
-      body.community-active #pageContent .community-feed-panel {
-        width:100% !important;
-        min-width:0 !important;
-      }
-
-      body.community-active #pageContent .community-feed-search {
-        display:none !important;
-      }
-
-      body.community-active #pageContent .community-composer {
-        display:flex !important;
-        flex-direction:column !important;
-        align-items:stretch !important;
-        width:100% !important;
-        box-sizing:border-box !important;
-        margin:18px 0 20px !important;
-        padding:17px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:18px !important;
-        background:var(--card,#103E4C) !important;
-      }
-
-      body.community-active #pageContent .community-composer-title {
-        margin:0 0 12px !important;
-        font-size:15px !important;
-        line-height:1.35 !important;
-        font-weight:900 !important;
-      }
-
-      body.community-active #pageContent .community-composer textarea {
-        display:block !important;
-        width:100% !important;
-        min-height:92px !important;
-        height:92px !important;
-        box-sizing:border-box !important;
-        margin:0 !important;
-        padding:12px 14px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:15px !important;
-        background:var(--panel,#08494B) !important;
-        color:var(--white,#fff) !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:15px !important;
-        line-height:1.5 !important;
-      }
-
-      body.community-active #pageContent .community-composer-bottom {
-        display:flex !important;
-        flex-direction:row !important;
-        flex-wrap:nowrap !important;
-        align-items:center !important;
-        justify-content:space-between !important;
-        gap:10px !important;
-        width:100% !important;
-        box-sizing:border-box !important;
-        margin-top:14px !important;
-      }
-
-      body.community-active #pageContent .community-photo-label {
-        display:inline-flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        flex:0 1 auto !important;
-        min-width:0 !important;
-        min-height:43px !important;
-        box-sizing:border-box !important;
-        margin:0 !important;
-        padding:8px 13px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:12px !important;
-        background:transparent !important;
-        color:var(--mint,#68DDB9) !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:12px !important;
-        font-weight:900 !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-photo-label input {
-        display:none !important;
-      }
-
-      body.community-active #pageContent .community-publish-btn {
-        display:inline-flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        flex:0 0 95px !important;
-        width:95px !important;
-        min-width:95px !important;
-        height:46px !important;
-        min-height:46px !important;
-        box-sizing:border-box !important;
-        margin:0 0 0 auto !important;
-        padding:8px 10px !important;
-        border:0 !important;
-        border-radius:12px !important;
-        background:var(--green,#08C99A) !important;
-        color:#052D3B !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:15px !important;
-        font-weight:1000 !important;
-        white-space:nowrap !important;
-      }
-
-      body.community-active #pageContent .community-preview {
-        display:none;
-        width:100% !important;
-        max-height:230px !important;
-        margin-top:12px !important;
-        border-radius:12px !important;
-        object-fit:contain !important;
-      }
-
-      body.community-active #pageContent .community-feed-title {
-        margin:0 0 18px !important;
-        font-size:17px !important;
-        line-height:1.35 !important;
-        font-weight:900 !important;
-      }
-
-      body.community-active #pageContent .community-feed {
-        display:flex !important;
-        flex-direction:column !important;
-        gap:16px !important;
-        width:100% !important;
-      }
-
-      @media(max-width:380px) {
-        body.community-active #pageContent .community-brand {
-          font-size:16px !important;
-        }
-        body.community-active #pageContent .community-nav-label {
-          font-size:10px !important;
-        }
-        body.community-active #pageContent .community-photo-label {
-          padding:8px 9px !important;
-        }
-      }
-
-      /* FINAL HEADER / SEARCH / SPACING CORRECTIONS */
-      body.community-active #pageContent .community-header {
-        gap:8px !important;
-        margin:0 0 5px !important;
-        padding:7px 0 !important;
-      }
-      body.community-active #pageContent .community-header-actions {
-        gap:8px !important;
-      }
-      body.community-active #pageContent .community-icon-btn {
-        width:40px !important;
-        height:40px !important;
-        flex:0 0 40px !important;
-        border:0 !important;
-        border-radius:12px !important;
-        background:rgba(8,201,154,.12) !important;
-        color:var(--mint,#68DDB9) !important;
-      }
-      body.community-active #pageContent .community-icon-btn svg {
-        width:23px !important;
-        height:23px !important;
-        stroke:currentColor !important;
-        stroke-width:2 !important;
-      }
-      body.community-active #pageContent .community-search {
-        width:min(55vw,245px) !important;
-        min-width:0 !important;
-        height:40px !important;
-        padding:8px 12px !important;
-        border-radius:12px !important;
-        font-size:13px !important;
-      }
-      body.community-active #pageContent .community-nav {
-        margin:0 0 5px !important;
-        padding:0 0 8px !important;
-      }
-      body.community-active #pageContent .community-nav-button {
-        min-height:64px !important;
-      }
-      body.community-active #pageContent .community-composer {
-        margin:7px 0 18px !important;
-      }
-      body.community-active #pageContent .community-section-panel {
-        width:100% !important;
-        min-width:0 !important;
-        box-sizing:border-box !important;
-      }
-      body.community-active #pageContent .community-profile-cover,
-      body.community-active #pageContent .community-avatar[role="button"] {
-        cursor:pointer !important;
-      }
-      body.community-active #pageContent .community-image-editor {
-        width:fit-content !important;
-        max-width:100% !important;
-        box-sizing:border-box !important;
-      }
-      body.community-active #pageContent .community-image-edit-btn,
-      body.community-active #pageContent .community-image-save-btn,
-      body.community-active #pageContent .community-image-cancel-btn {
-        min-height:38px !important;
-        padding:8px 12px !important;
-        border:1px solid var(--border,#245563) !important;
-        border-radius:10px !important;
-        background:var(--deep,#052D3B) !important;
-        color:var(--mint,#68DDB9) !important;
-        font-family:'Nunito Sans',sans-serif !important;
-        font-size:12px !important;
-        font-weight:900 !important;
-      }
-      body.community-active #pageContent .community-image-save-btn {
-        border:0 !important;
-        background:var(--green,#08C99A) !important;
-        color:#052D3B !important;
-      }
-      body.community-active #pageContent .community-profile-info {
-        width:100% !important;
-        box-sizing:border-box !important;
-      }
-      body.community-active #pageContent .community-profile-tabs {
-        display:flex !important;
-        flex-wrap:wrap !important;
-        gap:8px !important;
-        margin:18px 0 14px !important;
-      }
-      body.community-active #pageContent .community-profile-tab {
-        flex:1 1 auto !important;
-        min-width:0 !important;
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-
-  await loadSession();
-
-  await refreshData();
-
-
-  // ================================================
-  // HEADER
-  // ================================================
-
-  const header = createElement("header", "community-header");
-
-  const brand = createElement("div", "community-brand");
-
-  brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
-
-  const headerActions = createElement("div", "community-header-actions");
-
-  const searchButton = makeButton("", "community-icon-btn");
-
-  searchButton.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="10.8" cy="10.8" r="6.8"></circle>
-      <path d="m16 16 5 5"></path>
-    </svg>
-  `;
-
-  searchButton.type = "button";
-
-  searchButton.setAttribute("aria-label", "Open search");
-
-  searchButton.title = "Search";
-
-  const searchInput = createElement("input", "community-search");
-
-  searchInput.type = "search";
-
-  searchInput.placeholder = "Search posts or people...";
-
-  searchInput.setAttribute("aria-label", "Search community");
-
-  searchInput.value = currentFeedSearchQuery || "";
-
-  searchInput.style.display = "none";
-
-  headerActions.appendChild(searchButton);
-
-  headerActions.appendChild(searchInput);
-
-  header.appendChild(brand);
-
-  header.appendChild(headerActions);
-
-
-  // ================================================
-  // NAVIGATION AND MAIN
-  // ================================================
-
-  const nav = createElement("nav", "community-nav");
-
-  nav.setAttribute("aria-label", "Community navigation");
-
-  const main = createElement("main", "community-main");
-
-  const noticeArea = createElement("div", "community-notice-area");
-
-  const feedPanel = createElement("section", "community-feed-panel");
-
-  const mePanel = createElement("section", "community-section-panel");
-
-  const creatorPanel = createElement("section", "community-section-panel");
-
-  const notificationPanel = createElement("section", "community-section-panel");
-
-  mePanel.style.display = "none";
-
-  creatorPanel.style.display = "none";
-
-  notificationPanel.style.display = "none";
-
-  main.appendChild(noticeArea);
-
-  main.appendChild(feedPanel);
-
-  main.appendChild(mePanel);
-
-  main.appendChild(creatorPanel);
-
-  main.appendChild(notificationPanel);
-
-
-  // IMPORTANT ORDER:
-  // HEADER -> NAVIGATION -> MAIN CONTENT
-
-  page.appendChild(header);
-
-  page.appendChild(nav);
-
-  page.appendChild(main);
-
-
-  const panels = {
-    home: feedPanel,
-    me: mePanel,
-    creator: creatorPanel,
-    notifications: notificationPanel
-  };
-
-  let activePage = "home";
-
-
-  function showPanel(name) {
-
-    activePage = name;
-
-    Object.entries(panels).forEach(([key, panel]) => {
-
-      panel.style.display = key === name ? "" : "none";
-
-    });
-
-    nav.querySelectorAll("button").forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.page === name
-      );
-
-    });
-  }
-
-
-  // ================================================
-  // NAVIGATION ITEMS
-  // ================================================
-
-  const navItems = [
-    { id: "home", label: "Home", icon: "home" },
-    { id: "me", label: "Me", icon: "person" },
-    { id: "creator", label: "Creator Panel", icon: "pencil" },
-    { id: "notifications", label: "Notification", icon: "bell" }
-  ];
-
-  const navIconSVG = {
-    home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-7h5v7"/></svg>`,
-    person: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>`,
-    pencil: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5 4 4"/><path d="M4 20l4.2-.8L20 7.4a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z"/><path d="m12.5 7.5 4 4"/></svg>`,
-    bell: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>`
-  };
-
-  const notificationBadge = document.createElement("span");
-
-  notificationBadge.className = "community-notification-dot";
-
-  notificationBadge.style.display = "none";
-
-  const navButtons = {};
-
-
-  navItems.forEach(item => {
-
-    const button = makeButton("", "community-nav-button");
-
+  function makeButton(text, className = "", onClick = null) {
+    const button = createElement("button", className, text);
     button.type = "button";
 
-    button.dataset.page = item.id;
-
-    button.setAttribute("aria-label", item.label);
-
-    button.title = item.label;
-
-    const iconWrap = createElement("span", "community-nav-icon-wrap");
-
-    const icon = createElement("span", "community-nav-icon");
-
-    icon.innerHTML = navIconSVG[item.icon];
-
-    iconWrap.appendChild(icon);
-
-    if (item.id === "notifications") {
-
-      iconWrap.appendChild(notificationBadge);
-
+    if (typeof onClick === "function") {
+      button.addEventListener("click", onClick);
     }
 
-    const label = createElement("span", "community-nav-label", item.label);
+    return button;
+  }
 
-    button.appendChild(iconWrap);
+  function showNotice(message, type = "info") {
+    let notice = $("#communityNotice");
 
-    button.appendChild(label);
+    if (!notice) {
+      notice = createElement("div", "community-notice");
+      notice.id = "communityNotice";
+      document.body.appendChild(notice);
+    }
 
+    notice.textContent = message;
+    notice.dataset.type = type;
+    notice.classList.add("show");
 
-    button.addEventListener("click", async () => {
+    clearTimeout(notice._timer);
 
-      showPanel(item.id);
+    notice._timer = setTimeout(() => {
+      notice.classList.remove("show");
+    }, 3000);
+  }
 
-      if (item.id === "home") {
+  function dateText(value) {
+    if (!value) return "";
 
-        await refreshData();
+    const date = new Date(value);
 
-        renderFeed(feedPanel, "community_home");
+    if (Number.isNaN(date.getTime())) return "";
 
-      }
-
-      if (item.id === "me") {
-
-        await refreshData();
-
-        await renderMe(mePanel);
-
-      }
-
-      if (item.id === "creator") {
-
-        await refreshData();
-
-        await renderCreator(creatorPanel);
-
-      }
-
-      if (item.id === "notifications") {
-
-        await renderNotifications(notificationPanel);
-
-        updateNotificationBadge();
-
-      }
-
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
     });
+  }
 
+  function initial(name = "") {
+    return String(name).trim().charAt(0).toUpperCase() || "U";
+  }
 
-    navButtons[item.id] = button;
+  function currentName() {
+    return (
+      currentProfile?.display_name ||
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.email?.split("@")[0] ||
+      "User"
+    );
+  }
 
-    nav.appendChild(button);
+  function isCreator() {
+    return ["admin", "moderator", "developer"].includes(
+      String(currentRole || "").toLowerCase()
+    );
+  }
 
-  });
+  function requireLogin() {
+    if (currentUser) return true;
 
+    showNotice(LOGIN_ERROR, "error");
+    return false;
+  }
 
-  // ================================================
-  // NOTIFICATION BADGE
-  // ================================================
-
-  async function updateNotificationBadge() {
-
-    if (!currentUser) {
-
-      notificationBadge.style.display = "none";
-
-      return;
-
-    }
+  function safeImage(url) {
+    if (!url) return "";
 
     try {
+      const parsed = new URL(url, window.location.origin);
 
-      const { count, error } = await db
-        .from("community_notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", currentUser.id)
-        .eq("is_read", false);
-
-      if (error) throw error;
-
-      notificationBadge.style.display = count > 0 ? "inline-block" : "none";
-
-      notificationBadge.title = count > 0
-        ? `${count} unread notifications`
-        : "";
-
-    } catch (error) {
-
-      console.error("Notification badge error:", error);
-
-      notificationBadge.style.display = "none";
-
-    }
-  }
-
-
-  // ================================================
-  // SEARCH BUTTON
-  // ================================================
-
-  searchButton.addEventListener("click", () => {
-
-    const isOpen = searchInput.style.display !== "none";
-
-    if (isOpen) {
-
-      searchInput.style.display = "none";
-
-      searchInput.value = "";
-
-      currentFeedSearchQuery = "";
-
-      header.classList.remove("search-open");
-
-      searchButton.setAttribute("aria-label", "Open search");
-
-      if (activePage === "home") {
-
-        renderFeed(feedPanel, "community_home");
-
+      if (
+        parsed.protocol !== "https:" &&
+        parsed.protocol !== "http:"
+      ) {
+        return "";
       }
 
+      return parsed.href;
+    } catch {
+      return "";
+    }
+  }
+
+  function escapeText(value = "") {
+    return String(value).replace(/[&<>"']/g, character => {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
+
+      return map[character];
+    });
+  }
+
+  async function loadSession() {
+    if (!db) {
+      console.error("Supabase client not found: window.cmaSupabase");
+      return null;
+    }
+
+    const { data, error } = await db.auth.getSession();
+
+    if (error) {
+      console.error("Session load error:", error);
+      currentUser = null;
+      return null;
+    }
+
+    currentUser = data.session?.user || null;
+    return currentUser;
+  }
+
+  async function loadMyProfile() {
+    currentProfile = null;
+    currentPrivate = null;
+
+    if (!currentUser) return;
+
+    const { data, error } = await db
+      .from("community_profiles")
+      .select(
+        "user_id, display_name, short_description, school, avatar_url, cover_url"
+      )
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Profile load error:", error);
     } else {
-
-      searchInput.style.display = "block";
-
-      header.classList.add("search-open");
-
-      searchButton.setAttribute("aria-label", "Close search");
-
-      searchInput.focus();
-
+      currentProfile = data || null;
     }
-  });
 
+    // Private profile is loaded only for the signed-in user's own account.
+    const { data: privateData, error: privateError } = await db
+      .from("community_private_profiles")
+      .select("user_id, phone, address")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
 
-  searchInput.addEventListener("input", () => {
-
-    currentFeedSearchQuery = searchInput.value.trim();
-
-    if (activePage === "home") {
-
-      renderFeed(feedPanel, "community_home");
-
+    if (privateError) {
+      console.error("Private profile load error:", privateError);
+    } else {
+      currentPrivate = privateData || null;
     }
-  });
+  }
 
+  async function loadMyRole() {
+    currentRole = null;
 
-  // ================================================
-  // INITIAL PAGE
-  // ================================================
+    if (!currentUser) return;
 
-  showPanel("home");
+    const { data, error } = await db
+      .from("community_creator_roles")
+      .select("role")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
 
-  renderFeed(feedPanel, "community_home");
+    if (error) {
+      console.error("Role load error:", error);
+      return;
+    }
 
-  updateNotificationBadge();
+    currentRole = data?.role || null;
+  }
 
+  async function loadPosts() {
+    const { data, error } = await db
+      .from("community_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  // ================================================
-  // GLOBAL REFRESH
-  // ================================================
+    if (error) {
+      console.error("Posts load error:", error);
+      posts = [];
+      return;
+    }
 
-  window.cmaCommunityRefresh = async function () {
+    posts = data || [];
+  }
+
+  async function loadReactions() {
+    reactions = [];
+
+    if (!currentUser) return;
+
+    const { data, error } = await db
+      .from("community_reactions")
+      .select("*")
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      console.error("Reactions load error:", error);
+      return;
+    }
+
+    reactions = data || [];
+  }
+
+  async function loadComments() {
+    const { data, error } = await db
+      .from("community_comments")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Comments load error:", error);
+      comments = [];
+      return;
+    }
+
+    comments = data || [];
+  }
+
+  async function loadPublicProfiles() {
+    const authorIds = [
+      ...new Set(
+        posts
+          .map(post => post.user_id)
+          .filter(Boolean)
+      )
+    ];
+
+    if (currentUser?.id) {
+      authorIds.push(currentUser.id);
+    }
+
+    const uniqueIds = [...new Set(authorIds)];
+
+    if (!uniqueIds.length) {
+      profiles = [];
+      return;
+    }
+
+    const { data, error } = await db
+      .from("community_profiles")
+      .select("user_id, display_name, short_description, avatar_url, cover_url")
+      .in("user_id", uniqueIds);
+
+    if (error) {
+      console.error("Public profiles load error:", error);
+      profiles = [];
+      return;
+    }
+
+    profiles = data || [];
+  }
+
+  async function refreshData() {
+    await loadSession();
+
+    await Promise.all([
+      loadPosts(),
+      loadComments()
+    ]);
+
+    await Promise.all([
+      loadMyProfile(),
+      loadMyRole(),
+      loadReactions(),
+      loadPublicProfiles()
+    ]);
+  }
+
+  function getProfile(userId) {
+    if (currentUser?.id === userId && currentProfile) {
+      return currentProfile;
+    }
+
+    return profiles.find(profile => profile.user_id === userId) || null;
+  }
+
+  function getReaction(postId) {
+    return reactions.find(reaction => reaction.post_id === postId) || null;
+  }
+
+  function getPostComments(postId) {
+    return comments.filter(comment => comment.post_id === postId);
+  }
+
+  async function uploadCommunityImage(file, folder = "posts") {
+    if (!requireLogin()) return null;
+
+    if (!file) return null;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      showNotice("Only JPG, PNG and WEBP images are allowed.", "error");
+      return null;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showNotice("Image size must be 5MB or less.", "error");
+      return null;
+    }
+
+    const extension = file.name.split(".").pop().toLowerCase();
+    const filePath =
+      `${currentUser.id}/${folder}/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}.${extension}`;
+
+    const { error } = await db.storage
+      .from(BUCKET)
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) {
+      console.error("Image upload error:", error);
+      showNotice("Image upload failed. Please try again.", "error");
+      return null;
+    }
+
+    const { data } = db.storage
+      .from(BUCKET)
+      .getPublicUrl(filePath);
+
+    return data?.publicUrl || null;
+  }
+
+  async function saveProfile(profileData, privateData = {}) {
+    if (!requireLogin()) return false;
+
+    const publicPayload = {
+      user_id: currentUser.id,
+      display_name: profileData.display_name || "",
+      short_description: profileData.short_description || "",
+      school: profileData.school || "",
+      avatar_url: profileData.avatar_url || null,
+      cover_url: profileData.cover_url || null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: profileError } = await db
+      .from("community_profiles")
+      .upsert(publicPayload, {
+        onConflict: "user_id"
+      });
+
+    if (profileError) {
+      console.error("Profile save error:", profileError);
+      showNotice("Could not save profile information.", "error");
+      return false;
+    }
+
+    const privatePayload = {
+      user_id: currentUser.id,
+      phone: privateData.phone || "",
+      address: privateData.address || "",
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: privateError } = await db
+      .from("community_private_profiles")
+      .upsert(privatePayload, {
+        onConflict: "user_id"
+      });
+
+    if (privateError) {
+      console.error("Private profile save error:", privateError);
+      showNotice("Public profile saved, but private information could not be saved.", "error");
+      return false;
+    }
+
+    await loadMyProfile();
+
+    showNotice("Profile updated successfully.", "success");
+    return true;
+  }
+
+  async function publishPost(content, imageUrl = null, postScope = "community_home") {
+    if (!requireLogin()) return false;
+
+    if (postScope !== "community_home" && !isCreator()) {
+      showNotice("You do not have permission to publish here.", "error");
+      return false;
+    }
+
+    const text = String(content || "").trim();
+
+    if (!text && !imageUrl) {
+      showNotice("Write something or add a photo first.", "error");
+      return false;
+    }
+
+    const { error } = await db
+      .from("community_posts")
+      .insert({
+        user_id: currentUser.id,
+        content: text,
+        image_url: imageUrl || null,
+        post_scope: postScope
+      });
+
+    if (error) {
+      console.error("Post publish error:", error);
+      showNotice("Could not publish your post.", "error");
+      return false;
+    }
 
     await refreshData();
+    showNotice("Post published successfully.", "success");
+    return true;
+  }
 
-    if (activePage === "home") {
+  async function toggleReaction(postId, emoji) {
+    if (!requireLogin()) return false;
 
-      renderFeed(feedPanel, "community_home");
+    if (!EMOJIS.includes(emoji)) return false;
 
-    } else if (activePage === "me") {
+    const existing = reactions.find(
+      reaction => reaction.post_id === postId
+    );
 
-      await renderMe(mePanel);
+    if (existing?.emoji === emoji) {
+      const { error } = await db
+        .from("community_reactions")
+        .delete()
+        .eq("id", existing.id)
+        .eq("user_id", currentUser.id);
 
-    } else if (activePage === "creator") {
+      if (error) {
+        console.error("Reaction remove error:", error);
+        showNotice("Could not remove reaction.", "error");
+        return false;
+      }
+    } else if (existing) {
+      const { error } = await db
+        .from("community_reactions")
+        .update({ emoji })
+        .eq("id", existing.id)
+        .eq("user_id", currentUser.id);
 
-      await renderCreator(creatorPanel);
+      if (error) {
+        console.error("Reaction update error:", error);
+        showNotice("Could not update reaction.", "error");
+        return false;
+      }
+    } else {
+      const { error } = await db
+        .from("community_reactions")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          emoji
+        });
 
-    } else if (activePage === "notifications") {
-
-      await renderNotifications(notificationPanel);
-
+      if (error) {
+        console.error("Reaction insert error:", error);
+        showNotice("Could not add reaction.", "error");
+        return false;
+      }
     }
 
-    updateNotificationBadge();
+    await loadReactions();
+    return true;
+  }
 
+  async function addComment(postId, content) {
+    if (!requireLogin()) return false;
+
+    const text = String(content || "").trim();
+
+    if (!text) {
+      showNotice("Write a comment first.", "error");
+      return false;
+    }
+
+    if (text.length > 500) {
+      showNotice("Comment must be 500 characters or less.", "error");
+      return false;
+    }
+
+    const { error } = await db
+      .from("community_comments")
+      .insert({
+        post_id: postId,
+        user_id: currentUser.id,
+        content: text
+      });
+
+    if (error) {
+      console.error("Comment insert error:", error);
+      showNotice("Could not add your comment.", "error");
+      return false;
+    }
+
+    await loadComments();
+    return true;
+       }
+    function addProfileField(container, label, value, name, type = "text") {
+    const wrapper = createElement("label", "community-profile-field");
+
+    const title = createElement(
+      "span",
+      "community-profile-field-label",
+      label
+    );
+
+    const input = createElement("input", "community-profile-input");
+    input.type = type;
+    input.name = name;
+    input.value = value || "";
+    input.placeholder = label;
+
+    wrapper.append(title, input);
+    container.appendChild(wrapper);
+
+    return input;
+  }
+
+  function addImageField(container, label, currentUrl, folder) {
+    const wrapper = createElement("div", "community-image-field");
+
+    const heading = createElement(
+      "div",
+      "community-image-field-title",
+      label
+    );
+
+    const preview = createElement("div", "community-image-preview");
+
+    if (currentUrl) {
+      const image = createElement("img");
+      image.src = safeImage(currentUrl);
+      image.alt = label;
+      preview.appendChild(image);
+    } else {
+      preview.textContent = "No image selected";
+    }
+
+    const input = createElement("input", "community-image-input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp";
+
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const uploadedUrl = await uploadCommunityImage(file, folder);
+      if (!uploadedUrl) return;
+
+      preview.replaceChildren();
+
+      const image = createElement("img");
+      image.src = uploadedUrl;
+      image.alt = label;
+      preview.appendChild(image);
+
+      if (folder === "avatars") {
+        selectedAvatar = uploadedUrl;
+      } else if (folder === "covers") {
+        selectedCover = uploadedUrl;
+      }
+    });
+
+    wrapper.append(heading, preview, input);
+    container.appendChild(wrapper);
+
+    return input;
+  }
+
+  function createProfileTabs(container, userId, isOwnProfile) {
+    const tabs = createElement("div", "community-profile-tabs");
+    const content = createElement("div", "community-profile-tab-content");
+
+    const tabItems = [
+      { key: "posts", label: "Post" },
+      { key: "photos", label: "Photos" }
+    ];
+
+    if (isOwnProfile) {
+      tabItems.push({ key: "reacted", label: "React On" });
+    }
+
+    function selectTab(tabKey) {
+      $$(".community-profile-tab", tabs).forEach(button => {
+        const active = button.dataset.tab === tabKey;
+
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+
+      renderProfileTab(content, userId, tabKey, isOwnProfile);
+    }
+
+    tabItems.forEach(item => {
+      const button = makeButton(
+        item.label,
+        "community-profile-tab",
+        () => selectTab(item.key)
+      );
+
+      button.dataset.tab = item.key;
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-selected", "false");
+
+      tabs.appendChild(button);
+    });
+
+    container.append(tabs, content);
+    selectTab("posts");
+  }
+
+  function renderProfileTab(container, userId, tab, isOwnProfile) {
+    container.replaceChildren();
+
+    let userPosts = posts.filter(
+      post => post.user_id === userId
+    );
+
+    if (tab === "photos") {
+      userPosts = userPosts.filter(post => post.image_url);
+    }
+
+    if (tab === "reacted" && isOwnProfile) {
+      const reactedPostIds = reactions.map(
+        reaction => reaction.post_id
+      );
+
+      userPosts = posts.filter(post =>
+        reactedPostIds.includes(post.id)
+      );
+    }
+
+    if (!userPosts.length) {
+      const message =
+        tab === "photos"
+          ? "No photos yet."
+          : tab === "reacted"
+            ? "You haven't reacted to any posts yet."
+            : "No posts yet.";
+
+      container.appendChild(
+        createElement("div", "community-profile-empty", message)
+      );
+
+      return;
+    }
+
+    userPosts.forEach(post => {
+      renderPostCard(
+        container,
+        post,
+        isOwnProfile && post.user_id === currentUser?.id
+      );
+    });
+  }
+
+  function renderProfileHeader(container, profile, isOwnProfile) {
+    const cover = createElement("div", "community-profile-cover");
+
+    if (profile?.cover_url) {
+      cover.style.backgroundImage =
+        `url("${safeImage(profile.cover_url)}")`;
+    }
+
+    const avatarWrap = createElement(
+      "div",
+      "community-profile-avatar-wrap"
+    );
+
+    const avatar = createElement(
+      "div",
+      "community-avatar community-profile-avatar"
+    );
+
+    if (profile?.avatar_url) {
+      const image = createElement("img");
+      image.src = safeImage(profile.avatar_url);
+      image.alt = "Profile picture";
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = initial(
+        profile?.display_name || "User"
+      );
+    }
+
+    avatarWrap.appendChild(avatar);
+
+    const identity = createElement(
+      "div",
+      "community-profile-identity"
+    );
+
+    const name = createElement(
+      "h2",
+      "community-profile-name",
+      profile?.display_name || "User"
+    );
+
+    const description = createElement(
+      "p",
+      "community-profile-description",
+      profile?.short_description || ""
+    );
+
+    identity.append(name, description);
+    container.append(cover, avatarWrap, identity);
+
+    if (!isOwnProfile) return;
+
+    cover.classList.add("community-editable-image");
+    avatar.classList.add("community-editable-image");
+
+    cover.title = "Change cover photo";
+    avatar.title = "Change profile picture";
+
+    cover.addEventListener("click", () => {
+      const input = createElement("input");
+      input.type = "file";
+      input.accept = "image/jpeg,image/png,image/webp";
+
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        const url = await uploadCommunityImage(file, "covers");
+        if (!url) return;
+
+        const success = await saveProfile(
+          {
+            ...currentProfile,
+            cover_url: url
+          },
+          currentPrivate || {}
+        );
+
+        if (success) {
+          selectedCover = null;
+          cover.style.backgroundImage = `url("${safeImage(url)}")`;
+        }
+      });
+
+      input.click();
+    });
+
+    avatar.addEventListener("click", () => {
+      const input = createElement("input");
+      input.type = "file";
+      input.accept = "image/jpeg,image/png,image/webp";
+
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        const url = await uploadCommunityImage(file, "avatars");
+        if (!url) return;
+
+        const success = await saveProfile(
+          {
+            ...currentProfile,
+            avatar_url: url
+          },
+          currentPrivate || {}
+        );
+
+        if (success) {
+          selectedAvatar = null;
+
+          avatar.replaceChildren();
+
+          const image = createElement("img");
+          image.src = safeImage(url);
+          image.alt = "Profile picture";
+          avatar.appendChild(image);
+        }
+      });
+
+      input.click();
+    });
+  }
+
+  function renderProfileInfo(container, profile, privateData, isOwnProfile) {
+    const section = createElement("section", "community-profile-info");
+
+    const headingRow = createElement(
+      "div",
+      "community-profile-info-heading"
+    );
+
+    const heading = createElement("h3", "", "Information");
+    headingRow.appendChild(heading);
+
+    const details = createElement(
+      "div",
+      "community-profile-info-details"
+    );
+
+    function addInfo(label, value) {
+      if (!value) return;
+
+      const row = createElement(
+        "div",
+        "community-profile-info-row"
+      );
+
+      row.append(
+        createElement("span", "community-profile-info-label", label),
+        createElement("span", "community-profile-info-value", value)
+      );
+
+      details.appendChild(row);
+    }
+
+    addInfo("Institution", profile?.school);
+
+    if (isOwnProfile) {
+      addInfo("Mobile Number", privateData?.phone);
+      addInfo("Address", privateData?.address);
+    }
+
+    if (isOwnProfile) {
+      const editButton = makeButton(
+        "✎",
+        "community-profile-edit-button",
+        openProfileEditor
+      );
+
+      editButton.title = "Edit profile information";
+      editButton.setAttribute(
+        "aria-label",
+        "Edit profile information"
+      );
+
+      headingRow.appendChild(editButton);
+    }
+
+    section.append(headingRow, details);
+    container.appendChild(section);
+
+    function openProfileEditor() {
+      details.replaceChildren();
+
+      const form = createElement(
+        "form",
+        "community-profile-edit-form"
+      );
+
+      const nameInput = addProfileField(
+        form,
+        "Name",
+        profile?.display_name,
+        "display_name"
+      );
+
+      const descriptionInput = addProfileField(
+        form,
+        "Short Description",
+        profile?.short_description,
+        "short_description"
+      );
+
+      const schoolInput = addProfileField(
+        form,
+        "Institution",
+        profile?.school,
+        "school"
+      );
+
+      const phoneInput = addProfileField(
+        form,
+        "Mobile Number",
+        privateData?.phone,
+        "phone",
+        "tel"
+      );
+
+      const addressInput = addProfileField(
+        form,
+        "Address",
+        privateData?.address,
+        "address"
+      );
+
+      const actions = createElement(
+        "div",
+        "community-profile-edit-actions"
+      );
+
+      const cancelButton = makeButton(
+        "Cancel",
+        "community-secondary-button",
+        () => {
+          renderProfileInfo(
+            container,
+            currentProfile,
+            currentPrivate,
+            true
+          );
+          section.remove();
+        }
+      );
+
+      const saveButton = makeButton(
+        "Save",
+        "community-primary-button"
+      );
+
+      saveButton.type = "submit";
+
+      actions.append(cancelButton, saveButton);
+      form.appendChild(actions);
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+
+        const success = await saveProfile(
+          {
+            display_name: nameInput.value.trim(),
+            short_description: descriptionInput.value.trim(),
+            school: schoolInput.value.trim(),
+            avatar_url: currentProfile?.avatar_url || null,
+            cover_url: currentProfile?.cover_url || null
+          },
+          {
+            phone: phoneInput.value.trim(),
+            address: addressInput.value.trim()
+          }
+        );
+
+        if (success) {
+          renderProfileInfo(
+            container,
+            currentProfile,
+            currentPrivate,
+            true
+          );
+
+          section.remove();
+        } else {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save";
+        }
+      });
+
+      details.appendChild(form);
+    }
+  }
+
+  function renderMe(container) {
+    container.replaceChildren();
+
+    const profile = currentProfile || {
+      display_name: currentName(),
+      short_description: "",
+      school: "",
+      avatar_url: null,
+      cover_url: null
+    };
+
+    selectedAvatar = null;
+    selectedCover = null;
+
+    const profileHeader = createElement(
+      "section",
+      "community-profile-header"
+    );
+
+    renderProfileHeader(profileHeader, profile, true);
+
+    const infoContainer = createElement(
+      "div",
+      "community-profile-info-container"
+    );
+
+    renderProfileInfo(
+      infoContainer,
+      profile,
+      currentPrivate,
+      true
+    );
+
+    container.append(profileHeader, infoContainer);
+
+    createComposer(
+      container,
+      "community_home",
+      async () => {
+        await refreshData();
+        renderMe(container);
+      }
+    );
+
+    const tabsContainer = createElement(
+      "section",
+      "community-profile-post-section"
+    );
+
+    createProfileTabs(
+      tabsContainer,
+      currentUser.id,
+      true
+    );
+
+    container.appendChild(tabsContainer);
+  }
+
+  async function renderUserProfile(container, userId, onBack) {
+    container.replaceChildren();
+
+    container.appendChild(
+      makeButton("← Back", "community-back-button", () => {
+        if (typeof onBack === "function") onBack();
+      })
+    );
+
+    if (!userId) {
+      container.appendChild(
+        createElement(
+          "div",
+          "community-profile-empty",
+          "Profile not found."
+        )
+      );
+      return;
+    }
+
+    let profile = getProfile(userId);
+
+    if (!profile) {
+      const { data, error } = await db
+        .from("community_profiles")
+        .select(
+          "user_id, display_name, short_description, school, avatar_url, cover_url"
+        )
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Public profile error:", error);
+      }
+
+      profile = data || null;
+    }
+
+    if (!profile) {
+      container.appendChild(
+        createElement(
+          "div",
+          "community-profile-empty",
+          "This profile is not available."
+        )
+      );
+      return;
+    }
+
+    const isOwnProfile = currentUser?.id === userId;
+
+    const profileHeader = createElement(
+      "section",
+      "community-profile-header"
+    );
+
+    renderProfileHeader(profileHeader, profile, isOwnProfile);
+    container.appendChild(profileHeader);
+
+    if (isOwnProfile) {
+      renderProfileInfo(
+        container,
+        profile,
+        currentPrivate,
+        true
+      );
+
+      createComposer(
+        container,
+        "community_home",
+        async () => {
+          await refreshData();
+          renderUserProfile(container, userId, onBack);
+        }
+      );
+    } else {
+      renderProfileInfo(
+        container,
+        profile,
+        null,
+        false
+      );
+    }
+
+    const tabsContainer = createElement(
+      "section",
+      "community-profile-post-section"
+    );
+
+    createProfileTabs(
+      tabsContainer,
+      userId,
+      isOwnProfile
+    );
+
+    container.appendChild(tabsContainer);
+                             }
+     function openPublicProfile(userId) {
+    if (!userId) return;
+
+    window.dispatchEvent(
+      new CustomEvent("cma:open-profile", {
+        detail: { userId }
+      })
+    );
+  }
+
+  function createAuthorAvatar(profile, userId) {
+    const avatar = createElement(
+      "div",
+      "community-post-avatar"
+    );
+
+    if (profile?.avatar_url) {
+      const image = createElement("img");
+      image.src = safeImage(profile.avatar_url);
+      image.alt = profile.display_name || "User";
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = initial(
+        profile?.display_name || "User"
+      );
+    }
+
+    avatar.setAttribute("role", "button");
+    avatar.tabIndex = 0;
+    avatar.title = "View profile";
+
+    avatar.addEventListener("click", () => {
+      openPublicProfile(userId);
+    });
+
+    avatar.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openPublicProfile(userId);
+      }
+    });
+
+    return avatar;
+  }
+
+  function createPostAuthor(post) {
+    const profile = getProfile(post.user_id);
+
+    const author = createElement(
+      "div",
+      "community-post-author"
+    );
+
+    const avatar = createAuthorAvatar(
+      profile,
+      post.user_id
+    );
+
+    const information = createElement(
+      "div",
+      "community-post-author-info"
+    );
+
+    const name = createElement(
+      "button",
+      "community-post-author-name",
+      profile?.display_name || "User"
+    );
+
+    name.type = "button";
+
+    name.addEventListener("click", () => {
+      openPublicProfile(post.user_id);
+    });
+
+    const date = createElement(
+      "span",
+      "community-post-date",
+      dateText(post.created_at)
+    );
+
+    information.append(name, date);
+    author.append(avatar, information);
+
+    return author;
+  }
+
+  function renderPostCard(container, post, ownPost = false) {
+    const card = createElement(
+      "article",
+      "community-post-card"
+    );
+
+    card.dataset.postId = post.id;
+
+    const header = createElement(
+      "div",
+      "community-post-header"
+    );
+
+    header.appendChild(createPostAuthor(post));
+
+    const content = createElement(
+      "div",
+      "community-post-content"
+    );
+
+    if (post.content) {
+      const caption = createElement(
+        "p",
+        "community-post-caption"
+      );
+
+      caption.textContent = post.content;
+      content.appendChild(caption);
+    }
+
+    if (post.image_url) {
+      const imageWrap = createElement(
+        "div",
+        "community-post-image-wrap"
+      );
+
+      const image = createElement(
+        "img",
+        "community-post-image"
+      );
+
+      image.src = safeImage(post.image_url);
+      image.alt = "Post image";
+      image.loading = "lazy";
+
+      image.addEventListener("error", () => {
+        imageWrap.remove();
+      });
+
+      imageWrap.appendChild(image);
+      content.appendChild(imageWrap);
+    }
+
+    const reactionRow = createElement(
+      "div",
+      "community-post-reactions"
+    );
+
+    const myReaction = getReaction(post.id);
+
+    EMOJIS.forEach(emoji => {
+      const button = makeButton(
+        emoji,
+        "community-reaction-button",
+        async () => {
+          if (!requireLogin()) return;
+
+          button.disabled = true;
+
+          const success = await toggleReaction(
+            post.id,
+            emoji
+          );
+
+          button.disabled = false;
+
+          if (success) {
+            await refreshData();
+            renderCommunityPage();
+          }
+        }
+      );
+
+      button.setAttribute(
+        "aria-label",
+        `React ${emoji}`
+      );
+
+      button.setAttribute(
+        "aria-pressed",
+        String(myReaction?.emoji === emoji)
+      );
+
+      if (myReaction?.emoji === emoji) {
+        button.classList.add("active");
+      }
+
+      reactionRow.appendChild(button);
+    });
+
+    const commentButton = makeButton(
+      "Comment",
+      "community-comment-button",
+      () => {
+        if (!requireLogin()) return;
+        openComments(post);
+      }
+    );
+
+    const actionRow = createElement(
+      "div",
+      "community-post-actions"
+    );
+
+    actionRow.append(reactionRow, commentButton);
+
+    const commentPreview = createElement(
+      "div",
+      "community-comment-preview"
+    );
+
+    const postComments = getPostComments(post.id);
+
+    postComments.slice(0, 2).forEach(comment => {
+      const commentProfile = getProfile(comment.user_id);
+
+      const preview = createElement(
+        "div",
+        "community-comment-preview-item"
+      );
+
+      const commentName = createElement(
+        "strong",
+        "community-comment-preview-name",
+        commentProfile?.display_name || "User"
+      );
+
+      commentName.setAttribute("role", "button");
+      commentName.tabIndex = 0;
+
+      commentName.addEventListener("click", () => {
+        openPublicProfile(comment.user_id);
+      });
+
+      const commentText = createElement(
+        "span",
+        "community-comment-preview-text",
+        comment.content || ""
+      );
+
+      preview.append(commentName, commentText);
+      commentPreview.appendChild(preview);
+    });
+
+    if (postComments.length > 2) {
+      const moreComments = makeButton(
+        `View all ${postComments.length} comments`,
+        "community-view-comments",
+        () => {
+          if (!requireLogin()) return;
+          openComments(post);
+        }
+      );
+
+      commentPreview.appendChild(moreComments);
+    }
+
+    if (ownPost && currentUser?.id === post.user_id) {
+      const deleteButton = makeButton(
+        "Delete Post",
+        "community-delete-post-button",
+        async () => {
+          if (!requireLogin()) return;
+
+          const confirmed = window.confirm(
+            "Are you sure you want to delete this post?"
+          );
+
+          if (!confirmed) return;
+
+          deleteButton.disabled = true;
+          deleteButton.textContent = "Deleting...";
+
+          const { error } = await db
+            .from("community_posts")
+            .delete()
+            .eq("id", post.id)
+            .eq("user_id", currentUser.id);
+
+          if (error) {
+            console.error("Post delete error:", error);
+
+            showNotice(
+              "Could not delete this post.",
+              "error"
+            );
+
+            deleteButton.disabled = false;
+            deleteButton.textContent = "Delete Post";
+            return;
+          }
+
+          await refreshData();
+
+          showNotice("Post deleted.", "success");
+          renderCommunityPage();
+        }
+      );
+
+      actionRow.appendChild(deleteButton);
+    }
+
+    card.append(
+      header,
+      content,
+      actionRow
+    );
+
+    if (postComments.length) {
+      card.appendChild(commentPreview);
+    }
+
+    container.appendChild(card);
+
+    return card;
+  }
+
+  function openComments(post) {
+    if (!requireLogin()) return;
+
+    activePost = post;
+
+    const oldOverlay = $("#community-comments-overlay");
+
+    if (oldOverlay) {
+      oldOverlay.remove();
+    }
+
+    const overlay = createElement(
+      "div",
+      "community-comments-overlay"
+    );
+
+    overlay.id = "community-comments-overlay";
+
+    const sheet = createElement(
+      "section",
+      "community-comments-sheet"
+    );
+
+    const header = createElement(
+      "div",
+      "community-comments-header"
+    );
+
+    const title = createElement(
+      "h3",
+      "",
+      "Comments"
+    );
+
+    const closeButton = makeButton(
+      "✕",
+      "community-comments-close",
+      () => overlay.remove()
+    );
+
+    closeButton.setAttribute(
+      "aria-label",
+      "Close comments"
+    );
+
+    header.append(title, closeButton);
+
+    const list = createElement(
+      "div",
+      "community-comments-list"
+    );
+
+    function renderCommentList() {
+      list.replaceChildren();
+
+      const postComments = getPostComments(post.id);
+
+      if (!postComments.length) {
+        list.appendChild(
+          createElement(
+            "div",
+            "community-comments-empty",
+            "No comments yet. Be the first to comment."
+          )
+        );
+
+        return;
+      }
+
+      postComments.forEach(comment => {
+        const profile = getProfile(comment.user_id);
+
+        const item = createElement(
+          "div",
+          "community-comment-item"
+        );
+
+        const avatar = createAuthorAvatar(
+          profile,
+          comment.user_id
+        );
+
+        const body = createElement(
+          "div",
+          "community-comment-body"
+        );
+
+        const name = createElement(
+          "button",
+          "community-comment-name",
+          profile?.display_name || "User"
+        );
+
+        name.type = "button";
+
+        name.addEventListener("click", () => {
+          overlay.remove();
+          openPublicProfile(comment.user_id);
+        });
+
+        const text = createElement(
+          "p",
+          "community-comment-text",
+          comment.content || ""
+        );
+
+        const date = createElement(
+          "span",
+          "community-comment-date",
+          dateText(comment.created_at)
+        );
+
+        body.append(name, text, date);
+        item.append(avatar, body);
+
+        list.appendChild(item);
+      });
+    }
+
+    const form = createElement(
+      "form",
+      "community-comment-form"
+    );
+
+    const input = createElement(
+      "textarea",
+      "community-comment-input"
+    );
+
+    input.placeholder = "Write a comment...";
+    input.maxLength = 500;
+    input.rows = 2;
+    input.required = true;
+
+    const submit = makeButton(
+      "Send",
+      "community-comment-send"
+    );
+
+    submit.type = "submit";
+
+    form.append(input, submit);
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!requireLogin()) return;
+
+      const text = input.value.trim();
+
+      if (!text) {
+        showNotice("Write a comment first.", "error");
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = "Sending...";
+
+      const success = await addComment(
+        post.id,
+        text
+      );
+
+      if (success) {
+        input.value = "";
+        renderCommentList();
+      }
+
+      submit.disabled = false;
+      submit.textContent = "Send";
+    });
+
+    sheet.append(
+      header,
+      list,
+      form
+    );
+
+    overlay.appendChild(sheet);
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) {
+        overlay.remove();
+      }
+    });
+
+    document.body.appendChild(overlay);
+
+    renderCommentList();
+       }
+     function createComposer(container, postScope, onPublished) {
+    if (!currentUser) return;
+
+    if (postScope !== "community_home" && !isCreator()) {
+      return;
+    }
+
+    const composer = createElement(
+      "section",
+      "community-composer"
+    );
+
+    const heading = createElement(
+      "h3",
+      "community-composer-title",
+      "Create a Post"
+    );
+
+    const form = createElement(
+      "form",
+      "community-composer-form"
+    );
+
+    const textarea = createElement(
+      "textarea",
+      "community-composer-textarea"
+    );
+
+    textarea.placeholder = "What's on your mind?";
+    textarea.rows = 3;
+    textarea.maxLength = 5000;
+
+    const preview = createElement(
+      "div",
+      "community-composer-preview"
+    );
+
+    let selectedImageUrl = null;
+
+    const controls = createElement(
+      "div",
+      "community-composer-controls"
+    );
+
+    const photoButton = makeButton(
+      "＋ Add Photo",
+      "community-add-photo-button"
+    );
+
+    const photoInput = createElement("input");
+    photoInput.type = "file";
+    photoInput.accept = "image/jpeg,image/png,image/webp";
+    photoInput.hidden = true;
+
+    photoButton.addEventListener("click", () => {
+      photoInput.click();
+    });
+
+    photoInput.addEventListener("change", async () => {
+      const file = photoInput.files?.[0];
+      if (!file) return;
+
+      photoButton.disabled = true;
+      photoButton.textContent = "Uploading...";
+
+      const url = await uploadCommunityImage(file, "posts");
+
+      photoButton.disabled = false;
+      photoButton.textContent = "＋ Add Photo";
+
+      if (!url) {
+        photoInput.value = "";
+        return;
+      }
+
+      selectedImageUrl = url;
+      preview.replaceChildren();
+
+      const imageWrap = createElement(
+        "div",
+        "community-composer-image-wrap"
+      );
+
+      const image = createElement(
+        "img",
+        "community-composer-image"
+      );
+
+      image.src = safeImage(url);
+      image.alt = "Selected post image";
+
+      const removeButton = makeButton(
+        "✕",
+        "community-remove-image-button",
+        () => {
+          selectedImageUrl = null;
+          preview.replaceChildren();
+          photoInput.value = "";
+        }
+      );
+
+      removeButton.title = "Remove image";
+
+      imageWrap.append(image, removeButton);
+      preview.appendChild(imageWrap);
+    });
+
+    const postButton = makeButton(
+      "Post",
+      "community-primary-button"
+    );
+
+    postButton.type = "submit";
+
+    controls.append(photoButton, postButton);
+
+    form.append(
+      textarea,
+      preview,
+      photoInput,
+      controls
+    );
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!requireLogin()) return;
+
+      const content = textarea.value.trim();
+
+      if (!content && !selectedImageUrl) {
+        showNotice(
+          "Write something or add a photo first.",
+          "error"
+        );
+        return;
+      }
+
+      postButton.disabled = true;
+      postButton.textContent = "Posting...";
+
+      const success = await publishPost(
+        content,
+        selectedImageUrl,
+        postScope
+      );
+
+      postButton.disabled = false;
+      postButton.textContent = "Post";
+
+      if (!success) return;
+
+      textarea.value = "";
+      selectedImageUrl = null;
+      photoInput.value = "";
+      preview.replaceChildren();
+
+      if (typeof onPublished === "function") {
+        await onPublished();
+      }
+    });
+
+    composer.append(heading, form);
+    container.appendChild(composer);
+
+    return composer;
+  }
+
+  function renderFeed(container, postScope = "community_home") {
+    container.replaceChildren();
+
+    const isHome = postScope === "community_home";
+
+    const heading = createElement(
+      "h2",
+      "community-section-title",
+      isHome ? "Community Feed" : "Creator Panel"
+    );
+
+    container.appendChild(heading);
+
+    if (isHome) {
+      createComposer(
+        container,
+        "community_home",
+        async () => {
+          await refreshData();
+          renderFeed(container, "community_home");
+        }
+      );
+    } else if (isCreator()) {
+      createComposer(
+        container,
+        postScope,
+        async () => {
+          await refreshData();
+          renderFeed(container, postScope);
+        }
+      );
+    }
+
+    const feed = createElement(
+      "div",
+      "community-post-list"
+    );
+
+    const filteredPosts = posts.filter(post => {
+      const scope = post.post_scope || "community_home";
+      return scope === postScope;
+    });
+
+    if (!filteredPosts.length) {
+      feed.appendChild(
+        createElement(
+          "div",
+          "community-feed-empty",
+          isHome
+            ? "No posts yet. Be the first to share something!"
+            : "No Creator Panel posts yet."
+        )
+      );
+    } else {
+      filteredPosts.forEach(post => {
+        renderPostCard(
+          feed,
+          post,
+          post.user_id === currentUser?.id
+        );
+      });
+    }
+
+    container.appendChild(feed);
+  }
+
+  function renderCreator(container) {
+    container.replaceChildren();
+
+    const heading = createElement(
+      "h2",
+      "community-section-title",
+      "Creator Panel"
+    );
+
+    const description = createElement(
+      "p",
+      "community-section-description",
+      "Official updates and posts from the Change Maker Community team."
+    );
+
+    container.append(heading, description);
+
+    const feed = createElement(
+      "div",
+      "community-post-list"
+    );
+
+    const creatorPosts = posts.filter(post => {
+      return post.post_scope === "creator_panel";
+    });
+
+    if (isCreator()) {
+      createComposer(
+        container,
+        "creator_panel",
+        async () => {
+          await refreshData();
+          renderCreator(container);
+        }
+      );
+    }
+
+    if (!creatorPosts.length) {
+      feed.appendChild(
+        createElement(
+          "div",
+          "community-feed-empty",
+          "No Creator Panel posts yet."
+        )
+      );
+    } else {
+      creatorPosts.forEach(post => {
+        renderPostCard(
+          feed,
+          post,
+          post.user_id === currentUser?.id
+        );
+      });
+    }
+
+    container.appendChild(feed);
+  }
+
+  async function getUnreadNotificationCount() {
+    if (!currentUser) return 0;
+
+    const { count, error } = await db
+      .from("community_notifications")
+      .select("id", {
+        count: "exact",
+        head: true
+      })
+      .eq("recipient_id", currentUser.id)
+      .eq("is_read", false);
+
+    if (error) {
+      console.error(
+        "Notification count error:",
+        error
+      );
+
+      return 0;
+    }
+
+    return count || 0;
+  }
+
+  async function renderNotifications(container) {
+    container.replaceChildren();
+
+    const heading = createElement(
+      "h2",
+      "community-section-title",
+      "Notifications"
+    );
+
+    container.appendChild(heading);
+
+    if (!currentUser) {
+      container.appendChild(
+        createElement(
+          "div",
+          "community-feed-empty",
+          "Please sign in to view your notifications."
+        )
+      );
+
+      return;
+    }
+
+    const { data, error } = await db
+      .from("community_notifications")
+      .select("*")
+      .eq("recipient_id", currentUser.id)
+      .order("created_at", {
+        ascending: false
+      });
+
+    if (error) {
+      console.error(
+        "Notifications load error:",
+        error
+      );
+
+      container.appendChild(
+        createElement(
+          "div",
+          "community-feed-empty",
+          "Could not load notifications."
+        )
+      );
+
+      return;
+    }
+
+    const notificationList = createElement(
+      "div",
+      "community-notification-list"
+    );
+
+    if (!data?.length) {
+      notificationList.appendChild(
+        createElement(
+          "div",
+          "community-feed-empty",
+          "You have no notifications yet."
+        )
+      );
+    } else {
+      for (const notification of data) {
+        const item = createElement(
+          "div",
+          "community-notification-item"
+        );
+
+        if (!notification.is_read) {
+          item.classList.add("unread");
+        }
+
+        const message = createElement(
+          "div",
+          "community-notification-message",
+          notification.message ||
+            "You have a new notification."
+        );
+
+        const date = createElement(
+          "span",
+          "community-notification-date",
+          dateText(notification.created_at)
+        );
+
+        item.append(message, date);
+
+        if (!notification.is_read) {
+          const markButton = makeButton(
+            "Mark as read",
+            "community-notification-read-button",
+            async () => {
+              markButton.disabled = true;
+
+              const { error: updateError } = await db
+                .from("community_notifications")
+                .update({ is_read: true })
+                .eq("id", notification.id)
+                .eq("recipient_id", currentUser.id);
+
+              if (updateError) {
+                console.error(
+                  "Notification update error:",
+                  updateError
+                );
+
+                showNotice(
+                  "Could not update notification.",
+                  "error"
+                );
+
+                markButton.disabled = false;
+                return;
+              }
+
+              notification.is_read = true;
+              item.classList.remove("unread");
+              markButton.remove();
+              await updateNotificationBadge();
+            }
+          );
+
+          item.appendChild(markButton);
+        }
+
+        notificationList.appendChild(item);
+      }
+    }
+
+    container.appendChild(notificationList);
+         }
+     function updateNotificationBadge() {
+    const badge = document.querySelector(
+      ".community-notification-badge"
+    );
+
+    if (!badge) return;
+
+    getUnreadNotificationCount().then(count => {
+      badge.textContent = count > 99 ? "99+" : String(count);
+      badge.hidden = count === 0;
+    });
+  }
+
+  function getRecentSearches() {
+    try {
+      const saved = localStorage.getItem(
+        "cma_community_recent_searches"
+      );
+
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveRecentSearch(query) {
+    const cleanQuery = query.trim();
+    if (!cleanQuery) return;
+
+    const recent = getRecentSearches().filter(
+      item => item.toLowerCase() !== cleanQuery.toLowerCase()
+    );
+
+    recent.unshift(cleanQuery);
+
+    localStorage.setItem(
+      "cma_community_recent_searches",
+      JSON.stringify(recent.slice(0, 10))
+    );
+  }
+
+  function renderSearchPage(container, onBack) {
+    container.replaceChildren();
+
+    const page = createElement(
+      "section",
+      "community-search-page"
+    );
+
+    const topbar = createElement(
+      "div",
+      "community-search-topbar"
+    );
+
+    const backButton = makeButton(
+      "←",
+      "community-search-back",
+      () => {
+        if (typeof onBack === "function") {
+          onBack();
+        }
+      }
+    );
+
+    backButton.setAttribute("aria-label", "Back");
+
+    const title = createElement(
+      "h2",
+      "community-search-title",
+      "Search"
+    );
+
+    topbar.append(backButton, title);
+
+    const searchForm = createElement(
+      "form",
+      "community-search-form"
+    );
+
+    const searchInput = createElement(
+      "input",
+      "community-search-input"
+    );
+
+    searchInput.type = "search";
+    searchInput.placeholder = "Search people or posts...";
+    searchInput.autocomplete = "off";
+
+    const searchButton = makeButton(
+      "Search",
+      "community-primary-button"
+    );
+
+    searchButton.type = "submit";
+
+    searchForm.append(searchInput, searchButton);
+
+    const results = createElement(
+      "div",
+      "community-search-results"
+    );
+
+    const recentSection = createElement(
+      "section",
+      "community-recent-searches"
+    );
+
+    const recentHeader = createElement(
+      "div",
+      "community-recent-header"
+    );
+
+    const recentTitle = createElement(
+      "h3",
+      "",
+      "Recent Searches"
+    );
+
+    const clearButton = makeButton(
+      "Clear All",
+      "community-clear-searches"
+    );
+
+    recentHeader.append(recentTitle, clearButton);
+
+    const recentList = createElement(
+      "div",
+      "community-recent-list"
+    );
+
+    function showRecentSearches() {
+      recentList.replaceChildren();
+
+      const recent = getRecentSearches();
+
+      if (!recent.length) {
+        recentList.appendChild(
+          createElement(
+            "p",
+            "community-search-muted",
+            "No recent searches."
+          )
+        );
+
+        return;
+      }
+
+      recent.forEach(query => {
+        const item = makeButton(
+          "⌕  " + query,
+          "community-recent-search-item",
+          () => {
+            searchInput.value = query;
+            performSearch(query);
+          }
+        );
+
+        recentList.appendChild(item);
+      });
+    }
+
+    clearButton.addEventListener("click", () => {
+      localStorage.removeItem(
+        "cma_community_recent_searches"
+      );
+
+      showRecentSearches();
+    });
+
+    function addSearchResult(titleText, description, callback, className) {
+      const item = makeButton(
+        "",
+        className || "community-search-result-item",
+        callback
+      );
+
+      const resultTitle = createElement(
+        "strong",
+        "community-search-result-title",
+        titleText
+      );
+
+      const resultDescription = createElement(
+        "span",
+        "community-search-result-description",
+        description
+      );
+
+      item.append(resultTitle, resultDescription);
+      results.appendChild(item);
+    }
+
+    function performSearch(rawQuery) {
+      const query = String(rawQuery || "").trim();
+
+      results.replaceChildren();
+
+      if (!query) {
+        showNotice("Enter something to search.", "error");
+        return;
+      }
+
+      saveRecentSearch(query);
+
+      const normalizedQuery = query.toLowerCase();
+
+      const matchingProfiles = Object.values(profiles).filter(profile => {
+        const name = profile.display_name || "";
+
+        const description = profile.short_description || "";
+
+        return (
+          name.toLowerCase().includes(normalizedQuery) ||
+          description.toLowerCase().includes(normalizedQuery)
+        );
+      });
+
+      const matchingPosts = posts.filter(post => {
+        const content = post.content || post.caption || "";
+
+        return content.toLowerCase().includes(normalizedQuery);
+      });
+
+      const peopleHeading = createElement(
+        "h3",
+        "community-search-group-title",
+        "People"
+      );
+
+      results.appendChild(peopleHeading);
+
+      if (!matchingProfiles.length) {
+        results.appendChild(
+          createElement(
+            "p",
+            "community-search-muted",
+            "No matching people found."
+          )
+        );
+      } else {
+        matchingProfiles.forEach(profile => {
+          addSearchResult(
+            profile.display_name || "Community Member",
+            profile.short_description || "View profile",
+            () => {
+              renderUserProfile(
+                container,
+                profile.user_id,
+                () => renderSearchPage(container, onBack)
+              );
+            },
+            "community-search-result-item"
+          );
+        });
+      }
+
+      const postsHeading = createElement(
+        "h3",
+        "community-search-group-title",
+        "Posts"
+      );
+
+      results.appendChild(postsHeading);
+
+      if (!matchingPosts.length) {
+        results.appendChild(
+          createElement(
+            "p",
+            "community-search-muted",
+            "No matching posts found."
+          )
+        );
+      } else {
+        matchingPosts.forEach(post => {
+          const content = post.content || post.caption || "";
+
+          const author = getProfile(post.user_id);
+
+          addSearchResult(
+            author?.display_name || "Community Member",
+            content.slice(0, 140) || "Photo post",
+            () => {
+              if (typeof onBack === "function") {
+                onBack();
+              }
+
+              setTimeout(() => {
+                const postElement = document.querySelector(
+                  `[data-post-id="${post.id}"]`
+                );
+
+                if (postElement) {
+                  postElement.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                  });
+                }
+              }, 100);
+            },
+            "community-search-result-item"
+          );
+        });
+      }
+
+      showRecentSearches();
+    }
+
+    searchForm.addEventListener("submit", event => {
+      event.preventDefault();
+      performSearch(searchInput.value);
+    });
+
+    recentSection.append(recentHeader, recentList);
+
+    page.append(
+      topbar,
+      searchForm,
+      recentSection,
+      results
+    );
+
+    container.appendChild(page);
+
+    showRecentSearches();
+    searchInput.focus();
+  }
+
+  function injectCommunityStyles() {
+    if (document.getElementById("cma-community-styles")) {
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = "cma-community-styles";
+
+    style.textContent = `
+      body.community-active {
+        background: #073746 !important;
+        color: #fff;
+        font-family: "Nunito Sans", sans-serif;
+      }
+
+      body.community-active #pageContent {
+        background: #073746;
+        min-height: 100vh;
+      }
+
+      .community-app {
+        width: 100%;
+        max-width: 760px;
+        min-height: 100vh;
+        margin: 0 auto;
+        padding-bottom: 90px;
+        color: #fff;
+      }
+
+      .community-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 62px;
+        padding: 12px 18px;
+        background: #073746;
+        border-bottom: 1px solid rgba(168,192,206,.15);
+      }
+
+      .community-brand {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        white-space: nowrap;
+        letter-spacing: -.4px;
+      }
+
+      .community-brand span {
+        color: #08C99A;
+      }
+
+      .community-search-icon {
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 50%;
+        color: #fff;
+        background: transparent;
+        font-size: 23px;
+        cursor: pointer;
+      }
+
+      .community-search-icon:active {
+        color: #08C99A;
+      }
+
+      .community-main {
+        padding: 16px 14px 28px;
+      }
+
+      .community-bottom-nav {
+        position: fixed;
+        z-index: 50;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        background: #073746;
+        border-top: 1px solid rgba(168,192,206,.18);
+      }
+
+      .community-nav-inner {
+        width: 100%;
+        max-width: 760px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
+      }
+
+      .community-nav-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-height: 54px;
+        border: 0;
+        background: transparent;
+        color: #A8C0CE;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .community-nav-icon {
+        font-size: 21px;
+        line-height: 1.2;
+      }
+
+      .community-nav-label {
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .community-nav-item.active {
+        color: #08C99A;
+        background: transparent;
+      }
+
+      .community-notification-badge {
+        position: absolute;
+        top: 0;
+        left: calc(50% + 7px);
+        min-width: 16px;
+        padding: 2px 4px;
+        border-radius: 20px;
+        background: #08C99A;
+        color: #052D3B;
+        font-size: 9px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .community-notification-badge[hidden] {
+        display: none;
+      }
+
+      .community-section-title {
+        margin: 5px 0 15px;
+        font-size: 21px;
+        font-weight: 800;
+      }
+
+      .community-section-description {
+        margin: -7px 0 18px;
+        color: #A8C0CE;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .community-composer {
+        margin-bottom: 18px;
+        padding: 15px;
+        border: 1px solid #245563;
+        border-radius: 17px;
+        background: #103E4C;
+      }
+
+      .community-composer-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .community-composer-form {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+
+      .community-composer-textarea {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        box-sizing: border-box;
+        padding: 12px;
+        border: 1px solid #245563;
+        border-radius: 12px;
+        outline: none;
+        background: #08494B;
+        color: #fff;
+        font: inherit;
+        font-size: 14px;
+      }
+
+      .community-composer-textarea::placeholder {
+        color: #A8C0CE;
+      }
+
+      .community-composer-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .community-add-photo-button {
+        min-height: 38px;
+        padding: 8px 13px;
+        border: 1px solid #08C99A;
+        border-radius: 10px;
+        background: transparent;
+        color: #68DDB9;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .community-primary-button {
+        min-height: 38px;
+        padding: 8px 20px;
+        border: 0;
+        border-radius: 10px;
+        background: #08C99A;
+        color: #052D3B;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .community-primary-button:disabled,
+      .community-add-photo-button:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+      }
+
+      .community-composer-preview:empty {
+        display: none;
+      }
+
+      .community-composer-image-wrap {
+        position: relative;
+        width: fit-content;
+        max-width: 100%;
+      }
+
+      .community-composer-image {
+        display: block;
+        max-width: 100%;
+        max-height: 220px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+
+      .community-remove-image-button {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 29px;
+        height: 29px;
+        border: 0;
+        border-radius: 50%;
+        background: #052D3B;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .community-post-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .community-feed-empty {
+        padding: 25px 15px;
+        border: 1px solid #245563;
+        border-radius: 15px;
+        background: #103E4C;
+        color: #A8C0CE;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .community-post-card {
+        overflow: hidden;
+        padding: 14px;
+        border: 1px solid #245563;
+        border-radius: 16px;
+        background: #103E4C;
+      }
+
+      .community-post-author,
+      .community-post-author-button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .community-post-author-button {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .community-avatar {
+        width: 39px;
+        height: 39px;
+        flex: 0 0 39px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #08494B;
+      }
+
+      .community-post-author-name {
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .community-post-date {
+        display: block;
+        margin-top: 2px;
+        color: #A8C0CE;
+        font-size: 11px;
+      }
+
+      .community-post-content {
+        margin: 13px 0;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+      }
+
+      .community-post-image {
+        display: block;
+        width: 100%;
+        max-height: 420px;
+        border-radius: 12px;
+        object-fit: contain;
+        background: #08494B;
+      }
+
+      .community-post-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 13px;
+        padding-top: 11px;
+        border-top: 1px solid rgba(168,192,206,.15);
+      }
+
+      .community-reaction-button,
+      .community-comment-button,
+      .community-delete-button {
+        min-width: 35px;
+        min-height: 35px;
+        padding: 5px 9px;
+        border: 0;
+        border-radius: 30px;
+        background: #08494B;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+      }
+
+      .community-reaction-button.active {
+        outline: 1px solid #08C99A;
+        background: #08494B;
+      }
+
+      .community-comment-button {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .community-delete-button {
+        color: #ffb3b3;
+        font-size: 12px;
+      }
+
+      .community-profile-cover {
+        position: relative;
+        height: 175px;
+        border-radius: 15px;
+        background: #08494B;
+        background-position: center;
+        background-size: cover;
+      }
+
+      .community-profile-avatar-wrap {
+        position: relative;
+        width: 112px;
+        height: 112px;
+        margin: -55px 0 0 18px;
+      }
+
+      .community-profile-avatar {
+        width: 112px;
+        height: 112px;
+        border: 4px solid #073746;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #08494B;
+      }
+
+      .community-profile-identity {
+        padding: 10px 17px 17px;
+      }
+
+      .community-profile-name {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .community-profile-description {
+        margin: 5px 0 0;
+        color: #A8C0CE;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .community-profile-info {
+        margin: 12px 0 18px;
+        padding: 15px;
+        border: 1px solid #245563;
+        border-radius: 15px;
+        background: #103E4C;
+      }
+
+      .community-profile-info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .community-profile-info-title {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .community-profile-edit-button {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #08C99A;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .community-profile-info-row {
+        margin-top: 12px;
+        color: #A8C0CE;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+
+      .community-profile-info-row strong {
+        display: block;
+        margin-bottom: 3px;
+        color: #fff;
+      }
+
+      .community-profile-edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .community-profile-edit-form input,
+      .community-profile-edit-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px;
+        border: 1px solid #245563;
+        border-radius: 10px;
+        outline: none;
+        background: #08494B;
+        color: #fff;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .community-profile-tabs {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        margin: 18px 0;
+        padding: 0 4px 11px;
+        border-bottom: 1px solid rgba(168,192,206,.18);
+      }
+
+      .community-profile-tab {
+        padding: 5px 0;
+        border: 0;
+        background: transparent;
+        color: #A8C0CE;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .community-profile-tab.active {
+        background: transparent;
+        color: #08C99A;
+      }
+
+      .community-search-page {
+        min-height: 75vh;
+      }
+
+      .community-search-topbar {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 17px;
+      }
+
+      .community-search-back {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 50%;
+        background: #103E4C;
+        color: #fff;
+        font-size: 22px;
+        cursor: pointer;
+      }
+
+      .community-search-title {
+        margin: 0;
+        font-size: 21px;
+      }
+
+      .community-search-form {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 22px;
+      }
+
+      .community-search-input {
+        min-width: 0;
+        flex: 1;
+        padding: 11px 13px;
+        border: 1px solid #245563;
+        border-radius: 11px;
+        outline: none;
+        background: #103E4C;
+        color: #fff;
+        font: inherit;
+      }
+
+      .community-recent-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .community-recent-header h3,
+      .community-search-group-title {
+        font-size: 15px;
+      }
+
+      .community-clear-searches {
+        border: 0;
+        background: transparent;
+        color: #08C99A;
+        font: inherit;
+     // Open another user's public profile
+  document.addEventListener(
+    "cma:open-profile",
+    event => {
+      const userId = event.detail;
+
+      if (!userId) return;
+
+      const main = document.querySelector(
+        ".community-main"
+      );
+
+      if (!main) return;
+
+      renderUserProfile(
+        main,
+        userId,
+        () => renderCommunityPage()
+      );
+    }
+  );
+
+  // Public function to open a community profile
+  window.cmaOpenCommunityProfile = function (userId) {
+    if (!userId) return;
+
+    document.dispatchEvent(
+      new CustomEvent("cma:open-profile", {
+        detail: userId
+      })
+    );
   };
 
-  })();
+  // Supabase authentication state listener
+  if (
+    db &&
+    db.auth &&
+    typeof db.auth.onAuthStateChange === "function"
+  ) {
+    db.auth.onAuthStateChange(
+      (event, session) => {
+        currentUser = session?.user || null;
 
-
-  try {
-
-    await communityRenderPromise;
-
-  } finally {
-
-    communityRenderPromise = null;
-
+        if (
+          window.location.search.includes(
+            "page=community"
+          )
+        ) {
+          setTimeout(() => {
+            renderCommunityPage();
+          }, 0);
+        }
+      }
+    );
   }
-}
 
-
-// ================================================
-// AUTH STATE CHANGES
-// ================================================
-
-if (db && db.auth) {
-
-  db.auth.onAuthStateChange((event, session) => {
-
-    currentUser = session?.user || null;
-
-    const activeRoute = new URLSearchParams(window.location.search).get("page");
-
-    if (
-      event !== "INITIAL_SESSION" &&
-      activeRoute === "community" &&
-      document.getElementById("pageContent")
-    ) {
-
-      Promise.resolve().then(() => renderCommunityPage());
-
+  // Refresh community when browser navigation changes
+  window.addEventListener(
+    "popstate",
+    () => {
+      if (
+        window.location.search.includes(
+          "page=community"
+        )
+      ) {
+        renderCommunityPage();
+      }
     }
+  );
 
-  });
+  // Initialize community page
+  function initializeCommunityPage() {
+    const params = new URLSearchParams(
+      window.location.search
+    );
 
-}
+    if (params.get("page") === "community") {
+      renderCommunityPage();
+    }
+  }
 
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeCommunityPage
+    );
+  } else {
+    initializeCommunityPage();
+  }
 
-// ================================================
-// GLOBAL ACCESS
-// ================================================
-
-window.renderCommunityPage = renderCommunityPage;
-
-
-// router.js calls this function only after opening Community.
+  // Public refresh function
+  window.renderCommunityPage = renderCommunityPage;
 
 })();
