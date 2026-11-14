@@ -1,0 +1,29 @@
+/* =========================================
+   CHANGE MAKER ACADEMY
+   COMMUNITY DESIGN SYSTEM
+========================================= */
+
+.cma-community {
+    --cma-bg: #073746;
+    --cma-deep: #052D3B;
+    --cma-panel: #08494B;
+    --cma-card: #103E4C;
+    --cma-border: #245563;
+    --cma-green: #08C99A;
+    --cma-mint: #68DDB9;
+    --cma-white: #FFFFFF;
+    --cma-muted: #A8C0CE;
+
+    font-family: "Nunito Sans", sans-serif;
+    color: var(--cma-white);
+    background: var(--cma-bg);
+    width: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.cma-community *,
+.cma-community *::before,
+.cma-community *::after {
+    box-sizing: border-box;
+}
