@@ -1,424 +1,1377 @@
-
 /* ==================================================
    CHANGE MAKER ACADEMY
-   COMMUNITY — FRONTEND SYSTEM
+   COMPLETE COMMUNITY SYSTEM
    PART 1 OF 2
 ================================================== */
 
 (function(){
 "use strict";
 
-let temporaryPosts = [];
-let selectedImage = "";
-let currentFilter = "";
-let communityNotifications = [];
-let activeCommentPost = null;
+// ================================================
+// SUPABASE
+// ================================================
 
-const reactionOptions = ["👍","❤️","😂","🔥"];
-const userReactions = {};
+const db = window.cmaSupabase;
+const BUCKET = "community-media";
+
+let currentUser = null;
+let currentProfile = {};
+let currentPrivate = {};
+let currentRole = null;
+
+let posts = [];
+let reactions = [];
+let comments = [];
+let profiles = {};
+
+let selectedPostImage = null;
+let selectedAvatar = null;
+let selectedCover = null;
+
+let activePost = null;
+let currentFilter = "";
+
+const EMOJIS = ["👍","❤️","😂","🔥"];
 
 const LOGIN_ERROR =
 "Login Error! Please go back to homepage, select Account, sign up your account and sign in to continue.";
 
 
 // ================================================
-// COMMON FUNCTIONS
+// HELPERS
 // ================================================
 
 function createElement(tag,className,text){
- const el = document.createElement(tag);
 
- if(className) el.className = className;
- if(text !== undefined) el.textContent = text;
+ const node = document.createElement(tag);
 
- return el;
+ if(className) node.className = className;
+
+ if(text !== undefined) node.textContent = text;
+
+ return node;
+}
+
+function makeButton(text,className){
+
+ const node = createElement("button",className,text);
+
+ node.type = "button";
+
+ return node;
 }
 
 function showNotice(message){
- const notice = document.querySelector(".community-notice");
 
- if(!notice) return;
+ const box = document.querySelector(".community-notice");
 
- notice.textContent = message;
- notice.classList.add("show");
+ if(!box){
+  console.log(message);
+  return;
+ }
 
- clearTimeout(notice._timer);
+ box.textContent = message;
+ box.classList.add("show");
 
- notice._timer = setTimeout(()=>{
-  notice.classList.remove("show");
- },4500);
+ clearTimeout(box._timer);
+
+ box._timer = setTimeout(()=>{
+  box.classList.remove("show");
+ },4000);
 }
 
-function showLoginError(){
- showNotice(LOGIN_ERROR);
+function dateText(value){
+
+ if(!value) return "Recently";
+
+ const date = new Date(value);
+
+ return isNaN(date.getTime())
+  ? "Recently"
+  : date.toLocaleString();
 }
 
-function createIcon(name){
+function initial(name){
 
- const icons = {
-  search:`<circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path>`,
-  home:`<path d="m3 10 9-7 9 7"></path><path d="M5 9v11h14V9"></path><path d="M9 20v-7h6v7"></path>`,
-  user:`<circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path>`,
-  creator:`<path d="m16 4 4 4"></path><path d="M4 20 15.5 8.5"></path><path d="m13 6 5 5"></path><path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"></path>`,
-  bell:`<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>`,
-  close:`<path d="m18 6-12 12M6 6l12 12"></path>`
- };
+ return String(name || "U").trim().charAt(0).toUpperCase() || "U";
+}
 
- const svg = document.createElementNS(
-  "http://www.w3.org/2000/svg",
-  "svg"
+function currentName(){
+
+ return currentProfile.display_name ||
+  currentUser?.user_metadata?.full_name ||
+  currentUser?.email?.split("@")[0] ||
+  "Student";
+}
+
+function isCreator(){
+
+ return ["admin","moderator","developer"].includes(
+  String(currentRole || "").toLowerCase()
  );
+}
 
- svg.setAttribute("viewBox","0 0 24 24");
- svg.setAttribute("width","22");
- svg.setAttribute("height","22");
- svg.setAttribute("fill","none");
- svg.setAttribute("stroke","currentColor");
- svg.setAttribute("stroke-width","1.8");
- svg.setAttribute("stroke-linecap","round");
- svg.setAttribute("stroke-linejoin","round");
- svg.setAttribute("aria-hidden","true");
- svg.innerHTML = icons[name] || "";
+function requireLogin(){
 
- return svg;
+ if(currentUser) return true;
+
+ showNotice(LOGIN_ERROR);
+
+ return false;
+}
+
+function safeImage(url){
+
+ return typeof url === "string" &&
+  /^https?:\/\//i.test(url);
 }
 
 
 // ================================================
-// NOTIFICATIONS
+// AUTH
 // ================================================
 
-function addReactionNotification(post,emoji){
+async function loadSession(){
 
- if(!post || post.author === "You") return;
+ if(!db){
+  throw new Error("Supabase client is not connected.");
+ }
 
- communityNotifications.unshift({
-  postId:String(post.id),
-  message:"You reacted " + emoji + " to " +
-   (post.author || "a member") + "'s post.",
-  time:"Just now"
+ const {data,error} = await db.auth.getSession();
+
+ if(error) throw error;
+
+ currentUser = data.session?.user || null;
+
+ return currentUser;
+}
+
+
+// ================================================
+// PROFILE
+// ================================================
+
+async function loadProfile(){
+
+ currentProfile = {};
+ currentPrivate = {};
+
+ if(!currentUser) return;
+
+ const {data,error} = await db
+  .from("community_profiles")
+  .select("*")
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(error) throw error;
+
+ currentProfile = data || {};
+
+ const {data:privateData,error:privateError} = await db
+  .from("community_private_profiles")
+  .select("*")
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(privateError) throw privateError;
+
+ currentPrivate = privateData || {};
+}
+
+
+// ================================================
+// CREATOR ROLE
+// ================================================
+
+async function loadRole(){
+
+ currentRole = null;
+
+ if(!currentUser) return;
+
+ const {data,error} = await db
+  .from("community_creator_roles")
+  .select("role")
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(error) throw error;
+
+ currentRole = data?.role || null;
+}
+
+
+// ================================================
+// LOAD POSTS
+// ================================================
+
+async function loadPosts(){
+
+ const {data,error} = await db
+  .from("community_posts")
+  .select("*")
+  .order("created_at",{ascending:false});
+
+ if(error) throw error;
+
+ posts = data || [];
+}
+
+
+// ================================================
+// LOAD REACTIONS
+// ================================================
+
+async function loadReactions(){
+
+ reactions = [];
+
+ if(!currentUser) return;
+
+ const {data,error} = await db
+  .from("community_reactions")
+  .select("*")
+  .eq("user_id",currentUser.id);
+
+ if(error) throw error;
+
+ reactions = data || [];
+}
+
+
+// ================================================
+// LOAD COMMENTS
+// ================================================
+
+async function loadComments(){
+
+ const {data,error} = await db
+  .from("community_comments")
+  .select("*")
+  .order("created_at",{ascending:true});
+
+ if(error) throw error;
+
+ comments = data || [];
+}
+
+
+// ================================================
+// LOAD PUBLIC PROFILES
+// ================================================
+
+async function loadProfiles(){
+
+ profiles = {};
+
+ const ids = [...new Set(
+  posts.map(post=>post.user_id).filter(Boolean)
+ )];
+
+ if(!ids.length) return;
+
+ const {data,error} = await db
+  .from("community_profiles")
+  .select("user_id,display_name,avatar_url")
+  .in("user_id",ids);
+
+ if(error) throw error;
+
+ (data || []).forEach(profile=>{
+  profiles[profile.user_id] = profile;
  });
 }
 
-function renderNotifications(container){
+
+// ================================================
+// REFRESH DATABASE
+// ================================================
+
+async function refreshData(){
+
+ await loadSession();
+
+ await Promise.all([
+  loadPosts(),
+  loadComments()
+ ]);
+
+ await Promise.all([
+  loadProfile(),
+  loadRole(),
+  loadReactions(),
+  loadProfiles()
+ ]);
+}
+
+
+// ================================================
+// IMAGE UPLOAD
+// ================================================
+
+async function uploadImage(file,folder){
+
+ if(!currentUser){
+  throw new Error(LOGIN_ERROR);
+ }
+
+ if(!file) return null;
+
+ const allowed = [
+  "image/jpeg",
+  "image/png",
+  "image/webp"
+ ];
+
+ if(!allowed.includes(file.type)){
+  throw new Error("Only JPG, PNG and WEBP images are allowed.");
+ }
+
+ if(file.size > 5*1024*1024){
+  throw new Error("Image size must be 5 MB or less.");
+ }
+
+ const extension = file.name.split(".").pop().toLowerCase();
+
+ const path =
+  currentUser.id + "/" +
+  folder + "/" +
+  Date.now() + "-" +
+  Math.random().toString(36).slice(2) +
+  "." + extension;
+
+ const {error} = await db.storage
+  .from(BUCKET)
+  .upload(path,file,{
+   cacheControl:"3600",
+   upsert:false,
+   contentType:file.type
+  });
+
+ if(error) throw error;
+
+ const {data} = db.storage
+  .from(BUCKET)
+  .getPublicUrl(path);
+
+ return data.publicUrl;
+}
+
+
+// ================================================
+// SAVE PROFILE
+// ================================================
+
+async function saveProfile(values){
+
+ if(!requireLogin()) return;
+
+ let avatarUrl = currentProfile.avatar_url || null;
+ let coverUrl = currentProfile.cover_url || null;
+
+ if(selectedAvatar){
+  avatarUrl = await uploadImage(selectedAvatar,"profile");
+ }
+
+ if(selectedCover){
+  coverUrl = await uploadImage(selectedCover,"cover");
+ }
+
+ const profileData = {
+  user_id:currentUser.id,
+  display_name:values.name.trim(),
+  short_description:values.description.trim(),
+  school:values.school.trim(),
+  avatar_url:avatarUrl,
+  cover_url:coverUrl
+ };
+
+ const {error} = await db
+  .from("community_profiles")
+  .upsert(profileData,{onConflict:"user_id"});
+
+ if(error) throw error;
+
+ const privateData = {
+  user_id:currentUser.id,
+  phone:values.phone.trim(),
+  address:values.address.trim()
+ };
+
+ const {error:privateError} = await db
+  .from("community_private_profiles")
+  .upsert(privateData,{onConflict:"user_id"});
+
+ if(privateError) throw privateError;
+
+ selectedAvatar = null;
+ selectedCover = null;
+
+ await loadProfile();
+}
+
+
+// ================================================
+// PUBLISH POST
+// ================================================
+
+async function publishPost(caption,file){
+
+ if(!requireLogin()) return;
+
+ if(!isCreator()){
+  throw new Error("Only Admin, Moderator and Developer can publish posts.");
+ }
+
+ if(!caption.trim() && !file){
+  throw new Error("Write something or select a photo.");
+ }
+
+ let imageUrl = null;
+
+ if(file){
+  imageUrl = await uploadImage(file,"posts");
+ }
+
+ const {error} = await db
+  .from("community_posts")
+  .insert({
+   user_id:currentUser.id,
+   post_type:imageUrl ? "photo" : "text",
+   caption:caption.trim(),
+   image_url:imageUrl
+  });
+
+ if(error) throw error;
+
+ await loadPosts();
+ await loadProfiles();
+}
+
+
+// ================================================
+// MY REACTION
+// ================================================
+
+function myReaction(postId){
+
+ return reactions.find(item=>
+  String(item.post_id) === String(postId)
+ );
+}
+
+
+// ================================================
+// TOGGLE REACTION
+// ================================================
+
+async function toggleReaction(postId,emoji){
+
+ if(!requireLogin()) return;
+
+ const existing = myReaction(postId);
+
+ if(existing){
+
+  if(existing.reaction_type === emoji){
+
+   const {error} = await db
+    .from("community_reactions")
+    .delete()
+    .eq("id",existing.id)
+    .eq("user_id",currentUser.id);
+
+   if(error) throw error;
+
+  }else{
+
+   const {error} = await db
+    .from("community_reactions")
+    .update({reaction_type:emoji})
+    .eq("id",existing.id)
+    .eq("user_id",currentUser.id);
+
+   if(error) throw error;
+  }
+
+ }else{
+
+  const {error} = await db
+   .from("community_reactions")
+   .insert({
+    post_id:postId,
+    user_id:currentUser.id,
+    reaction_type:emoji
+   });
+
+  if(error) throw error;
+ }
+
+ await loadReactions();
+}
+
+
+// ================================================
+// ADD COMMENT
+// ================================================
+
+async function addComment(postId,text){
+
+ if(!requireLogin()) return;
+
+ if(!text.trim()) return;
+
+ const {error} = await db
+  .from("community_comments")
+  .insert({
+   post_id:postId,
+   user_id:currentUser.id,
+   comment_text:text.trim()
+  });
+
+ if(error) throw error;
+
+ await loadComments();
+ await loadProfiles();
+}
+
+
+// ================================================
+// PROFILE FIELD
+// ================================================
+
+function addProfileField(form,label,value,type){
+
+ const wrapper = createElement("label","");
+
+ wrapper.style.cssText = `
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:var(--white);
+  font-size:13px;
+ `;
+
+ wrapper.appendChild(createElement("span","",label));
+
+ const input = createElement("input");
+
+ input.type = type || "text";
+ input.value = value || "";
+
+ input.style.cssText = `
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--panel);
+  color:var(--white);
+  font:inherit;
+ `;
+
+ wrapper.appendChild(input);
+ form.appendChild(wrapper);
+
+ return input;
+}
+
+
+// ================================================
+// FILE FIELD
+// ================================================
+
+function addImageField(form,label,callback){
+
+ const wrapper = createElement("label","");
+
+ wrapper.style.cssText = `
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  color:var(--white);
+  font-size:13px;
+ `;
+
+ wrapper.appendChild(createElement("span","",label));
+
+ const input = createElement("input");
+
+ input.type = "file";
+ input.accept = "image/jpeg,image/png,image/webp";
+
+ input.addEventListener("change",()=>{
+
+  const file = input.files?.[0];
+
+  if(!file) return;
+
+  if(file.size > 5*1024*1024){
+   showNotice("Image must be 5 MB or less.");
+   input.value = "";
+   return;
+  }
+
+  callback(file);
+ });
+
+ wrapper.appendChild(input);
+ form.appendChild(wrapper);
+}
+
+
+// ================================================
+// PROFILE TABS
+// ================================================
+
+function createProfileTabs(container){
+
+ const tabs = createElement("div","community-profile-tabs");
+
+ tabs.style.cssText = `
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:22px 0 15px;
+ `;
+
+ const content = createElement("div","community-profile-tab-content");
+
+ container.appendChild(tabs);
+ container.appendChild(content);
+
+ const items = [
+  ["Photos","photos"],
+  ["React On","reacted"],
+  ["My Posts","posts"]
+ ];
+
+ items.forEach((item,index)=>{
+
+  const b = makeButton(item[0],"community-profile-tab");
+
+  if(index === 0) b.classList.add("active");
+
+  b.addEventListener("click",()=>{
+
+   tabs.querySelectorAll("button").forEach(x=>
+    x.classList.remove("active")
+   );
+
+   b.classList.add("active");
+
+   renderProfileTab(content,item[1]);
+  });
+
+  tabs.appendChild(b);
+ });
+
+ renderProfileTab(content,"photos");
+}
+
+
+// ================================================
+// RENDER PROFILE TAB
+// ================================================
+
+function renderProfileTab(container,type){
 
  container.innerHTML = "";
 
- container.appendChild(
-  createElement("h3","community-notifications-title","Notifications")
- );
+ if(type === "photos"){
 
- if(!communityNotifications.length){
+  const photos = posts.filter(post=>
+   post.user_id === currentUser.id &&
+   post.image_url
+  );
 
-  container.appendChild(
-   createElement("div","community-empty","No notifications yet.")
+  if(!photos.length){
+   container.appendChild(
+    createElement("p","community-empty","No photos yet.")
+   );
+   return;
+  }
+
+  const grid = createElement("div","community-photo-grid");
+
+  grid.style.cssText = `
+   display:grid;
+   grid-template-columns:repeat(3,minmax(0,1fr));
+   gap:7px;
+  `;
+
+  photos.forEach(post=>{
+
+   const image = createElement("img","community-post-image");
+
+   image.src = post.image_url;
+   image.alt = post.caption || "My photo";
+
+   image.style.cssText = `
+    width:100%;
+    aspect-ratio:1;
+    object-fit:cover;
+    border-radius:10px;
+    cursor:pointer;
+   `;
+
+   image.addEventListener("click",()=>{
+
+    const target = document.getElementById(
+     "community-post-" + post.id
+    );
+
+    if(target){
+     target.scrollIntoView({behavior:"smooth"});
+    }else{
+     showNotice(post.caption || "Your photo");
+    }
+   });
+
+   grid.appendChild(image);
+  });
+
+  container.appendChild(grid);
+  return;
+ }
+
+ if(type === "reacted"){
+
+  const myItems = reactions
+   .map(reaction=>posts.find(post=>
+    String(post.id) === String(reaction.post_id)
+   ))
+   .filter(Boolean);
+
+  if(!myItems.length){
+   container.appendChild(
+    createElement("p","community-empty","You haven't reacted to any posts yet.")
+   );
+   return;
+  }
+
+  myItems.forEach(post=>
+   renderPostCard(container,post,false)
   );
 
   return;
  }
 
- communityNotifications.forEach(item=>{
+ if(type === "posts"){
 
-  const card = createElement(
-   "div",
-   "community-notification-item"
+  container.appendChild(
+   createElement("h3","","My Posts")
   );
 
-  card.style.cssText = `
-   padding:13px;
-   margin-bottom:9px;
-   border:1px solid var(--border);
-   border-radius:12px;
-   background:var(--panel);
-   color:var(--white);
-   font-size:13px;
-  `;
+  const mine = posts
+   .filter(post=>post.user_id === currentUser.id)
+   .sort((a,b)=>
+    new Date(b.created_at)-new Date(a.created_at)
+   );
 
-  card.appendChild(createElement("div","",item.message));
+  if(!mine.length){
+   container.appendChild(
+    createElement("p","community-empty","You haven't published any posts yet.")
+   );
+   return;
+  }
 
-  const time = createElement("small","",item.time);
-  time.style.color = "var(--muted)";
-
-  card.appendChild(time);
-  container.appendChild(card);
- });
+  mine.forEach(post=>
+   renderPostCard(container,post,true)
+  );
+ }
 }
 
 
 // ================================================
-// COMMUNITY PAGE
+// ME PAGE
 // ================================================
 
-function renderCommunityPage(){
+async function renderMe(container){
 
- const pageContent = document.getElementById("pageContent");
+ container.innerHTML = "";
 
- if(!pageContent){
-  console.error("Community: #pageContent not found.");
+ if(!currentUser){
+  container.appendChild(createElement("p","community-empty",LOGIN_ERROR));
   return;
  }
 
- document.body.classList.add("community-active");
+ const title = createElement("h3","","My Profile");
 
- const root = createElement("div","community-page");
+ container.appendChild(title);
 
+ const cover = createElement("div","community-profile-cover");
 
-// ================================================
-// HEADER
-// ================================================
+ cover.style.cssText = `
+  width:100%;
+  min-height:155px;
+  border-radius:16px;
+  background:var(--panel) center/cover no-repeat;
+ `;
 
- const header = createElement("header","community-header");
+ if(safeImage(currentProfile.cover_url)){
+  cover.style.backgroundImage =
+   `url("${currentProfile.cover_url}")`;
+ }
 
- const brand = createElement("a","community-brand");
+ container.appendChild(cover);
 
- brand.href = "?page=community";
- brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
+ const avatar = createElement("div","community-avatar");
 
- header.appendChild(brand);
-
-
-// ================================================
-// SEARCH
-// ================================================
-
- const searchArea = createElement("div","community-search-area");
-
- searchArea.style.cssText = `
+ avatar.style.cssText = `
+  width:86px;
+  height:86px;
+  margin:-45px 0 10px 18px;
   position:relative;
+  border:4px solid var(--bg);
+  border-radius:50%;
+  overflow:hidden;
+  background:var(--panel);
+ `;
+
+ if(safeImage(currentProfile.avatar_url)){
+
+  const image = createElement("img");
+
+  image.src = currentProfile.avatar_url;
+  image.alt = "Profile";
+
+  image.style.cssText = `
+   width:100%;
+   height:100%;
+   object-fit:cover;
+  `;
+
+  avatar.appendChild(image);
+
+ }else{
+
+  avatar.textContent = initial(currentName());
+ }
+
+ container.appendChild(avatar);
+
+ container.appendChild(
+  createElement("h3","",currentName())
+ );
+
+ container.appendChild(
+  createElement(
+   "p",
+   "",
+   currentProfile.short_description || "No description added."
+  )
+ );
+
+ const form = createElement("form","community-profile-form");
+
+ form.style.cssText = `
   display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  margin-left:auto;
-  flex-shrink:0;
+  flex-direction:column;
+  gap:12px;
+  margin-top:18px;
  `;
 
- const searchButton = createElement("button","community-search-btn");
+ form.appendChild(createElement("h3","","Edit Profile"));
 
- searchButton.type = "button";
- searchButton.setAttribute("aria-label","Open search");
- searchButton.appendChild(createIcon("search"));
+ const name = addProfileField(
+  form,"Name",currentProfile.display_name
+ );
 
- const search = createElement("div","community-search");
+ const description = addProfileField(
+  form,"Short Description",
+  currentProfile.short_description
+ );
 
- search.style.cssText = `
-  display:none;
-  position:absolute;
-  top:48px;
-  right:0;
-  width:min(260px,75vw);
-  z-index:1002;
-  padding:5px;
-  border:1px solid var(--border);
-  border-radius:25px;
-  background:var(--bg);
- `;
+ const school = addProfileField(
+  form,"Institution",
+  currentProfile.school
+ );
 
- const searchInput = createElement("input");
+ const phone = addProfileField(
+  form,"Mobile Number",
+  currentPrivate.phone,
+  "tel"
+ );
 
- searchInput.type = "search";
- searchInput.placeholder = "Search posts...";
+ const address = addProfileField(
+  form,"Address",
+  currentPrivate.address
+ );
 
- search.appendChild(searchInput);
- searchArea.appendChild(searchButton);
- searchArea.appendChild(search);
- header.appendChild(searchArea);
-
- searchButton.addEventListener("click",()=>{
-
-  const opening = search.style.display === "none";
-
-  search.style.display = opening ? "block" : "none";
-
-  searchButton.setAttribute("aria-expanded",String(opening));
-
-  if(opening){
-   searchInput.focus();
-  }else{
-   searchInput.value = "";
-   currentFilter = "";
-   renderFeed();
-  }
+ addImageField(form,"Profile Logo / Photo",file=>{
+  selectedAvatar = file;
  });
 
- searchInput.addEventListener("input",()=>{
-
-  currentFilter = searchInput.value.trim().toLowerCase();
-  renderFeed();
+ addImageField(form,"Cover Banner",file=>{
+  selectedCover = file;
  });
 
-
-// ================================================
-// MAIN
-// ================================================
-
- const main = createElement("main","community-main");
-
- const notice = createElement("div","community-notice");
-
- main.appendChild(notice);
-
-
-// ================================================
-// NAVIGATION
-// ================================================
-
- const nav = createElement("nav","community-nav");
-
- const navItems = [
-  ["home","Home","home"],
-  ["user","Me","me"],
-  ["creator","Creator Panel","creator"],
-  ["bell","Notification","notifications"]
- ];
-
- const notificationPanel = createElement(
-  "section",
-  "community-notification-panel"
+ const save = makeButton(
+  "Save Profile",
+  "community-publish-btn"
  );
 
- notificationPanel.style.cssText = `
-  display:none;
-  padding:16px;
-  width:100%;
-  box-sizing:border-box;
- `;
+ save.type = "submit";
 
- const notificationList = createElement(
-  "div",
-  "community-notification-list"
- );
+ form.appendChild(save);
 
- notificationPanel.appendChild(notificationList);
+ form.addEventListener("submit",async event=>{
 
- const sectionPanel = createElement(
-  "section",
-  "community-section-panel"
- );
+  event.preventDefault();
 
- sectionPanel.style.cssText = `
-  display:none;
-  padding:16px;
-  width:100%;
-  box-sizing:border-box;
- `;
+  save.disabled = true;
+  save.textContent = "Saving...";
 
- navItems.forEach((item,index)=>{
+  try{
 
-  const button = createElement(
-   "button",
-   index === 0 ? "active" : ""
-  );
-
-  button.type = "button";
-  button.setAttribute("aria-label",item[1]);
-
-  button.style.cssText = `
-   display:flex;
-   flex-direction:column;
-   align-items:center;
-   justify-content:center;
-   gap:5px;
-  `;
-
-  const iconWrap = createElement("span","community-nav-icon-wrap");
-
-  iconWrap.style.cssText = `
-   position:relative;
-   width:30px;
-   height:27px;
-   display:flex;
-   align-items:center;
-   justify-content:center;
-  `;
-
-  const icon = createElement("span","community-nav-icon");
-  icon.appendChild(createIcon(item[0]));
-  iconWrap.appendChild(icon);
-
-  if(item[2] === "notifications"){
-
-   const dot = createElement("span","community-notification-dot");
-
-   dot.style.cssText = `
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:8px;
-    height:8px;
-    border:1px solid var(--bg);
-    border-radius:50%;
-    background:#ff3b45;
-    transform:translate(-50%,-50%);
-    z-index:2;
-    pointer-events:none;
-   `;
-
-   iconWrap.appendChild(dot);
-  }
-
-  button.appendChild(iconWrap);
-
-  button.appendChild(
-   createElement("span","community-nav-label",item[1])
-  );
-
-  button.addEventListener("click",()=>{
-
-   nav.querySelectorAll("button").forEach(btn=>{
-    btn.classList.remove("active");
+   await saveProfile({
+    name:name.value,
+    description:description.value,
+    school:school.value,
+    phone:phone.value,
+    address:address.value
    });
 
-   button.classList.add("active");
+   await renderMe(container);
 
-   main.style.display = "block";
-   notificationPanel.style.display = "none";
-   sectionPanel.style.display = "none";
+   showNotice("Profile saved successfully.");
 
-   if(item[2] === "home"){
-    showNotice("Welcome to the Community feed.");
-   }
+  }catch(error){
 
-   if(item[2] === "me"){
+   console.error(error);
+   showNotice(error.message || "Profile could not be saved.");
 
-    sectionPanel.style.display = "block";
+  }finally{
 
-    sectionPanel.innerHTML = `
-     <h3>My Profile</h3>
-     <p>Student profile will be connected after Account Login is added.</p>
-    `;
-   }
+   save.disabled = false;
+   save.textContent = "Save Profile";
+  }
+ });
 
-   if(item[2] === "creator"){
+ container.appendChild(form);
 
-    sectionPanel.style.display = "block";
+ createProfileTabs(container);
+}
 
-    sectionPanel.innerHTML = `
-     <h3>Creator Panel</h3>
-     <p>Creator access is reserved for authorized Admin, Developer and Moderator accounts.</p>
-    `;
-   }
+// ================================================
+// PART 2 CONTINUES
+// ================================================
+ /* ==================================================
+   CHANGE MAKER ACADEMY
+   COMPLETE COMMUNITY SYSTEM
+   PART 2 OF 2
+================================================== */
 
-   if(item[2] === "notifications"){
+// ================================================
+// POST CARD
+// ================================================
 
-    main.style.display = "none";
-    notificationPanel.style.display = "block";
+function renderPostCard(container,post,ownPost){
 
-    renderNotifications(notificationList);
+ const card = createElement("article","community-post");
+
+ card.id = "community-post-" + post.id;
+
+ const profile = profiles[post.user_id] || {};
+
+ const author = profile.display_name || "Community Member";
+
+ const top = createElement("div","community-post-top");
+
+ const avatar = createElement("div","community-avatar");
+
+ if(safeImage(profile.avatar_url)){
+
+  const image = createElement("img");
+
+  image.src = profile.avatar_url;
+  image.alt = author;
+
+  image.style.cssText = `
+   width:100%;
+   height:100%;
+   object-fit:cover;
+   border-radius:50%;
+  `;
+
+  avatar.appendChild(image);
+
+ }else{
+
+  avatar.textContent = initial(author);
+ }
+
+ top.appendChild(avatar);
+
+ const info = createElement("div","community-author-info");
+
+ info.appendChild(
+  createElement("strong","",author)
+ );
+
+ info.appendChild(
+  createElement("small","",dateText(post.created_at))
+ );
+
+ top.appendChild(info);
+ card.appendChild(top);
+
+ if(post.caption){
+
+  card.appendChild(
+   createElement("p","community-caption",post.caption)
+  );
+ }
+
+ if(safeImage(post.image_url)){
+
+  const image = createElement("img","community-post-image");
+
+  image.src = post.image_url;
+  image.alt = "Community post";
+  image.loading = "lazy";
+
+  card.appendChild(image);
+ }
+
+ // REACTIONS
+
+ const reactionRow = createElement("div","community-reactions");
+
+ EMOJIS.forEach(emoji=>{
+
+  const b = makeButton(
+   emoji,
+   "community-reaction community-reaction-button"
+  );
+
+  const selected =
+   myReaction(post.id)?.reaction_type === emoji;
+
+  if(selected) b.classList.add("selected");
+
+  b.addEventListener("click",async()=>{
+
+   b.disabled = true;
+
+   try{
+
+    await toggleReaction(post.id,emoji);
+
+    await renderFeed(
+     document.querySelector(".community-feed-panel")
+    );
+
+   }catch(error){
+
+    console.error(error);
+    showNotice(error.message || "Reaction failed.");
+
+   }finally{
+
+    b.disabled = false;
    }
   });
 
-  nav.appendChild(button);
+  reactionRow.appendChild(b);
  });
 
- header.appendChild(nav);
- root.appendChild(header);
+ card.appendChild(reactionRow);
+
+ // COMMENTS
+
+ const actionRow = createElement("div","community-post-actions");
+
+ const commentButton = makeButton(
+  "Comment",
+  "community-comment-toggle"
+ );
+
+ commentButton.addEventListener("click",()=>{
+  openComments(post);
+ });
+
+ actionRow.appendChild(commentButton);
+ card.appendChild(actionRow);
+
+ const preview = createElement("div","community-comments-preview");
+
+ comments
+  .filter(comment=>
+   String(comment.post_id) === String(post.id)
+  )
+  .slice(0,2)
+  .forEach(comment=>{
+
+   const commentProfile = profiles[comment.user_id] || {};
+
+   const line = createElement(
+    "div",
+    "community-comment-preview-item"
+   );
+
+   line.textContent =
+    (commentProfile.display_name || "Member") +
+    ": " + comment.comment_text;
+
+   preview.appendChild(line);
+  });
+
+ card.appendChild(preview);
+
+ // DELETE OWN POST
+
+ if(ownPost){
+
+  const remove = makeButton(
+   "Delete Post",
+   "community-delete-post"
+  );
+
+  remove.addEventListener("click",async()=>{
+
+   if(!confirm("Are you sure you want to delete this post?")){
+    return;
+   }
+
+   remove.disabled = true;
+
+   try{
+
+    const {error} = await db
+     .from("community_posts")
+     .delete()
+     .eq("id",post.id)
+     .eq("user_id",currentUser.id);
+
+    if(error) throw error;
+
+    await loadPosts();
+    await loadProfiles();
+
+    showNotice("Post deleted successfully.");
+
+    const feed = document.querySelector(".community-feed-panel");
+
+    if(feed) await renderFeed(feed);
+
+    const me = document.querySelector(".community-section-panel");
+
+    if(me && me.style.display !== "none"){
+     await renderMe(me);
+    }
+
+   }catch(error){
+
+    console.error(error);
+    showNotice(error.message || "Delete failed.");
+
+   }finally{
+
+    remove.disabled = false;
+   }
+  });
+
+  card.appendChild(remove);
+ }
+
+ container.appendChild(card);
+}
+
+
+// ================================================
+// COMMENT WINDOW
+// ================================================
+
+function openComments(post){
+
+ activePost = post;
+
+ const overlay = createElement("div","community-comment-overlay");
+
+ overlay.style.cssText = `
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(0,0,0,.65);
+ `;
+
+ const sheet = createElement("section","community-comment-sheet");
+
+ sheet.style.cssText = `
+  width:100%;
+  max-width:650px;
+  max-height:80vh;
+  min-height:55vh;
+  overflow:auto;
+  box-sizing:border-box;
+  padding:16px;
+  background:var(--bg);
+  color:var(--white);
+  border-radius:20px 20px 0 0;
+ `;
+
+ const header = createElement(
+  "div",
+  "community-comment-sheet-header"
+ );
+
+ header.style.cssText = `
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:15px;
+ `;
+
+ header.appendChild(createElement("strong","","Comments"));
+
+ const close = makeButton("✕","community-comment-close");
+
+ close.addEventListener("click",()=>{
+  overlay.remove();
+ });
+
+ header.appendChild(close);
+ sheet.appendChild(header);
+
+ const list = createElement(
+  "div",
+  "community-comment-sheet-list"
+ );
+
+ function drawComments(){
+
+  list.innerHTML = "";
+
+  const items = comments.filter(comment=>
+   String(comment.post_id) === String(post.id)
+  );
+
+  if(!items.length){
+   list.appendChild(
+    createElement("p","community-empty","No comments yet.")
+   );
+   return;
+  }
+
+  items.forEach(comment=>{
+
+   const profile = profiles[comment.user_id] || {};
+
+   const row = createElement("div","community-comment-preview-item");
+
+   row.textContent =
+    (profile.display_name || "Community Member") +
+    ": " + comment.comment_text;
+
+   list.appendChild(row);
+  });
+ }
+
+ drawComments();
+
+ sheet.appendChild(list);
+
+ const form = createElement(
+  "form",
+  "community-comment-sheet-form"
+ );
+
+ form.style.cssText = `
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+ `;
+
+ const input = createElement("input");
+
+ input.type = "text";
+ input.placeholder = "Write a comment...";
+ input.maxLength = 500;
+ input.required = true;
+
+ input.style.cssText = `
+  flex:1;
+  min-width:0;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:25px;
+  background:var(--panel);
+  color:var(--white);
+ `;
+
+ const send = makeButton("Send","community-comment-sheet-send");
+
+ send.type = "submit";
+
+ form.appendChild(input);
+ form.appendChild(send);
+
+ form.addEventListener("submit",async event=>{
+
+  event.preventDefault();
+
+  send.disabled = true;
+
+  try{
+
+   await addComment(post.id,input.value);
+
+   await drawComments();
+
+   input.value = "";
+
+   drawComments();
+
+   await renderFeed(
+    document.querySelector(".community-feed-panel")
+   );
+
+   notice("Comment added.");
+
+  }catch(error){
+
+   console.error(error);
+   showNotice(error.message || "Comment failed.");
+
+  }finally{
+
+   send.disabled = false;
+  }
+ });
+
+ sheet.appendChild(form);
+
+ overlay.appendChild(sheet);
+
+ overlay.addEventListener("click",event=>{
+
+  if(event.target === overlay){
+   overlay.remove();
+  }
+ });
+
+ document.body.appendChild(overlay);
+}
 
 
 // ================================================
 // CREATE POST COMPOSER
 // ================================================
 
- const composer = createElement("section","community-composer");
+function createComposer(container){
+
+ if(!currentUser || !isCreator()) return;
+
+ const composer = createElement(
+  "section",
+  "community-composer"
+ );
 
  composer.appendChild(
   createElement("h3","community-composer-title","Create a Post")
@@ -433,762 +1386,478 @@ function renderCommunityPage(){
 
  const preview = createElement("img","community-preview");
 
- preview.alt = "Selected post image preview";
- preview.style.display = "none";
+ preview.alt = "Selected image preview";
+ preview.style.cssText = `
+  display:none;
+  width:100%;
+  max-height:300px;
+  object-fit:contain;
+ `;
 
  composer.appendChild(preview);
-
- const composerBottom = createElement(
-  "div",
-  "community-composer-bottom"
- );
-
- const photoLabel = createElement(
-  "label",
-  "community-photo-label",
-  "▧ Add Photo"
- );
 
  const fileInput = createElement("input");
 
  fileInput.type = "file";
  fileInput.accept = "image/jpeg,image/png,image/webp";
 
- photoLabel.appendChild(fileInput);
+ composer.appendChild(fileInput);
 
- const fileName = createElement("div","community-selected-file");
-
- const publishButton = createElement(
-  "button",
-  "community-publish-btn",
-  "Publish"
- );
-
- publishButton.type = "button";
-
- composerBottom.appendChild(photoLabel);
- composerBottom.appendChild(publishButton);
-
- composer.appendChild(composerBottom);
- composer.appendChild(fileName);
-
- main.appendChild(composer);
-
- main.appendChild(
-  createElement("h3","community-feed-title","Community Feed")
- );
-
- const feed = createElement("div","community-feed");
-
- main.appendChild(feed);
-
- root.appendChild(main);
- root.appendChild(notificationPanel);
- root.appendChild(sectionPanel);
-
-
-// ================================================
-// IMAGE PREVIEW
-// ================================================
+ let chosenFile = null;
 
  fileInput.addEventListener("change",()=>{
 
-  const file = fileInput.files[0];
+  chosenFile = fileInput.files?.[0] || null;
 
-  selectedImage = "";
-
-  if(!file){
+  if(!chosenFile){
    preview.style.display = "none";
-   fileName.textContent = "";
    return;
   }
 
-  if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
-
+  if(chosenFile.size > 5*1024*1024){
+   chosenFile = null;
    fileInput.value = "";
-   preview.style.display = "none";
-   fileName.textContent = "";
-
-   showNotice("Please choose a JPG, PNG or WEBP image.");
+   showNotice("Image must be 5 MB or less.");
    return;
   }
 
-  if(file.size > 5 * 1024 * 1024){
-
+  if(!["image/jpeg","image/png","image/webp"].includes(chosenFile.type)){
+   chosenFile = null;
    fileInput.value = "";
-   preview.style.display = "none";
-   fileName.textContent = "";
-
-   showNotice("Image size must be 5 MB or less.");
+   showNotice("Choose JPG, PNG or WEBP.");
    return;
   }
 
   const reader = new FileReader();
 
   reader.onload = event=>{
-
-   selectedImage = event.target.result;
-   preview.src = selectedImage;
+   preview.src = event.target.result;
    preview.style.display = "block";
-   fileName.textContent = file.name;
   };
 
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(chosenFile);
  });
 
+ const publish = makeButton(
+  "Publish",
+  "community-publish-btn"
+ );
 
-// ================================================
-// PUBLISH POST — LOGIN REQUIRED
-// ================================================
+ publish.addEventListener("click",async()=>{
 
- publishButton.addEventListener("click",()=>{
+  publish.disabled = true;
+  publish.textContent = "Publishing...";
 
-  showLoginError();
+  try{
 
+   await publishPost(textarea.value,chosenFile);
+
+   textarea.value = "";
+   fileInput.value = "";
+   chosenFile = null;
+
+   preview.src = "";
+   preview.style.display = "none";
+
+   await refreshData();
+
+   await renderFeed(container);
+
+   showNotice("Post published successfully.");
+
+  }catch(error){
+
+   console.error(error);
+   showNotice(error.message || "Publish failed.");
+
+  }finally{
+
+   publish.disabled = false;
+   publish.textContent = "Publish";
+  }
  });
 
+ composer.appendChild(publish);
+
+ container.appendChild(composer);
+}
+
 
 // ================================================
-// COMMENT BOTTOM SHEET
+// COMMUNITY FEED
 // ================================================
 
- const commentOverlay = createElement(
-  "div",
-  "community-comment-overlay"
+async function renderFeed(container){
+
+ if(!container) return;
+
+ container.innerHTML = "";
+
+ container.appendChild(
+  createElement("h3","community-feed-title","Community Feed")
  );
 
- commentOverlay.style.cssText = `
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  background:rgba(0,0,0,.58);
-  align-items:flex-end;
-  justify-content:center;
- `;
+ createComposer(container);
 
- const commentSheet = createElement(
-  "section",
-  "community-comment-sheet"
- );
+ const search = createElement("input","community-feed-search");
 
- commentSheet.style.cssText = `
+ search.type = "search";
+ search.placeholder = "Search posts...";
+
+ search.style.cssText = `
   width:100%;
-  max-width:650px;
-  height:min(78vh,720px);
-  display:flex;
-  flex-direction:column;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-bottom:0;
-  border-radius:20px 20px 0 0;
-  overflow:hidden;
-  box-shadow:0 -8px 35px rgba(0,0,0,.3);
-  animation:communitySheetUp .28s ease-out;
- `;
-
- const sheetStyle = document.createElement("style");
-
- sheetStyle.textContent = `
-  @keyframes communitySheetUp {
-   from {transform:translateY(100%)}
-   to {transform:translateY(0)}
-  }
- `;
-
- document.head.appendChild(sheetStyle);
-
- const sheetHeader = createElement(
-  "div",
-  "community-comment-sheet-header"
- );
-
- sheetHeader.style.cssText = `
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 16px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
- `;
-
- const sheetTitle = createElement("strong","","Comments");
-
- const closeButton = createElement(
-  "button",
-  "community-comment-close"
- );
-
- closeButton.type = "button";
- closeButton.appendChild(createIcon("close"));
-
- closeButton.style.cssText = `
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:36px;
-  height:36px;
-  border:0;
-  border-radius:50%;
-  background:var(--panel);
-  color:var(--white);
-  cursor:pointer;
- `;
-
- sheetHeader.appendChild(sheetTitle);
- sheetHeader.appendChild(closeButton);
-
- const sheetComments = createElement(
-  "div",
-  "community-comment-sheet-list"
- );
-
- sheetComments.style.cssText = `
-  flex:1;
-  overflow-y:auto;
-  padding:14px;
- `;
-
- const sheetForm = createElement(
-  "form",
-  "community-comment-sheet-form"
- );
-
- sheetForm.style.cssText = `
-  display:flex;
-  align-items:center;
-  gap:8px;
+  box-sizing:border-box;
   padding:12px;
-  padding-bottom:calc(12px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--border);
-  background:var(--bg);
-  flex-shrink:0;
- `;
-
- const sheetInput = createElement(
-  "input",
-  "community-comment-sheet-input"
- );
-
- sheetInput.type = "text";
- sheetInput.placeholder = "Write a comment...";
- sheetInput.maxLength = 500;
- sheetInput.required = true;
-
- sheetInput.style.cssText = `
-  flex:1;
-  min-width:0;
-  padding:12px 15px;
+  margin:12px 0;
   border:1px solid var(--border);
-  border-radius:24px;
-  outline:none;
+  border-radius:12px;
   background:var(--panel);
   color:var(--white);
-  font:inherit;
  `;
 
- const sheetSend = createElement(
-  "button",
-  "community-comment-sheet-send",
-  "Send"
+ container.appendChild(search);
+
+ const list = createElement("div","community-feed");
+
+ container.appendChild(list);
+
+ function draw(){
+
+  list.innerHTML = "";
+
+  const query = search.value.trim().toLowerCase();
+
+  const filtered = posts.filter(post=>{
+
+   const profile = profiles[post.user_id] || {};
+
+   return (
+    String(post.caption || "").toLowerCase().includes(query) ||
+    String(profile.display_name || "").toLowerCase().includes(query)
+   );
+  });
+
+  if(!filtered.length){
+
+   list.appendChild(
+    createElement("p","community-empty","No posts found.")
+   );
+
+   return;
+  }
+
+  filtered.forEach(post=>{
+
+   renderPostCard(
+    list,
+    post,
+    currentUser && post.user_id === currentUser.id
+   );
+  });
+ }
+
+ search.addEventListener("input",draw);
+
+ draw();
+}
+
+
+// ================================================
+// CREATOR PANEL
+// ================================================
+
+async function renderCreator(container){
+
+ container.innerHTML = "";
+
+ container.appendChild(
+  createElement("h3","","Creator Panel")
  );
 
- sheetSend.type = "submit";
+ container.appendChild(
+  createElement(
+   "p",
+   "",
+   "Explore Community posts, react and comment."
+  )
+ );
 
- sheetSend.style.cssText = `
-  padding:11px 17px;
-  border:0;
-  border-radius:22px;
-  background:var(--green);
-  color:#052D3B;
-  font:inherit;
-  font-weight:900;
-  cursor:pointer;
- `;
+ if(currentUser && isCreator()){
 
- sheetForm.appendChild(sheetInput);
- sheetForm.appendChild(sheetSend);
-
- commentSheet.appendChild(sheetHeader);
- commentSheet.appendChild(sheetComments);
- commentSheet.appendChild(sheetForm);
-
- commentOverlay.appendChild(commentSheet);
- root.appendChild(commentOverlay);
-
-
-// ================================================
-// COMMENT FUNCTIONS
-// ================================================
-
- function closeCommentSheet(){
-
-  commentOverlay.style.display = "none";
-  activeCommentPost = null;
-  sheetInput.value = "";
- }
-
- closeButton.addEventListener("click",closeCommentSheet);
-
- commentOverlay.addEventListener("click",event=>{
-
-  if(event.target === commentOverlay){
-   closeCommentSheet();
-  }
- });
-
- function renderSheetComments(){
-
-  sheetComments.innerHTML = "";
-
-  if(!activeCommentPost) return;
-
-  const comments = Array.isArray(activeCommentPost.comments)
-   ? activeCommentPost.comments
-   : [];
-
-  if(!comments.length){
-
-   sheetComments.appendChild(
-    createElement(
-     "div",
-     "community-empty",
-     "No comments yet."
-    )
-   );
-
-   return;
-  }
-
-  comments.forEach(comment=>{
-
-   const row = createElement(
-    "div",
-    "community-comment-sheet-row"
-   );
-
-   row.style.cssText = `
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-    margin-bottom:15px;
-   `;
-
-   const avatar = createElement(
-    "div",
-    "community-avatar",
-    (comment.author || "U").charAt(0).toUpperCase()
-   );
-
-   const bubble = createElement(
-    "div",
-    "community-comment-bubble"
-   );
-
-   bubble.style.cssText = `
-    padding:10px 13px;
-    border-radius:15px;
-    background:var(--panel);
-    color:var(--white);
-    max-width:calc(100% - 50px);
-    overflow-wrap:anywhere;
-   `;
-
-   bubble.appendChild(
-    createElement(
-     "strong",
-     "",
-     comment.author || "Community Member"
-    )
-   );
-
-   const commentText = createElement(
+  container.appendChild(
+   createElement(
     "p",
-    "",
-    comment.text || ""
-   );
-
-   commentText.style.cssText = `
-    margin:5px 0 0;
-    font-size:13px;
-    line-height:1.5;
-   `;
-
-   bubble.appendChild(commentText);
-   row.appendChild(avatar);
-   row.appendChild(bubble);
-
-   sheetComments.appendChild(row);
-  });
-
-  sheetComments.scrollTop = sheetComments.scrollHeight;
- }
-
- function openCommentSheet(post){
-
-  activeCommentPost = post;
-
-  renderSheetComments();
-
-  commentOverlay.style.display = "flex";
-
-  setTimeout(()=>{
-   sheetInput.focus();
-  },150);
- }
-
- sheetForm.addEventListener("submit",event=>{
-
-  event.preventDefault();
-
-  const commentText = sheetInput.value.trim();
-
-  if(!commentText || !activeCommentPost) return;
-
-  activeCommentPost.comments =
-   Array.isArray(activeCommentPost.comments)
-    ? activeCommentPost.comments
-    : [];
-
-  activeCommentPost.comments.push({
-   author:"You",
-   text:commentText
-  });
-
-  sheetInput.value = "";
-
-  renderSheetComments();
-  renderFeed();
-
-  showNotice(
-   "Comment added to this temporary preview only."
+    "community-demo-tag",
+    "Authorized Role: " + currentRole
+   )
   );
- });
+
+ }else{
+
+  container.appendChild(
+   createElement(
+    "p",
+    "community-empty",
+    "You can browse posts, react and comment. Publishing is available only to authorized Creators."
+   )
+  );
+ }
+
+ const feed = createElement("div","community-feed-panel");
+
+ container.appendChild(feed);
+
+ await renderFeed(feed);
+}
 
 
 // ================================================
-// RENDER FEED
+// NOTIFICATIONS
 // ================================================
 
- function renderFeed(){
+async function renderNotifications(container){
 
-  feed.innerHTML = "";
+ container.innerHTML = "";
 
-  const demoPosts = Array.isArray(window.communityDemoPosts)
-   ? window.communityDemoPosts
-   : [];
+ container.appendChild(
+  createElement("h3","","Notifications")
+ );
 
-  const allPosts = [
-   ...temporaryPosts,
-   ...demoPosts
-  ];
+ if(!currentUser){
+  container.appendChild(
+   createElement("p","community-empty",LOGIN_ERROR)
+  );
+  return;
+ }
 
-  const filteredPosts = allPosts.filter(post=>{
+ const {data,error} = await db
+  .from("community_notifications")
+  .select("*")
+  .eq("recipient_id",currentUser.id)
+  .order("created_at",{ascending:false});
 
-   const comments = Array.isArray(post.comments)
-    ? post.comments
-    : [];
+ if(error){
+  showNotice(error.message);
+  return;
+ }
 
-   const searchable = [
-    post.author || "",
-    post.caption || "",
-    ...comments.map(comment=>
-     (comment.author || "") + " " + (comment.text || "")
-    )
-   ].join(" ").toLowerCase();
+ if(!data?.length){
 
-   return searchable.includes(currentFilter);
-  });
+  container.appendChild(
+   createElement("p","community-empty","No notifications yet.")
+  );
 
-  if(!filteredPosts.length){
+  return;
+ }
 
-   feed.appendChild(
-    createElement(
-     "div",
-     "community-empty",
-     "No matching posts found."
-    )
-   );
+ data.forEach(item=>{
 
-   return;
-  }
+  const card = createElement(
+   "div",
+   "community-notification-item"
+  );
 
-  filteredPosts.forEach(post=>{
+  card.style.cssText = `
+   padding:13px;
+   margin-bottom:10px;
+   border:1px solid var(--border);
+   border-radius:12px;
+   background:var(--panel);
+   color:var(--white);
+  `;
 
-   const card = createElement("article","community-post");
-
-   const postId = String(
-    post.id || post.author + post.time
-   );
-
-
-// AUTHOR
-
-   const top = createElement("div","community-post-top");
-
-   top.appendChild(
-    createElement(
-     "div",
-     "community-avatar",
-     post.avatar || "U"
-    )
-   );
-
-   const authorInfo = createElement(
+  card.appendChild(
+   createElement(
     "div",
-    "community-author-info"
+    "",
+    item.notification_type || "Notification"
+   )
+  );
+
+  card.appendChild(
+   createElement("small","",dateText(item.created_at))
+  );
+
+  if(!item.is_read){
+
+   const mark = makeButton(
+    "Mark as read",
+    "community-notification-read"
    );
 
-   authorInfo.appendChild(
-    createElement(
-     "span",
-     "community-author-name",
-     post.author || "Community Member"
-    )
-   );
+   mark.addEventListener("click",async()=>{
 
-   authorInfo.appendChild(
-    createElement(
-     "span",
-     "community-post-time",
-     post.time || "Recently"
-    )
-   );
+    const {error:updateError} = await db
+     .from("community_notifications")
+     .update({is_read:true})
+     .eq("id",item.id)
+     .eq("recipient_id",currentUser.id);
 
-   if(post.isDemo){
-
-    authorInfo.appendChild(
-     createElement(
-      "span",
-      "community-demo-tag",
-      "DEMO POST"
-     )
-    );
-   }
-
-   top.appendChild(authorInfo);
-
-   card.appendChild(top);
-
-
-// CAPTION
-
-   if(post.caption){
-
-    card.appendChild(
-     createElement(
-      "p",
-      "community-caption",
-      post.caption
-     )
-    );
-   }
-
-
-// IMAGE
-
-   if(post.image){
-
-    const image = createElement(
-     "img",
-     "community-post-image"
-    );
-
-    image.src = post.image;
-    image.alt = "Community post image";
-    image.loading = "lazy";
-
-    card.appendChild(image);
-   }
-
-
-// REACTIONS — NO COUNTS
-
-   const reactions = createElement(
-    "div",
-    "community-reactions"
-   );
-
-   if(!userReactions[postId]){
-    userReactions[postId] = "";
-   }
-
-   reactionOptions.forEach(emoji=>{
-
-    const selected = userReactions[postId] === emoji;
-
-    const button = createElement(
-     "button",
-     "community-reaction community-reaction-button"
-    );
-
-    button.type = "button";
-    button.textContent = emoji;
-    button.setAttribute("aria-label","React with " + emoji);
-
-    if(selected){
-
-     button.classList.add("selected");
-
-     button.style.background = "var(--green)";
-     button.style.borderColor = "var(--green)";
-     button.style.color = "#052D3B";
-     button.style.transform = "scale(1.08)";
-     button.style.fontWeight = "900";
+    if(updateError){
+     showNotice(updateError.message);
+     return;
     }
 
-    button.addEventListener("click",()=>{
-
-     const previous = userReactions[postId];
-
-     if(previous === emoji){
-
-      userReactions[postId] = "";
-
-     }else{
-
-      userReactions[postId] = emoji;
-      addReactionNotification(post,emoji);
-     }
-
-     renderFeed();
-    });
-
-    reactions.appendChild(button);
+    await renderNotifications(container);
    });
 
-   card.appendChild(reactions);
+   card.appendChild(mark);
+  }
+
+  container.appendChild(card);
+ });
+}
 
 
-// COMMENT ACTION
+// ================================================
+// MAIN COMMUNITY PAGE
+// ================================================
 
-   const actionRow = createElement(
-    "div",
-    "community-post-actions"
-   );
+async function renderCommunityPage(){
 
-   actionRow.style.cssText = `
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 0;
-    border-top:1px solid var(--border);
-    border-bottom:1px solid var(--border);
-   `;
+ const pageContent = document.getElementById("pageContent");
 
-   const commentButton = createElement(
-    "button",
-    "community-comment-toggle",
-    "Comment"
-   );
+ if(!pageContent) return;
 
-   commentButton.type = "button";
-
-   commentButton.style.cssText = `
-    border:0;
-    background:transparent;
-    color:var(--muted);
-    font:inherit;
-    font-weight:800;
-    cursor:pointer;
-    padding:8px 12px;
-   `;
-
-   commentButton.addEventListener("click",()=>{
-    openCommentSheet(post);
-   });
-
-   actionRow.appendChild(commentButton);
-   card.appendChild(actionRow);
-
-
-// SHOW TWO COMMENTS
-
-   const comments = Array.isArray(post.comments)
-    ? post.comments
-    : [];
-
-   const previewComments = createElement(
-    "div",
-    "community-comments-preview"
-   );
-
-   previewComments.style.cssText = `
-    padding-top:10px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-   `;
-
-   comments.slice(0,2).forEach(comment=>{
-
-    const line = createElement(
-     "div",
-     "community-comment-preview-item"
-    );
-
-    line.style.cssText = `
-     padding:8px 11px;
-     border-radius:12px;
-     background:var(--panel);
-     color:var(--white);
-     font-size:12px;
-     line-height:1.5;
-     overflow-wrap:anywhere;
-    `;
-
-    line.appendChild(
-     createElement(
-      "strong",
-      "",
-      comment.author || "Community Member"
-     )
-    );
-
-    line.appendChild(
-     document.createTextNode(": " + (comment.text || ""))
-    );
-
-    previewComments.appendChild(line);
-   });
-
-   if(comments.length > 2){
-
-    const more = createElement(
-     "button",
-     "community-more-comments",
-     "View all comments"
-    );
-
-    more.type = "button";
-
-    more.addEventListener("click",()=>{
-     openCommentSheet(post);
-    });
-
-    previewComments.appendChild(more);
-   }
-
-   card.appendChild(previewComments);
-   feed.appendChild(card);
-  });
+ if(!db){
+  pageContent.textContent =
+   "Supabase connection unavailable.";
+  return;
  }
 
-
-// ================================================
-// ADD COMMUNITY TO PAGE
-// ================================================
+ document.body.classList.add("community-active");
 
  pageContent.innerHTML = "";
+
+ const root = createElement("div","community-page");
+
+ const header = createElement("header","community-header");
+
+ const brand = createElement("a","community-brand");
+
+ brand.href = "?page=community";
+ brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
+
+ header.appendChild(brand);
+
+ const nav = createElement("nav","community-nav");
+
+ const main = createElement("main","community-main");
+
+ const noticeBox = createElement("div","community-notice");
+
+ main.appendChild(noticeBox);
+
+ const feedPanel = createElement("section","community-feed-panel");
+
+ const sectionPanel = createElement("section","community-section-panel");
+
+ const notificationPanel = createElement(
+  "section",
+  "community-notification-panel"
+ );
+
+ sectionPanel.style.display = "none";
+ notificationPanel.style.display = "none";
+
+ const navItems = [
+  ["Home","home"],
+  ["Me","me"],
+  ["Creator Panel","creator"],
+  ["Notification","notifications"]
+ ];
+
+ navItems.forEach((item,index)=>{
+
+  const b = makeButton(
+   item[0],
+   index === 0 ? "active" : ""
+  );
+
+  b.addEventListener("click",async()=>{
+
+   nav.querySelectorAll("button").forEach(button=>
+    button.classList.remove("active")
+   );
+
+   b.classList.add("active");
+
+   feedPanel.style.display = "none";
+   sectionPanel.style.display = "none";
+   notificationPanel.style.display = "none";
+
+   try{
+
+    if(item[1] === "home"){
+
+     feedPanel.style.display = "block";
+
+     await refreshData();
+
+     await renderFeed(feedPanel);
+    }
+
+    if(item[1] === "me"){
+
+     sectionPanel.style.display = "block";
+
+     await refreshData();
+
+     await renderMe(sectionPanel);
+    }
+
+    if(item[1] === "creator"){
+
+     sectionPanel.style.display = "block";
+
+     await refreshData();
+
+     await renderCreator(sectionPanel);
+    }
+
+    if(item[1] === "notifications"){
+
+     notificationPanel.style.display = "block";
+
+     await renderNotifications(notificationPanel);
+    }
+
+   }catch(error){
+
+    console.error(error);
+    showNotice(error.message || "Unable to open section.");
+   }
+  });
+
+  nav.appendChild(b);
+ });
+
+ header.appendChild(nav);
+
+ root.appendChild(header);
+
+ main.appendChild(feedPanel);
+
+ root.appendChild(main);
+ root.appendChild(sectionPanel);
+ root.appendChild(notificationPanel);
+
  pageContent.appendChild(root);
 
+ try{
 
-// ================================================
-// FIRST RENDER
-// ================================================
+  await refreshData();
 
- renderFeed();
+  await renderFeed(feedPanel);
 
+ }catch(error){
+
+  console.error("Community error:",error);
+
+  showNotice(
+   error.message || "Unable to load Community."
+  );
+ }
 }
 
 
@@ -1197,6 +1866,35 @@ function renderCommunityPage(){
 // ================================================
 
 window.renderCommunityPage = renderCommunityPage;
+
+
+// ================================================
+// AUTH STATE CHANGES
+// ================================================
+
+if(db){
+
+ db.auth.onAuthStateChange(async()=>{
+
+  const page = new URLSearchParams(
+   window.location.search
+  ).get("page");
+
+  if(page === "community"){
+
+   try{
+
+    await refreshData();
+
+    await renderCommunityPage();
+
+   }catch(error){
+
+    console.error(error);
+   }
+  }
+ });
+}
 
 
 // ================================================
@@ -1210,10 +1908,9 @@ window.addEventListener("popstate",()=>{
  );
 
  if(params.get("page") !== "community"){
+
   document.body.classList.remove("community-active");
  }
-
 });
 
 })();
-    
