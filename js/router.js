@@ -49,14 +49,17 @@ function loadCommunityModules() {
 
 
 // ==================================================
-// AUTOMATIC HEADER CONTROL SYSTEM
+// AUTOMATIC HEADER AND PAGE ELEMENT CONTROL
 // ==================================================
 
 function updatePageHeaders(page) {
 
  const topHeader = document.querySelector(".header");
  const secondHeader = document.querySelector(".cma-bottom-nav");
+
  const pageBanner = document.getElementById("pageBanner");
+ const pageIntro = document.querySelector("#innerPage .page-intro");
+ const backLink = document.getElementById("backLink");
 
  const isDemoAI = (
   page === "demo-ai" ||
@@ -82,18 +85,34 @@ function updatePageHeaders(page) {
   !!isCommunity
  );
 
+ // Main Academy Header
  if (topHeader) {
   topHeader.style.display =
    (isDemoAI || isCommunity) ? "none" : "";
  }
 
+ // Main Bottom Navigation
  if (secondHeader) {
   secondHeader.style.display =
    (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
  }
 
+ // Inner Page Banner
  if (pageBanner) {
-  pageBanner.style.display = isAccount ? "none" : "";
+  pageBanner.style.display =
+   (isAccount || isCommunity) ? "none" : "";
+ }
+
+ // Inner Page Program Heading
+ if (pageIntro) {
+  pageIntro.style.display =
+   isCommunity ? "none" : "";
+ }
+
+ // Back To Homepage Button
+ if (backLink) {
+  backLink.style.display =
+   isCommunity ? "none" : "";
  }
 
 }
@@ -175,6 +194,7 @@ function openPage(page) {
 
  homePage.style.display = "none";
  innerPage.classList.add("active");
+
  clearContent();
 
 
@@ -907,3 +927,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+   
