@@ -30,6 +30,7 @@ function createElement(tag,className,text){
 function showNotice(message){
  const notice = document.querySelector(".community-notice");
  if(!notice) return;
+
  notice.textContent = message;
  notice.classList.add("show");
 }
@@ -45,7 +46,11 @@ function createIcon(name){
   close:`<path d="m18 6-12 12M6 6l12 12"></path>`
  };
 
- const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+ const svg = document.createElementNS(
+  "http://www.w3.org/2000/svg",
+  "svg"
+ );
+
  svg.setAttribute("viewBox","0 0 24 24");
  svg.setAttribute("width","22");
  svg.setAttribute("height","22");
@@ -54,6 +59,7 @@ function createIcon(name){
  svg.setAttribute("stroke-width","1.8");
  svg.setAttribute("stroke-linecap","round");
  svg.setAttribute("stroke-linejoin","round");
+ svg.setAttribute("aria-hidden","true");
  svg.innerHTML = icons[name] || "";
 
  return svg;
@@ -61,7 +67,7 @@ function createIcon(name){
 
 
 // ================================================
-// NOTIFICATION
+// NOTIFICATIONS
 // ================================================
 
 function addReactionNotification(post,emoji){
@@ -69,15 +75,13 @@ function addReactionNotification(post,emoji){
  if(!post || post.author === "You") return;
 
  communityNotifications = communityNotifications.filter(item =>
-  !(item.postId === String(post.id) && item.from === "You")
+  item.postId !== String(post.id)
  );
 
  if(!emoji) return;
 
  communityNotifications.unshift({
   postId:String(post.id),
-  from:"You",
-  owner:post.author,
   message:"You reacted " + emoji + " to " + post.author + "'s post.",
   time:"Just now"
  });
@@ -88,19 +92,33 @@ function renderNotifications(container){
  container.innerHTML = "";
 
  container.appendChild(
-  createElement("h3","community-notifications-title","Notifications")
+  createElement(
+   "h3",
+   "community-notifications-title",
+   "Notifications"
+  )
  );
 
  if(!communityNotifications.length){
+
   container.appendChild(
-   createElement("div","community-empty","No notifications yet.")
+   createElement(
+    "div",
+    "community-empty",
+    "No notifications yet."
+   )
   );
+
   return;
  }
 
  communityNotifications.forEach(item=>{
 
-  const card = createElement("div","community-notification-item");
+  const card = createElement(
+   "div",
+   "community-notification-item"
+  );
+
   card.style.cssText = `
    padding:13px;
    margin-bottom:9px;
@@ -111,9 +129,16 @@ function renderNotifications(container){
    font-size:13px;
   `;
 
-  card.appendChild(createElement("div","",item.message));
+  card.appendChild(
+   createElement("div","",item.message)
+  );
 
-  const time = createElement("small","","Just now");
+  const time = createElement(
+   "small",
+   "",
+   item.time
+  );
+
   time.style.color = "var(--muted)";
   card.appendChild(time);
 
@@ -129,7 +154,11 @@ function renderNotifications(container){
 function renderCommunityPage(){
 
  const pageContent = document.getElementById("pageContent");
- if(!pageContent) return;
+
+ if(!pageContent){
+  console.error("Community error: #pageContent was not found.");
+  return;
+ }
 
  document.body.classList.add("community-active");
 
@@ -143,8 +172,10 @@ function renderCommunityPage(){
  const header = createElement("header","community-header");
 
  const brand = createElement("a","community-brand");
+
  brand.href = "?page=community";
  brand.innerHTML = 'CHANGE MAKER <span>COMMUNITY</span>';
+
  header.appendChild(brand);
 
 
@@ -152,7 +183,10 @@ function renderCommunityPage(){
 // SEARCH
 // ================================================
 
- const searchArea = createElement("div","community-search-area");
+ const searchArea = createElement(
+  "div",
+  "community-search-area"
+ );
 
  searchArea.style.cssText = `
   position:relative;
@@ -163,12 +197,17 @@ function renderCommunityPage(){
   flex-shrink:0;
  `;
 
- const searchButton = createElement("button","community-search-btn");
+ const searchButton = createElement(
+  "button",
+  "community-search-btn"
+ );
+
  searchButton.type = "button";
  searchButton.setAttribute("aria-label","Open search");
  searchButton.appendChild(createIcon("search"));
 
  const search = createElement("div","community-search");
+
  search.style.cssText = `
   display:none;
   position:absolute;
@@ -183,6 +222,7 @@ function renderCommunityPage(){
  `;
 
  const searchInput = createElement("input");
+
  searchInput.type = "search";
  searchInput.placeholder = "Search posts...";
 
@@ -196,25 +236,34 @@ function renderCommunityPage(){
   const opening = search.style.display === "none";
 
   search.style.display = opening ? "block" : "none";
-  searchButton.setAttribute("aria-expanded",String(opening));
+
+  searchButton.setAttribute(
+   "aria-expanded",
+   String(opening)
+  );
 
   if(opening){
+
    searchInput.focus();
+
   }else{
+
    searchInput.value = "";
    currentFilter = "";
    renderFeed();
+
   }
  });
 
 
 // ================================================
-// MAIN AND FEED
+// MAIN
 // ================================================
 
  const main = createElement("main","community-main");
 
  const notice = createElement("div","community-notice");
+
  main.appendChild(notice);
 
 
@@ -231,15 +280,32 @@ function renderCommunityPage(){
   ["bell","Notification","notifications"]
  ];
 
- const notificationPanel = createElement("section","community-notification-panel");
- notificationPanel.style.cssText = "display:none;padding:16px;width:100%;box-sizing:border-box;";
+ const notificationPanel = createElement(
+  "section",
+  "community-notification-panel"
+ );
 
- const notificationList = createElement("div","community-notification-list");
+ notificationPanel.style.cssText = `
+  display:none;
+  padding:16px;
+  width:100%;
+  box-sizing:border-box;
+ `;
+
+ const notificationList = createElement(
+  "div",
+  "community-notification-list"
+ );
+
  notificationPanel.appendChild(notificationList);
 
  navItems.forEach((item,index)=>{
 
-  const button = createElement("button",index === 0 ? "active" : "");
+  const button = createElement(
+   "button",
+   index === 0 ? "active" : ""
+  );
+
   button.type = "button";
   button.setAttribute("aria-label",item[1]);
 
@@ -251,7 +317,11 @@ function renderCommunityPage(){
    gap:5px;
   `;
 
-  const iconWrap = createElement("span","community-nav-icon-wrap");
+  const iconWrap = createElement(
+   "span",
+   "community-nav-icon-wrap"
+  );
+
   iconWrap.style.cssText = `
    position:relative;
    width:30px;
@@ -261,12 +331,21 @@ function renderCommunityPage(){
    justify-content:center;
   `;
 
-  const icon = createElement("span","community-nav-icon");
+  const icon = createElement(
+   "span",
+   "community-nav-icon"
+  );
+
   icon.appendChild(createIcon(item[0]));
   iconWrap.appendChild(icon);
 
   if(item[2] === "notifications"){
-   const dot = createElement("span","community-notification-dot");
+
+   const dot = createElement(
+    "span",
+    "community-notification-dot"
+   );
+
    dot.style.cssText = `
     position:absolute;
     top:50%;
@@ -280,34 +359,61 @@ function renderCommunityPage(){
     z-index:2;
     pointer-events:none;
    `;
+
    iconWrap.appendChild(dot);
   }
 
   button.appendChild(iconWrap);
-  button.appendChild(createElement("span","community-nav-label",item[1]));
+
+  button.appendChild(
+   createElement(
+    "span",
+    "community-nav-label",
+    item[1]
+   )
+  );
 
   button.addEventListener("click",()=>{
 
-   nav.querySelectorAll("button").forEach(btn=>btn.classList.remove("active"));
+   nav.querySelectorAll("button").forEach(btn=>{
+    btn.classList.remove("active");
+   });
+
    button.classList.add("active");
 
    if(item[2] === "home"){
+
     main.style.display = "block";
     notificationPanel.style.display = "none";
+
     showNotice("Welcome to the Community feed.");
    }
 
    if(item[2] === "me"){
-    showNotice("My Profile will be connected with your Account in a future update.");
+
+    main.style.display = "block";
+    notificationPanel.style.display = "none";
+
+    showNotice(
+     "My Profile will be connected with your Account in a future update."
+    );
    }
 
    if(item[2] === "creator"){
-    showNotice("Creator Panel is planned for a future update.");
+
+    main.style.display = "block";
+    notificationPanel.style.display = "none";
+
+    showNotice(
+     "Creator Panel is planned for a future update."
+    );
    }
 
    if(item[2] === "notifications"){
+
     main.style.display = "none";
     notificationPanel.style.display = "block";
+
     renderNotifications(notificationList);
    }
   });
@@ -323,45 +429,85 @@ function renderCommunityPage(){
 // CREATE POST
 // ================================================
 
- const composer = createElement("section","community-composer");
+ const composer = createElement(
+  "section",
+  "community-composer"
+ );
 
  composer.appendChild(
-  createElement("h3","community-composer-title","Create a Post")
+  createElement(
+   "h3",
+   "community-composer-title",
+   "Create a Post"
+  )
  );
 
  const textarea = createElement("textarea");
+
  textarea.placeholder = "What's on your mind?";
  textarea.maxLength = 2000;
+
  composer.appendChild(textarea);
 
- const preview = createElement("img","community-preview");
+ const preview = createElement(
+  "img",
+  "community-preview"
+ );
+
  preview.alt = "Selected post image preview";
  preview.style.display = "none";
+
  composer.appendChild(preview);
 
- const composerBottom = createElement("div","community-composer-bottom");
+ const composerBottom = createElement(
+  "div",
+  "community-composer-bottom"
+ );
 
- const photoLabel = createElement("label","community-photo-label","▧ Add Photo");
+ const photoLabel = createElement(
+  "label",
+  "community-photo-label",
+  "▧ Add Photo"
+ );
+
  const fileInput = createElement("input");
+
  fileInput.type = "file";
  fileInput.accept = "image/jpeg,image/png,image/webp";
+
  photoLabel.appendChild(fileInput);
 
- const fileName = createElement("div","community-selected-file");
+ const fileName = createElement(
+  "div",
+  "community-selected-file"
+ );
 
- const publishButton = createElement("button","community-publish-btn","Publish");
+ const publishButton = createElement(
+  "button",
+  "community-publish-btn",
+  "Publish"
+ );
+
  publishButton.type = "button";
 
  composerBottom.appendChild(photoLabel);
  composerBottom.appendChild(publishButton);
+
  composer.appendChild(composerBottom);
  composer.appendChild(fileName);
 
  main.appendChild(composer);
 
- main.appendChild(createElement("h3","community-feed-title","Community Feed"));
+ main.appendChild(
+  createElement(
+   "h3",
+   "community-feed-title",
+   "Community Feed"
+  )
+ );
 
  const feed = createElement("div","community-feed");
+
  main.appendChild(feed);
 
  root.appendChild(main);
@@ -369,10 +515,13 @@ function renderCommunityPage(){
 
 
 // ================================================
-// FACEBOOK-STYLE COMMENT BOTTOM SHEET
+// COMMENT BOTTOM SHEET
 // ================================================
 
- const commentOverlay = createElement("div","community-comment-overlay");
+ const commentOverlay = createElement(
+  "div",
+  "community-comment-overlay"
+ );
 
  commentOverlay.style.cssText = `
   display:none;
@@ -384,7 +533,10 @@ function renderCommunityPage(){
   justify-content:center;
  `;
 
- const commentSheet = createElement("section","community-comment-sheet");
+ const commentSheet = createElement(
+  "section",
+  "community-comment-sheet"
+ );
 
  commentSheet.style.cssText = `
   width:100%;
@@ -402,15 +554,20 @@ function renderCommunityPage(){
  `;
 
  const sheetStyle = document.createElement("style");
+
  sheetStyle.textContent = `
   @keyframes communitySheetUp {
    from { transform:translateY(100%); }
    to { transform:translateY(0); }
   }
  `;
+
  document.head.appendChild(sheetStyle);
 
- const sheetHeader = createElement("div","community-comment-sheet-header");
+ const sheetHeader = createElement(
+  "div",
+  "community-comment-sheet-header"
+ );
 
  sheetHeader.style.cssText = `
   display:flex;
@@ -421,11 +578,20 @@ function renderCommunityPage(){
   flex-shrink:0;
  `;
 
- const sheetTitle = createElement("strong","","Comments");
+ const sheetTitle = createElement(
+  "strong",
+  "",
+  "Comments"
+ );
 
- const closeButton = createElement("button","community-comment-close");
+ const closeButton = createElement(
+  "button",
+  "community-comment-close"
+ );
+
  closeButton.type = "button";
  closeButton.appendChild(createIcon("close"));
+
  closeButton.style.cssText = `
   display:flex;
   align-items:center;
@@ -442,7 +608,10 @@ function renderCommunityPage(){
  sheetHeader.appendChild(sheetTitle);
  sheetHeader.appendChild(closeButton);
 
- const sheetComments = createElement("div","community-comment-sheet-list");
+ const sheetComments = createElement(
+  "div",
+  "community-comment-sheet-list"
+ );
 
  sheetComments.style.cssText = `
   flex:1;
@@ -450,7 +619,10 @@ function renderCommunityPage(){
   padding:14px;
  `;
 
- const sheetForm = createElement("form","community-comment-sheet-form");
+ const sheetForm = createElement(
+  "form",
+  "community-comment-sheet-form"
+ );
 
  sheetForm.style.cssText = `
   display:flex;
@@ -463,7 +635,11 @@ function renderCommunityPage(){
   flex-shrink:0;
  `;
 
- const sheetInput = createElement("input","community-comment-sheet-input");
+ const sheetInput = createElement(
+  "input",
+  "community-comment-sheet-input"
+ );
+
  sheetInput.type = "text";
  sheetInput.placeholder = "Write a comment...";
  sheetInput.maxLength = 500;
@@ -481,7 +657,12 @@ function renderCommunityPage(){
   font:inherit;
  `;
 
- const sheetSend = createElement("button","community-comment-sheet-send","Send");
+ const sheetSend = createElement(
+  "button",
+  "community-comment-sheet-send",
+  "Send"
+ );
+
  sheetSend.type = "submit";
 
  sheetSend.style.cssText = `
@@ -501,21 +682,34 @@ function renderCommunityPage(){
  commentSheet.appendChild(sheetHeader);
  commentSheet.appendChild(sheetComments);
  commentSheet.appendChild(sheetForm);
+
  commentOverlay.appendChild(commentSheet);
  root.appendChild(commentOverlay);
 
  let activeCommentPost = null;
 
+
+// ================================================
+// COMMENT FUNCTIONS
+// ================================================
+
  function closeCommentSheet(){
+
   commentOverlay.style.display = "none";
   activeCommentPost = null;
   sheetInput.value = "";
  }
 
- closeButton.addEventListener("click",closeCommentSheet);
+ closeButton.addEventListener(
+  "click",
+  closeCommentSheet
+ );
 
  commentOverlay.addEventListener("click",event=>{
-  if(event.target === commentOverlay) closeCommentSheet();
+
+  if(event.target === commentOverlay){
+   closeCommentSheet();
+  }
  });
 
  function renderSheetComments(){
@@ -529,15 +723,24 @@ function renderCommunityPage(){
    : [];
 
   if(!comments.length){
+
    sheetComments.appendChild(
-    createElement("div","community-empty","No comments yet. Be the first to comment!")
+    createElement(
+     "div",
+     "community-empty",
+     "No comments yet. Be the first to comment!"
+    )
    );
+
    return;
   }
 
   comments.forEach(comment=>{
 
-   const row = createElement("div","community-comment-sheet-row");
+   const row = createElement(
+    "div",
+    "community-comment-sheet-row"
+   );
 
    row.style.cssText = `
     display:flex;
@@ -552,7 +755,10 @@ function renderCommunityPage(){
     (comment.author || "U").charAt(0).toUpperCase()
    );
 
-   const bubble = createElement("div","community-comment-bubble");
+   const bubble = createElement(
+    "div",
+    "community-comment-bubble"
+   );
 
    bubble.style.cssText = `
     padding:10px 13px;
@@ -564,15 +770,29 @@ function renderCommunityPage(){
    `;
 
    bubble.appendChild(
-    createElement("strong","",comment.author || "Community Member")
+    createElement(
+     "strong",
+     "",
+     comment.author || "Community Member"
+    )
    );
 
-   const commentText = createElement("p","",comment.text || "");
-   commentText.style.cssText = "margin:5px 0 0;font-size:13px;line-height:1.5;";
-   bubble.appendChild(commentText);
+   const commentText = createElement(
+    "p",
+    "",
+    comment.text || ""
+   );
 
+   commentText.style.cssText = `
+    margin:5px 0 0;
+    font-size:13px;
+    line-height:1.5;
+   `;
+
+   bubble.appendChild(commentText);
    row.appendChild(avatar);
    row.appendChild(bubble);
+
    sheetComments.appendChild(row);
   });
 
@@ -582,10 +802,14 @@ function renderCommunityPage(){
  function openCommentSheet(post){
 
   activeCommentPost = post;
-  commentOverlay.style.display = "flex";
+
   renderSheetComments();
 
-  setTimeout(()=>sheetInput.focus(),100);
+  commentOverlay.style.display = "flex";
+
+  setTimeout(()=>{
+   sheetInput.focus();
+  },150);
  }
 
  sheetForm.addEventListener("submit",event=>{
@@ -610,7 +834,9 @@ function renderCommunityPage(){
   renderSheetComments();
   renderFeed();
 
-  showNotice("Your comment has been added to this temporary preview.");
+  showNotice(
+   "Your comment has been added to this temporary preview."
+  );
  });
 
 
@@ -621,33 +847,43 @@ function renderCommunityPage(){
  fileInput.addEventListener("change",()=>{
 
   const file = fileInput.files[0];
+
   selectedImage = "";
 
   if(!file){
+
    preview.style.display = "none";
    fileName.textContent = "";
+
    return;
   }
 
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+
    fileInput.value = "";
    preview.style.display = "none";
    fileName.textContent = "";
+
    showNotice("Please choose a JPG, PNG or WEBP image.");
+
    return;
   }
 
   if(file.size > 5 * 1024 * 1024){
+
    fileInput.value = "";
    preview.style.display = "none";
    fileName.textContent = "";
+
    showNotice("Image size must be 5 MB or less.");
+
    return;
   }
 
   const reader = new FileReader();
 
   reader.onload = event=>{
+
    selectedImage = event.target.result;
    preview.src = selectedImage;
    preview.style.display = "block";
@@ -667,11 +903,13 @@ function renderCommunityPage(){
   const caption = textarea.value.trim();
 
   if(!caption && !selectedImage){
+
    showNotice("Write something or add a photo first.");
    return;
   }
 
   temporaryPosts.unshift({
+
    id:"temporary-" + Date.now(),
    isTemporary:true,
    author:"You",
@@ -686,11 +924,15 @@ function renderCommunityPage(){
   textarea.value = "";
   fileInput.value = "";
   fileName.textContent = "";
+
   preview.removeAttribute("src");
   preview.style.display = "none";
+
   selectedImage = "";
 
-  showNotice("Temporary preview post created. It is not saved to an account or database.");
+  showNotice(
+   "Temporary preview post created. It is not saved to an account or database."
+  );
 
   renderFeed();
  });
@@ -701,7 +943,11 @@ function renderCommunityPage(){
 // ================================================
 
  searchInput.addEventListener("input",()=>{
-  currentFilter = searchInput.value.trim().toLowerCase();
+
+  currentFilter = searchInput.value
+   .trim()
+   .toLowerCase();
+
   renderFeed();
  });
 
@@ -718,7 +964,10 @@ function renderCommunityPage(){
    ? window.communityDemoPosts
    : [];
 
-  const allPosts = [...temporaryPosts,...demoPosts];
+  const allPosts = [
+   ...temporaryPosts,
+   ...demoPosts
+  ];
 
   const filteredPosts = allPosts.filter(post=>{
 
@@ -734,66 +983,138 @@ function renderCommunityPage(){
   });
 
   if(!filteredPosts.length){
-   feed.appendChild(createElement("div","community-empty","No matching posts found."));
+
+   feed.appendChild(
+    createElement(
+     "div",
+     "community-empty",
+     "No matching posts found."
+    )
+   );
+
    return;
   }
 
   filteredPosts.forEach(post=>{
 
-   const card = createElement("article","community-post");
-   const postId = String(post.id || post.author + post.time);
+   const card = createElement(
+    "article",
+    "community-post"
+   );
+
+   const postId = String(
+    post.id || post.author + post.time
+   );
 
 
 // AUTHOR
 
-   const top = createElement("div","community-post-top");
+   const top = createElement(
+    "div",
+    "community-post-top"
+   );
 
-   top.appendChild(createElement("div","community-avatar",post.avatar || "U"));
+   top.appendChild(
+    createElement(
+     "div",
+     "community-avatar",
+     post.avatar || "U"
+    )
+   );
 
-   const authorInfo = createElement("div","community-author-info");
-
-   authorInfo.appendChild(
-    createElement("span","community-author-name",post.author || "Community Member")
+   const authorInfo = createElement(
+    "div",
+    "community-author-info"
    );
 
    authorInfo.appendChild(
-    createElement("span","community-post-time",post.time || "Recently")
+    createElement(
+     "span",
+     "community-author-name",
+     post.author || "Community Member"
+    )
+   );
+
+   authorInfo.appendChild(
+    createElement(
+     "span",
+     "community-post-time",
+     post.time || "Recently"
+    )
    );
 
    if(post.isDemo){
-    authorInfo.appendChild(createElement("span","community-demo-tag","DEMO POST"));
+
+    authorInfo.appendChild(
+     createElement(
+      "span",
+      "community-demo-tag",
+      "DEMO POST"
+     )
+    );
    }
 
    if(post.isTemporary){
-    authorInfo.appendChild(createElement("span","community-demo-tag","TEMPORARY PREVIEW"));
+
+    authorInfo.appendChild(
+     createElement(
+      "span",
+      "community-demo-tag",
+      "TEMPORARY PREVIEW"
+     )
+    );
    }
 
    top.appendChild(authorInfo);
-   top.appendChild(createElement("button","community-post-menu","···"));
+
+   top.appendChild(
+    createElement(
+     "button",
+     "community-post-menu",
+     "···"
+    )
+   );
+
    card.appendChild(top);
 
 
 // CAPTION
 
    if(post.caption){
-    card.appendChild(createElement("p","community-caption",post.caption));
+
+    card.appendChild(
+     createElement(
+      "p",
+      "community-caption",
+      post.caption
+     )
+    );
    }
 
 
 // IMAGE
 
    if(post.image){
-    const image = createElement("img","community-post-image");
+
+    const image = createElement(
+     "img",
+     "community-post-image"
+    );
+
     image.src = post.image;
     image.alt = "Community post image";
     image.loading = "lazy";
+
     card.appendChild(image);
    }
 
 
-// REACTIONS
+// REACTIONS — NO COUNTS
 
-   const reactions = createElement("div","community-reactions");
+   const reactions = createElement(
+    "div",
+    "community-reactions"
+   );
 
    if(!userReactions[postId]){
     userReactions[postId] = "";
@@ -801,12 +1122,7 @@ function renderCommunityPage(){
 
    reactionOptions.forEach(emoji=>{
 
-    const baseCount = Array.isArray(post.reactions)
-     ? post.reactions.filter(value=>value === emoji).length
-     : 0;
-
     const selected = userReactions[postId] === emoji;
-    const count = baseCount + (selected ? 1 : 0);
 
     const button = createElement(
      "button",
@@ -814,10 +1130,16 @@ function renderCommunityPage(){
     );
 
     button.type = "button";
-    button.textContent = count > 0 ? emoji + " " + count : emoji;
+    button.textContent = emoji;
+    button.setAttribute(
+     "aria-label",
+     "React with " + emoji
+    );
 
     if(selected){
+
      button.classList.add("selected");
+
      button.style.background = "var(--green)";
      button.style.borderColor = "var(--green)";
      button.style.color = "#052D3B";
@@ -830,9 +1152,12 @@ function renderCommunityPage(){
      const previous = userReactions[postId];
 
      if(previous === emoji){
+
       userReactions[postId] = "";
       addReactionNotification(post,"");
+
      }else{
+
       userReactions[postId] = emoji;
       addReactionNotification(post,emoji);
      }
@@ -848,7 +1173,10 @@ function renderCommunityPage(){
 
 // COMMENT ACTION
 
-   const actionRow = createElement("div","community-post-actions");
+   const actionRow = createElement(
+    "div",
+    "community-post-actions"
+   );
 
    actionRow.style.cssText = `
     display:flex;
@@ -866,6 +1194,7 @@ function renderCommunityPage(){
    );
 
    commentButton.type = "button";
+
    commentButton.style.cssText = `
     border:0;
     background:transparent;
@@ -884,11 +1213,16 @@ function renderCommunityPage(){
    card.appendChild(actionRow);
 
 
-// SHOW TWO COMMENTS OUTSIDE
+// SHOW ONLY TWO COMMENTS
 
-   const comments = Array.isArray(post.comments) ? post.comments : [];
+   const comments = Array.isArray(post.comments)
+    ? post.comments
+    : [];
 
-   const previewComments = createElement("div","community-comments-preview");
+   const previewComments = createElement(
+    "div",
+    "community-comments-preview"
+   );
 
    previewComments.style.cssText = `
     padding-top:10px;
@@ -899,7 +1233,10 @@ function renderCommunityPage(){
 
    comments.slice(0,2).forEach(comment=>{
 
-    const line = createElement("div","community-comment-preview-item");
+    const line = createElement(
+     "div",
+     "community-comment-preview-item"
+    );
 
     line.style.cssText = `
      padding:8px 11px;
@@ -911,10 +1248,19 @@ function renderCommunityPage(){
      overflow-wrap:anywhere;
     `;
 
-    const name = createElement("strong","",comment.author || "Community Member");
+    line.appendChild(
+     createElement(
+      "strong",
+      "",
+      comment.author || "Community Member"
+     )
+    );
 
-    line.appendChild(name);
-    line.appendChild(document.createTextNode(": " + (comment.text || "")));
+    line.appendChild(
+     document.createTextNode(
+      ": " + (comment.text || "")
+     )
+    );
 
     previewComments.appendChild(line);
    });
@@ -928,6 +1274,7 @@ function renderCommunityPage(){
     );
 
     more.type = "button";
+
     more.style.cssText = `
      border:0;
      background:transparent;
@@ -940,7 +1287,10 @@ function renderCommunityPage(){
      padding:4px 2px;
     `;
 
-    more.addEventListener("click",()=>openCommentSheet(post));
+    more.addEventListener("click",()=>{
+     openCommentSheet(post);
+    });
+
     previewComments.appendChild(more);
    }
 
@@ -951,10 +1301,19 @@ function renderCommunityPage(){
 
 
 // ================================================
+// IMPORTANT: ADD COMMUNITY TO PAGE CONTENT
+// ================================================
+
+ pageContent.innerHTML = "";
+ pageContent.appendChild(root);
+
+
+// ================================================
 // FIRST RENDER
 // ================================================
 
  renderFeed();
+
 }
 
 
@@ -971,7 +1330,9 @@ window.renderCommunityPage = renderCommunityPage;
 
 window.addEventListener("popstate",()=>{
 
- const params = new URLSearchParams(window.location.search);
+ const params = new URLSearchParams(
+  window.location.search
+ );
 
  if(params.get("page") !== "community"){
   document.body.classList.remove("community-active");
