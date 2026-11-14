@@ -6,9 +6,7 @@
 ========================================= */
 
 
-/* =========================================
-   1. COMMUNITY FULL SCREEN LAYOUT
-========================================= */
+/* 1. FULL SCREEN LAYOUT */
 
 body.community-active {
   margin: 0;
@@ -16,8 +14,6 @@ body.community-active {
   overflow-x: hidden;
   background: #073746;
 }
-
-/* Remove outer page width restrictions */
 
 body.community-active #innerPage {
   width: 100% !important;
@@ -44,9 +40,7 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   2. COLOR SYSTEM
-========================================= */
+/* 2. COLOR SYSTEM */
 
 .cma-community {
   --cma-bg: #073746;
@@ -63,17 +57,12 @@ body.community-active #pageContent {
   max-width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-
   margin: 0;
   padding: 14px;
-
   position: relative;
-
   background: var(--cma-bg);
   color: var(--cma-white);
-
   font-family: "Nunito Sans", sans-serif;
-
   box-sizing: border-box;
   overflow-x: clip;
 }
@@ -85,18 +74,14 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   3. HEADER
-========================================= */
+/* 3. HEADER */
 
 .cma-header {
   width: 100%;
   min-height: 46px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -105,11 +90,9 @@ body.community-active #pageContent {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.5px;
-
   white-space: nowrap;
   line-height: 1.2;
 }
@@ -123,19 +106,14 @@ body.community-active #pageContent {
   width: 40px;
   height: 40px;
   min-width: 40px;
-
   flex-shrink: 0;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   border: none;
   border-radius: 50%;
-
   background: transparent;
   color: var(--cma-white);
-
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -145,9 +123,9 @@ body.community-active #pageContent {
 }
 
 .cma-icon-button svg {
+  display: block;
   width: 23px;
   height: 23px;
-
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -156,22 +134,16 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   4. TOP NAVIGATION
-========================================= */
+/* 4. TOP NAVIGATION */
 
 .cma-navigation {
   width: 100%;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 0;
-
   padding: 9px 0;
   margin-bottom: 15px;
-
   border-top: 1px solid var(--cma-border);
   border-bottom: 1px solid var(--cma-border);
 }
@@ -180,73 +152,56 @@ body.community-active #pageContent {
   flex: 1 1 20%;
   min-width: 0;
   min-height: 54px;
-
   padding: 5px 1px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   gap: 5px;
-
   border: none;
   border-radius: 0;
-
   background: transparent;
   color: var(--cma-muted);
-
   font-family: inherit;
   font-size: 10px;
   font-weight: 700;
-
   white-space: nowrap;
   text-align: center;
-
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
-/* Navigation icon area */
+/* REAL SVG ICONS */
 
 .cma-nav-icon {
-  min-height: 25px;
+  width: 25px;
+  height: 25px;
   min-width: 25px;
-
-  display: flex;
+  min-height: 25px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-
   font-size: 0;
   line-height: 1;
 }
 
-/* Replace old navigation symbols with consistent icons */
-
-.cma-nav-item:nth-child(1) .cma-nav-icon::before {
-  content: "🏠";
-}
-
-.cma-nav-item:nth-child(2) .cma-nav-icon::before {
-  content: "👤";
-}
-
-.cma-nav-item:nth-child(3) .cma-nav-icon::before {
-  content: "👥";
-}
-
-.cma-nav-item:nth-child(4) .cma-nav-icon::before {
-  content: "🎨";
-}
-
-.cma-nav-item:nth-child(5) .cma-nav-icon::before {
-  content: "🔔";
-}
-
-.cma-nav-icon::before {
+.cma-nav-icon svg {
   display: block;
-  font-size: 21px;
-  line-height: 1;
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Remove all old Emoji icons */
+
+.cma-nav-icon::before,
+.cma-nav-icon::after {
+  content: none !important;
+  display: none !important;
 }
 
 /* Active navigation */
@@ -260,17 +215,13 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   5. POST COMPOSER
-========================================= */
+/* 5. POST COMPOSER */
 
 .cma-composer {
   width: 100%;
   min-width: 0;
-
   padding: 14px;
   margin-bottom: 15px;
-
   background: var(--cma-panel);
   border-radius: 17px;
 }
@@ -285,16 +236,12 @@ body.community-active #pageContent {
   width: 38px;
   height: 38px;
   min-width: 38px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
-
   background: var(--cma-card);
   color: var(--cma-white);
-
   font-size: 19px;
   overflow: hidden;
 }
@@ -310,18 +257,13 @@ body.community-active #pageContent {
   width: 100%;
   min-width: 0;
   min-height: 42px;
-
   padding: 11px 14px;
-
   resize: vertical;
-
   border: none;
   outline: none;
   border-radius: 22px;
-
   background: var(--cma-bg);
   color: var(--cma-white);
-
   font-family: inherit;
   font-size: 13px;
 }
@@ -334,7 +276,6 @@ body.community-active #pageContent {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 10px;
   margin-top: 12px;
 }
@@ -343,11 +284,9 @@ body.community-active #pageContent {
 .cma-post-button {
   border: none;
   background: transparent;
-
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-
   cursor: pointer;
 }
 
@@ -357,12 +296,9 @@ body.community-active #pageContent {
 
 .cma-post-button {
   padding: 9px 20px;
-
   border-radius: 22px;
-
   background: var(--cma-green);
   color: var(--cma-deep);
-
   transition: opacity 0.2s ease;
 }
 
@@ -371,37 +307,30 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   6. FEED
-========================================= */
+/* 6. FEED */
 
 .cma-feed-list {
   width: 100%;
   min-width: 0;
-
   display: flex;
   flex-direction: column;
-
   gap: 14px;
 }
 
 .cma-empty-feed {
   padding: 35px 15px;
-
   text-align: center;
   color: var(--cma-muted);
 }
 
 .cma-empty-icon {
   margin-bottom: 12px;
-
   color: var(--cma-green);
   font-size: 30px;
 }
 
 .cma-empty-feed p {
   margin: 0 0 7px;
-
   color: var(--cma-white);
   font-weight: 700;
 }
@@ -411,19 +340,14 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   7. POST CARD
-========================================= */
+/* 7. POST CARD */
 
 .cma-post-card {
   width: 100%;
   min-width: 0;
-
   padding: 14px;
-
   border-radius: 17px;
   background: var(--cma-card);
-
   overflow: hidden;
 }
 
@@ -436,7 +360,6 @@ body.community-active #pageContent {
 .cma-post-author {
   flex: 1;
   min-width: 0;
-
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -455,36 +378,28 @@ body.community-active #pageContent {
 
 .cma-post-caption {
   margin: 12px 0;
-
   color: var(--cma-white);
   font-size: 13px;
   line-height: 1.65;
-
   overflow-wrap: anywhere;
 }
 
 .cma-post-image {
   display: block;
-
   width: 100%;
   max-height: 420px;
-
   object-fit: cover;
-
   border-radius: 12px;
   margin-bottom: 12px;
 }
 
 
-/* =========================================
-   8. GLASS REACTIONS
-========================================= */
+/* 8. GLASS REACTIONS */
 
 .cma-reactions {
   display: flex;
   align-items: center;
   gap: 10px;
-
   margin: 11px 0;
 }
 
@@ -492,25 +407,18 @@ body.community-active #pageContent {
   width: 36px;
   height: 36px;
   min-width: 36px;
-
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: 1px solid #ffffff25;
   border-radius: 50%;
-
   background: #ffffff12;
   color: var(--cma-white);
-
   font-size: 17px;
   cursor: pointer;
-
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-
   transition: background 0.2s ease;
 }
 
@@ -520,36 +428,27 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   9. COMMENTS
-========================================= */
+/* 9. COMMENTS */
 
 .cma-comment-preview {
   padding: 11px;
   margin-top: 10px;
-
   border-radius: 11px;
   background: var(--cma-panel);
-
   color: var(--cma-white);
   font-size: 12px;
 }
 
 .cma-view-comments {
   display: inline-block;
-
   margin-top: 9px;
   padding: 0;
-
   border: none;
   background: transparent;
-
   color: var(--cma-green);
-
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
-
   cursor: pointer;
 }
 
@@ -557,12 +456,9 @@ body.community-active #pageContent {
   display: flex;
   align-items: center;
   gap: 9px;
-
   min-width: 0;
-
   padding: 4px 13px;
   margin-top: 10px;
-
   border-radius: 22px;
   background: var(--cma-panel);
 }
@@ -570,15 +466,11 @@ body.community-active #pageContent {
 .cma-comment-input input {
   width: 100%;
   min-width: 0;
-
   padding: 10px 0;
-
   border: none;
   outline: none;
-
   background: transparent;
   color: var(--cma-white);
-
   font-family: inherit;
   font-size: 12px;
 }
@@ -589,44 +481,30 @@ body.community-active #pageContent {
 
 .cma-comment-input button {
   flex-shrink: 0;
-
   border: none;
   background: transparent;
-
   color: var(--cma-green);
   font-size: 18px;
-
   cursor: pointer;
 }
 
 
-/* =========================================
-   10. COMMUNITY NOTICE
-========================================= */
+/* 10. COMMUNITY NOTICE */
 
 .cma-community-notice {
   position: fixed;
-
   left: 16px;
   right: 16px;
   bottom: 20px;
-
   z-index: 9999;
-
   padding: 13px 16px;
-
   border-radius: 12px;
-
   background: var(--cma-card, #103E4C);
   color: var(--cma-white, #FFFFFF);
-
   font-size: 13px;
-
   opacity: 0;
   transform: translateY(10px);
-
   pointer-events: none;
-
   transition: 0.2s ease;
 }
 
@@ -640,9 +518,7 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   11. GENERAL COMMUNITY ELEMENTS
-========================================= */
+/* 11. GENERAL ELEMENTS */
 
 .cma-community button {
   -webkit-tap-highlight-color: transparent;
@@ -666,12 +542,9 @@ body.community-active #pageContent {
 }
 
 
-/* =========================================
-   12. MOBILE RESPONSIVE
-========================================= */
+/* 12. MOBILE RESPONSIVE */
 
 @media (max-width: 380px) {
-
   .cma-community {
     padding: 11px;
   }
@@ -685,24 +558,21 @@ body.community-active #pageContent {
     min-height: 50px;
   }
 
-  .cma-nav-icon::before {
-    font-size: 19px;
+  .cma-nav-icon svg {
+    width: 21px;
+    height: 21px;
   }
 
   .cma-post-card,
   .cma-composer {
     padding: 12px;
   }
-
 }
 
 
-/* =========================================
-   13. EXTRA SMALL SCREEN
-========================================= */
+/* 13. EXTRA SMALL SCREEN */
 
 @media (max-width: 340px) {
-
   .cma-community {
     padding: 9px;
   }
@@ -716,23 +586,20 @@ body.community-active #pageContent {
     gap: 4px;
   }
 
-  .cma-nav-icon::before {
-    font-size: 18px;
+  .cma-nav-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   .cma-navigation {
     padding: 7px 0;
   }
-
 }
 
 
-/* =========================================
-   14. TABLET AND DESKTOP
-========================================= */
+/* 14. TABLET AND DESKTOP */
 
 @media (min-width: 700px) {
-
   .cma-community {
     padding: 20px 24px;
   }
@@ -754,8 +621,8 @@ body.community-active #pageContent {
     font-size: 12px;
   }
 
-  .cma-nav-icon::before {
-    font-size: 23px;
+  .cma-nav-icon svg {
+    width: 23px;
+    height: 23px;
   }
-
-}
+   }
