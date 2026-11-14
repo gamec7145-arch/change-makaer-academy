@@ -434,6 +434,7 @@ async function saveProfile(values){
  selectedCover = null;
 
  await loadProfile();
+ await loadProfiles();
 }
 
 
@@ -709,9 +710,9 @@ function createProfileTabs(container){
  container.appendChild(content);
 
  const items = [
-  ["Photos","photos"],
   ["React On","reacted"],
-  ["My Posts","posts"]
+  ["Photos","photos"],
+  ["Posts","posts"]
  ];
 
  items.forEach((item,index)=>{
@@ -739,7 +740,7 @@ function createProfileTabs(container){
   tabs.appendChild(button);
  });
 
- renderProfileTab(content,"photos");
+ renderProfileTab(content,"reacted");
 }
    // ================================================
 // RENDER PROFILE TAB
@@ -911,189 +912,272 @@ async function renderMe(container){
  container.innerHTML = "";
 
  if(!currentUser){
-
   container.appendChild(
-   createElement(
-    "p",
-    "community-empty",
-    LOGIN_ERROR
-   )
+   createElement("p","community-empty",LOGIN_ERROR)
   );
-
   return;
  }
 
  container.appendChild(
-  createElement("h3","","My Profile")
+  createElement("h3","community-me-title","My Profile")
  );
 
-
- // COVER
-
- const cover = createElement(
-  "div",
-  "community-profile-cover"
- );
-
+ // COVER PHOTO: controls stay hidden until the cover is clicked.
+ const cover = createElement("div","community-profile-cover");
+ cover.setAttribute("role","button");
+ cover.setAttribute("tabindex","0");
+ cover.setAttribute("aria-label","Click to edit cover photo");
  cover.style.cssText = `
+  position:relative;
   width:100%;
   min-height:155px;
   border-radius:16px;
   background:var(--panel) center/cover no-repeat;
+  cursor:pointer;
+  overflow:hidden;
  `;
-
  if(safeImage(currentProfile.cover_url)){
-
-  cover.style.backgroundImage =
-   `url("${currentProfile.cover_url}")`;
+  cover.style.backgroundImage = `url("${currentProfile.cover_url}")`;
  }
-
  container.appendChild(cover);
 
-
- // AVATAR
-
- const avatar = createElement(
-  "div",
-  "community-avatar"
- );
-
+ // PROFILE PICTURE: controls stay hidden until the picture is clicked.
+ const avatar = createElement("div","community-avatar");
+ avatar.setAttribute("role","button");
+ avatar.setAttribute("tabindex","0");
+ avatar.setAttribute("aria-label","Click to edit profile picture");
  avatar.style.cssText = `
   width:86px;
   height:86px;
   margin:-45px 0 10px 18px;
   position:relative;
+  z-index:2;
   border:4px solid var(--bg);
   border-radius:50%;
   overflow:hidden;
   background:var(--panel);
+  cursor:pointer;
+  box-sizing:content-box;
  `;
 
  if(safeImage(currentProfile.avatar_url)){
-
   const image = createElement("img");
-
   image.src = currentProfile.avatar_url;
   image.alt = "Profile";
-
-  image.style.cssText = `
-   width:100%;
-   height:100%;
-   object-fit:cover;
-  `;
-
+  image.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
   avatar.appendChild(image);
-
  }else{
-
   avatar.textContent = initial(currentName());
  }
-
  container.appendChild(avatar);
 
+ // Build a private editor for one image. It appears only after that image is clicked.
+ function createImageEditor(target,kind){
 
- // NAME AND DESCRIPTION
+  const isCover = kind === "cover";
+  const folder = isCover ? "cover" : "profile";
+  const column = isCover ? "cover_url" : "avatar_url";
+  const label = isCover ? "Cover Photo" : "Profile Picture";
 
- container.appendChild(
-  createElement("h3","",currentName())
+  const editor = createElement("div","community-image-editor");
+  editor.style.cssText = `
+   display:none;
+   flex-wrap:wrap;
+   align-items:center;
+   gap:9px;
+   margin:8px 0 12px;
+   padding:12px;
+   border:1px solid var(--border);
+   border-radius:13px;
+   background:var(--panel);
+  `;
+
+  const editButton = makeButton("Edit " + label,"community-image-edit-btn");
+  const fileInput = createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/jpeg,image/png,image/webp";
+  fileInput.style.display = "none";
+  fileInput.setAttribute("aria-label","Choose " + label);
+
+  const saveButton = makeButton("Save Selection","community-image-save-btn");
+  saveButton.style.display = "none";
+
+  const cancelButton = makeButton("Cancel","community-image-cancel-btn");
+
+  editor.appendChild(editButton);
+  editor.appendChild(fileInput);
+  editor.appendChild(saveButton);
+  editor.appendChild(cancelButton);
+
+  let chosenFile = null;
+  const originalBackground = isCover ? target.style.backgroundImage : "";
+  const originalAvatarHTML = isCover ? "" : target.innerHTML;
+
+  function openEditor(){
+   editor.style.display = "flex";
+  }
+
+  function closeEditor(){
+   editor.style.display = "none";
+   fileInput.value = "";
+   chosenFile = null;
+   saveButton.style.display = "none";
+   if(isCover){
+    target.style.backgroundImage = originalBackground;
+   }else{
+    target.innerHTML = originalAvatarHTML;
+   }
+  }
+
+  target.addEventListener("click",openEditor);
+  target.addEventListener("keydown",event=>{
+   if(event.key === "Enter" || event.key === " "){
+    event.preventDefault();
+    openEditor();
+   }
+  });
+
+  editButton.addEventListener("click",event=>{
+   event.stopPropagation();
+   fileInput.click();
+  });
+
+  fileInput.addEventListener("change",()=>{
+   const file = fileInput.files?.[0];
+   if(!file) return;
+
+   if(file.size > 5 * 1024 * 1024){
+    showNotice("Image must be 5 MB or less.");
+    fileInput.value = "";
+    return;
+   }
+
+   if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+    showNotice("Choose JPG, PNG or WEBP.");
+    fileInput.value = "";
+    return;
+   }
+
+   chosenFile = file;
+   const reader = new FileReader();
+   reader.onload = event=>{
+    if(isCover){
+     target.style.backgroundImage = `url("${event.target.result}")`;
+    }else{
+     target.innerHTML = "";
+     const previewImage = createElement("img");
+     previewImage.src = event.target.result;
+     previewImage.alt = "Selected profile picture";
+     previewImage.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+     target.appendChild(previewImage);
+    }
+    saveButton.style.display = "inline-flex";
+   };
+   reader.readAsDataURL(file);
+  });
+
+  saveButton.addEventListener("click",async event=>{
+   event.stopPropagation();
+   if(!chosenFile || !requireLogin()) return;
+
+   saveButton.disabled = true;
+   saveButton.textContent = "Saving...";
+
+   try{
+    const imageUrl = await uploadImage(chosenFile,folder);
+    const profileData = {
+     user_id:currentUser.id,
+     [column]:imageUrl
+    };
+
+    const {error} = await db
+     .from("community_profiles")
+     .upsert(profileData,{onConflict:"user_id"});
+
+    if(error) throw error;
+
+    await loadProfile();
+    await loadProfiles();
+    await renderMe(container);
+    showNotice(label + " updated successfully.");
+
+   }catch(error){
+    console.error(error);
+    showNotice(error.message || label + " could not be updated.");
+    saveButton.disabled = false;
+    saveButton.textContent = "Save Selection";
+   }
+  });
+
+  cancelButton.addEventListener("click",event=>{
+   event.stopPropagation();
+   closeEditor();
+  });
+
+  if(isCover){
+   editor.style.position = "absolute";
+   editor.style.bottom = "8px";
+   editor.style.left = "8px";
+   editor.style.zIndex = "4";
+   editor.style.margin = "0";
+   target.appendChild(editor);
+  }else{
+   target.insertAdjacentElement("afterend",editor);
+  }
+ }
+
+ createImageEditor(cover,"cover");
+ createImageEditor(avatar,"avatar");
+
+ // INFO
+ const infoSection = createElement("section","community-profile-info");
+ infoSection.style.cssText = `
+  margin-top:8px;
+  padding:15px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:var(--card);
+ `;
+
+ infoSection.appendChild(
+  createElement("h3","community-profile-info-title","Info")
  );
-
- container.appendChild(
+ infoSection.appendChild(
+  createElement("h3","community-profile-name",currentName())
+ );
+ infoSection.appendChild(
   createElement(
    "p",
-   "",
-   currentProfile.short_description ||
-   "No description added."
+   "community-profile-description",
+   currentProfile.short_description || "No description added."
   )
  );
 
-
- // EDIT PROFILE FORM
-
- const form = createElement(
-  "form",
-  "community-profile-form"
- );
-
+ // Keep existing profile information editing, but remove always-visible image upload fields.
+ const form = createElement("form","community-profile-form");
  form.style.cssText = `
   display:flex;
   flex-direction:column;
   gap:12px;
-  margin-top:18px;
+  margin-top:14px;
  `;
 
- form.appendChild(
-  createElement("h3","","Edit Profile")
- );
+ const name = addProfileField(form,"Name",currentProfile.display_name);
+ const description = addProfileField(form,"Short Description",currentProfile.short_description);
+ const school = addProfileField(form,"Institution",currentProfile.school);
+ const phone = addProfileField(form,"Mobile Number",currentPrivate.phone,"tel");
+ const address = addProfileField(form,"Address",currentPrivate.address);
 
- const name = addProfileField(
-  form,
-  "Name",
-  currentProfile.display_name
- );
-
- const description = addProfileField(
-  form,
-  "Short Description",
-  currentProfile.short_description
- );
-
- const school = addProfileField(
-  form,
-  "Institution",
-  currentProfile.school
- );
-
- const phone = addProfileField(
-  form,
-  "Mobile Number",
-  currentPrivate.phone,
-  "tel"
- );
-
- const address = addProfileField(
-  form,
-  "Address",
-  currentPrivate.address
- );
-
- addImageField(
-  form,
-  "Profile Logo / Photo",
-  file=>{
-   selectedAvatar = file;
-  }
- );
-
- addImageField(
-  form,
-  "Cover Banner",
-  file=>{
-   selectedCover = file;
-  }
- );
-
-
- // SAVE BUTTON
-
- const save = makeButton(
-  "Save Profile",
-  "community-publish-btn"
- );
-
- save.type = "submit";
-
- form.appendChild(save);
+ const saveInfo = makeButton("Save Info","community-publish-btn");
+ saveInfo.type = "submit";
+ form.appendChild(saveInfo);
 
  form.addEventListener("submit",async event=>{
-
   event.preventDefault();
-
-  save.disabled = true;
-  save.textContent = "Saving...";
+  saveInfo.disabled = true;
+  saveInfo.textContent = "Saving...";
 
   try{
-
    await saveProfile({
     name:name.value,
     description:description.value,
@@ -1101,32 +1185,28 @@ async function renderMe(container){
     phone:phone.value,
     address:address.value
    });
-
    await renderMe(container);
-
-   showNotice("Profile saved successfully.");
-
+   showNotice("Profile information saved successfully.");
   }catch(error){
-
    console.error(error);
-
-   showNotice(
-    error.message ||
-    "Profile could not be saved."
-   );
-
+   showNotice(error.message || "Profile information could not be saved.");
   }finally{
-
-   save.disabled = false;
-   save.textContent = "Save Profile";
+   saveInfo.disabled = false;
+   saveInfo.textContent = "Save Info";
   }
  });
 
- container.appendChild(form);
+ infoSection.appendChild(form);
+ container.appendChild(infoSection);
 
+ // Same post composer as the Community Homepage.
+ createComposer(container,"community_home",async()=>{
+  await renderMe(container);
+ });
+
+ // Order requested: React On, Photos, Posts.
  createProfileTabs(container);
 }
-
 
 // ================================================
 // POST CARD
@@ -1590,7 +1670,7 @@ function openComments(post){
  input.placeholder = "Write a comment...";
  input.maxLength = 500;
  input.required = true;
-
+           
  input.style.cssText = `
   flex:1;
   min-width:0;
@@ -1674,7 +1754,7 @@ function openComments(post){
 // CREATE POST COMPOSER
 // ================================================
 
-function createComposer(container,postScope){
+function createComposer(container,postScope,onPublished){
 
  if(!currentUser) return;
 
@@ -1771,7 +1851,13 @@ function createComposer(container,postScope){
    photoText.textContent = "▧ Add Photo";
 
    await refreshData();
-   await renderFeed(container,scope);
+
+   if(typeof onPublished === "function"){
+    await onPublished();
+   }else{
+    await renderFeed(container,scope);
+   }
+
    showNotice("Post published successfully.");
 
   }catch(error){
@@ -2420,14 +2506,16 @@ async function renderCommunityPage() {
         display:flex !important;
         flex-direction:column !important;
         align-items:stretch !important;
-        width:100% !important;
+                            width:100% !important;
         box-sizing:border-box !important;
         margin:18px 0 20px !important;
         padding:17px !important;
         border:1px solid var(--border,#245563) !important;
         border-radius:18px !important;
         background:var(--card,#103E4C) !important;
-         body.community-active #pageContent .community-brand {
+      }
+
+      body.community-active #pageContent .community-brand {
         flex:1 1 auto !important;
         min-width:0 !important;
         color:var(--white,#fff) !important;
@@ -2738,6 +2826,95 @@ async function renderCommunityPage() {
           padding:8px 9px !important;
         }
       }
+
+      /* FINAL HEADER / SEARCH / SPACING CORRECTIONS */
+      body.community-active #pageContent .community-header {
+        gap:8px !important;
+        margin:0 0 5px !important;
+        padding:7px 0 !important;
+      }
+      body.community-active #pageContent .community-header-actions {
+        gap:8px !important;
+      }
+      body.community-active #pageContent .community-icon-btn {
+        width:40px !important;
+        height:40px !important;
+        flex:0 0 40px !important;
+        border:0 !important;
+        border-radius:12px !important;
+        background:rgba(8,201,154,.12) !important;
+        color:var(--mint,#68DDB9) !important;
+      }
+      body.community-active #pageContent .community-icon-btn svg {
+        width:23px !important;
+        height:23px !important;
+        stroke:currentColor !important;
+        stroke-width:2 !important;
+      }
+      body.community-active #pageContent .community-search {
+        width:min(55vw,245px) !important;
+        min-width:0 !important;
+        height:40px !important;
+        padding:8px 12px !important;
+        border-radius:12px !important;
+        font-size:13px !important;
+      }
+      body.community-active #pageContent .community-nav {
+        margin:0 0 5px !important;
+        padding:0 0 8px !important;
+      }
+      body.community-active #pageContent .community-nav-button {
+        min-height:64px !important;
+      }
+      body.community-active #pageContent .community-composer {
+        margin:7px 0 18px !important;
+      }
+      body.community-active #pageContent .community-section-panel {
+        width:100% !important;
+        min-width:0 !important;
+        box-sizing:border-box !important;
+      }
+      body.community-active #pageContent .community-profile-cover,
+      body.community-active #pageContent .community-avatar[role="button"] {
+        cursor:pointer !important;
+      }
+      body.community-active #pageContent .community-image-editor {
+        width:fit-content !important;
+        max-width:100% !important;
+        box-sizing:border-box !important;
+      }
+      body.community-active #pageContent .community-image-edit-btn,
+      body.community-active #pageContent .community-image-save-btn,
+      body.community-active #pageContent .community-image-cancel-btn {
+        min-height:38px !important;
+        padding:8px 12px !important;
+        border:1px solid var(--border,#245563) !important;
+        border-radius:10px !important;
+        background:var(--deep,#052D3B) !important;
+        color:var(--mint,#68DDB9) !important;
+        font-family:'Nunito Sans',sans-serif !important;
+        font-size:12px !important;
+        font-weight:900 !important;
+      }
+      body.community-active #pageContent .community-image-save-btn {
+        border:0 !important;
+        background:var(--green,#08C99A) !important;
+        color:#052D3B !important;
+      }
+      body.community-active #pageContent .community-profile-info {
+        width:100% !important;
+        box-sizing:border-box !important;
+      }
+      body.community-active #pageContent .community-profile-tabs {
+        display:flex !important;
+        flex-wrap:wrap !important;
+        gap:8px !important;
+        margin:18px 0 14px !important;
+      }
+      body.community-active #pageContent .community-profile-tab {
+        flex:1 1 auto !important;
+        min-width:0 !important;
+      }
     `;
 
     document.head.appendChild(style);
@@ -3037,6 +3214,8 @@ async function renderCommunityPage() {
 
       currentFeedSearchQuery = "";
 
+      header.classList.remove("search-open");
+
       searchButton.setAttribute("aria-label", "Open search");
 
       if (activePage === "home") {
@@ -3048,6 +3227,8 @@ async function renderCommunityPage() {
     } else {
 
       searchInput.style.display = "block";
+
+      header.classList.add("search-open");
 
       searchButton.setAttribute("aria-label", "Close search");
 
