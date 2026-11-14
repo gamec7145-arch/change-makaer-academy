@@ -8,6 +8,7 @@ function updatePageHeaders(page) {
 
  const topHeader = document.querySelector(".header");
  const secondHeader = document.querySelector(".cma-bottom-nav");
+ const pageBanner = document.getElementById("pageBanner");
 
  const isDemoAI = (
   page === "demo-ai" ||
@@ -18,6 +19,8 @@ function updatePageHeaders(page) {
   page === "community" ||
   (page && page.startsWith("community-"))
  );
+
+ const isAccount = (page === "account");
 
  const showBoth = (
   !page ||
@@ -42,6 +45,11 @@ function updatePageHeaders(page) {
  if (secondHeader) {
   secondHeader.style.display =
    (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
+ }
+
+ // Account page: hide banner completely
+ if (pageBanner) {
+  pageBanner.style.display = isAccount ? "none" : "";
  }
 
 }
