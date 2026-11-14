@@ -1918,7 +1918,7 @@ async function renderFeed(container,postScope){
 
   list.innerHTML = "";
 
-  const query = search.value
+    const query = search.value
    .trim()
    .toLowerCase();
 
@@ -2234,16 +2234,26 @@ async function renderNotifications(container){
 // PART 4/4 — PAGE, NAVIGATION & INITIALIZATION
 // ==============================
 
+let communityRenderPromise = null;
+
 async function renderCommunityPage() {
-  const page = document.getElementById("communityPage") ||
-               document.getElementById("community-page") ||
-               document.querySelector("[data-community-page]");
+  // The main router owns page navigation. Community must render only
+  // while ?page=community is the active route.
+  const route = new URLSearchParams(window.location.search).get("page");
+  if (route !== "community") return;
+
+  // index.html provides #pageContent inside #innerPage.
+  const page = document.getElementById("pageContent");
 
   if (!page) {
-    console.error("Community page container not found.");
+    console.error("Community container #pageContent was not found.");
     return;
   }
 
+  // Prevent Router and Supabase auth events from rendering simultaneously.
+  if (communityRenderPromise) return communityRenderPromise;
+
+  communityRenderPromise = (async function () {
   page.innerHTML = "";
   document.body.classList.add("community-active");
 
@@ -2471,6 +2481,13 @@ async function renderCommunityPage() {
 
     updateNotificationBadge();
   };
+  })();
+
+  try {
+    await communityRenderPromise;
+  } finally {
+    communityRenderPromise = null;
+  }
 }
 
 
@@ -2479,39 +2496,22 @@ async function renderCommunityPage() {
 // ==============================
 
 if (db && db.auth) {
-  db.auth.onAuthStateChange(async (event, session) => {
+  db.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
 
-    currentProfile = null;
-    currentPrivate = null;
-    currentRole = null;
-
-    if (currentUser) {
-      await loadProfile();
-      await loadRole();
-    }
-
-    const communityPageExists =
-      document.getElementById("communityPage") ||
-      document.getElementById("community-page") ||
-      document.querySelector("[data-community-page]");
-
-    if (communityPageExists) {
-      await renderCommunityPage();
+    // The Router is the only owner of navigation. Do not render Community
+    // on homepage or on unrelated pages just because #pageContent exists.
+    const activeRoute = new URLSearchParams(window.location.search).get("page");
+    if (
+      event !== "INITIAL_SESSION" &&
+      activeRoute === "community" &&
+      document.getElementById("pageContent")
+    ) {
+      // Defer database work until Supabase finishes its auth callback.
+      Promise.resolve().then(() => renderCommunityPage());
     }
   });
 }
-
-
-// ==============================
-// BROWSER BACK / FORWARD
-// ==============================
-
-window.addEventListener("popstate", () => {
-  if (!window.location.hash.includes("community")) {
-    document.body.classList.remove("community-active");
-  }
-});
 
 
 // ==============================
@@ -2520,21 +2520,9 @@ window.addEventListener("popstate", () => {
 
 window.renderCommunityPage = renderCommunityPage;
 
-
-// ==============================
-// START COMMUNITY
-// ==============================
-
-document.addEventListener("DOMContentLoaded", () => {
-  const communityPageExists =
-    document.getElementById("communityPage") ||
-    document.getElementById("community-page") ||
-    document.querySelector("[data-community-page]");
-
-  if (communityPageExists) {
-    renderCommunityPage();
-  }
-});
+// Do not auto-render on DOMContentLoaded. router.js calls this function
+// only after it has opened the Community route.
 
 })(); 
 
+                            
