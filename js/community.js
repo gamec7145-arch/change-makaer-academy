@@ -11,7 +11,7 @@ let temporaryPosts = [];
 let selectedImage = "";
 let currentFilter = "";
 
-const reactionOptions = ["👍","❤️","😂","🔥"];
+const reactionOptions = ["👍","❤️","😂","😮","😢","😡"];
 const userReactions = {};
 let communityNotifications = [];
 
@@ -43,7 +43,10 @@ function createIcon(name){
   user:`<circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path>`,
   creator:`<path d="m16 4 4 4"></path><path d="M4 20 15.5 8.5"></path><path d="m13 6 5 5"></path><path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"></path>`,
   bell:`<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>`,
-  close:`<path d="m18 6-12 12M6 6l12 12"></path>`
+  close:`<path d="m18 6-12 12M6 6l12 12"></path>`,
+  like:`<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3z"></path><path d="M7 10 12 3a3 3 0 0 1 2 3v4h5a2 2 0 0 1 2 2l-2 7a2 2 0 0 1-2 2H7"></path>`,
+  comment:`<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"></path>`,
+  share:`<path d="M12 16V3"></path><path d="m7 8 5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path>`
  };
 
  const svg = document.createElementNS(
@@ -953,6 +956,340 @@ function renderCommunityPage(){
 
 
 // ================================================
+// REACTION FUNCTIONS
+// ================================================
+
+ function saveReaction(post,postId,emoji){
+
+  const previous = userReactions[postId] || "";
+
+  userReactions[postId] = emoji;
+
+  if(previous !== emoji){
+   addReactionNotification(post,emoji);
+  }
+
+  renderFeed();
+ }
+
+ function createReactionPicker(post,postId,likeButton){
+
+  const wrapper = createElement(
+   "div",
+   "community-reaction-picker"
+  );
+
+  wrapper.style.cssText = `
+   display:none;
+   position:absolute;
+   left:0;
+   bottom:calc(100% + 9px);
+   z-index:100;
+   align-items:center;
+   gap:5px;
+   padding:8px 10px;
+   border:1px solid var(--border);
+   border-radius:30px;
+   background:var(--panel);
+   box-shadow:0 5px 22px rgba(0,0,0,.35);
+   white-space:nowrap;
+  `;
+
+  let hoveredEmoji = "";
+
+  reactionOptions.forEach(emoji=>{
+
+   const choice = createElement(
+    "button",
+    "community-reaction-choice",
+    emoji
+   );
+
+   choice.type = "button";
+   choice.dataset.emoji = emoji;
+
+   choice.style.cssText = `
+    width:36px;
+    height:36px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    font-size:24px;
+    cursor:pointer;
+    transition:transform .12s ease,background .12s ease;
+   `;
+
+   choice.addEventListener("click",event=>{
+    event.preventDefault();
+    saveReaction(post,postId,emoji);
+   });
+
+   wrapper.appendChild(choice);
+  });
+
+  function openPicker(){
+   wrapper.style.display = "flex";
+   likeButton.classList.add("reaction-menu-open");
+  }
+
+  function closePicker(){
+   wrapper.style.display = "none";
+   likeButton.classList.remove("reaction-menu-open");
+   hoveredEmoji = "";
+  }
+
+  function updateHover(event){
+
+   if(wrapper.style.display !== "flex") return;
+
+   const target = document.elementFromPoint(
+    event.clientX,
+    event.clientY
+   );
+
+   const choice = target && target.closest
+    ? target.closest(".community-reaction-choice")
+    : null;
+
+   hoveredEmoji = choice ? choice.dataset.emoji : "";
+
+   wrapper.querySelectorAll(".community-reaction-choice").forEach(button=>{
+
+    const active = button.dataset.emoji === hoveredEmoji;
+
+    button.style.transform = active ? "scale(1.45) translateY(-5px)" : "scale(1)";
+    button.style.background = active ? "rgba(8,201,154,.18)" : "transparent";
+   });
+  }
+
+  let pressTimer = null;
+  let pickerOpened = false;
+  let suppressClick = false;
+
+  function clearPressTimer(){
+
+   if(pressTimer){
+    clearTimeout(pressTimer);
+    pressTimer = null;
+   }
+  }
+
+  likeButton.addEventListener("pointerdown",event=>{
+
+   if(event.button !== undefined && event.button !== 0) return;
+
+   pickerOpened = false;
+   suppressClick = false;
+
+   clearPressTimer();
+
+   pressTimer = setTimeout(()=>{
+
+    pickerOpened = true;
+    suppressClick = true;
+
+    openPicker();
+
+   },350);
+  });
+
+  document.addEventListener("pointermove",event=>{
+
+   if(pickerOpened){
+    updateHover(event);
+   }
+  });
+
+  document.addEventListener("pointerup",event=>{
+
+   clearPressTimer();
+
+   if(!pickerOpened) return;
+
+   const target = document.elementFromPoint(
+    event.clientX,
+    event.clientY
+   );
+
+   const choice = target && target.closest
+    ? target.closest(".community-reaction-choice")
+    : null;
+
+   const selectedEmoji = choice
+    ? choice.dataset.emoji
+    : hoveredEmoji;
+
+   closePicker();
+
+   if(selectedEmoji){
+    saveReaction(post,postId,selectedEmoji);
+   }
+
+   pickerOpened = false;
+
+   setTimeout(()=>{
+    suppressClick = false;
+   },100);
+  });
+
+  document.addEventListener("pointercancel",()=>{
+
+   clearPressTimer();
+
+   if(pickerOpened){
+    closePicker();
+    pickerOpened = false;
+   }
+  });
+
+  likeButton.addEventListener("click",event=>{
+
+   event.preventDefault();
+
+   if(suppressClick || pickerOpened){
+    suppressClick = false;
+    return;
+   }
+
+   const previous = userReactions[postId] || "";
+
+   if(previous === "👍"){
+
+    userReactions[postId] = "";
+    addReactionNotification(post,"");
+    renderFeed();
+
+   }else{
+
+    saveReaction(post,postId,"👍");
+   }
+  });
+
+  wrapper.addEventListener("pointerdown",event=>{
+   event.stopPropagation();
+  });
+
+  return wrapper;
+ }
+
+
+// ================================================
+// SHARE FUNCTIONS
+// ================================================
+
+ function createShareMenu(post,postId){
+
+  const menu = createElement(
+   "div",
+   "community-share-menu"
+  );
+
+  menu.style.cssText = `
+   display:none;
+   position:absolute;
+   right:0;
+   bottom:calc(100% + 9px);
+   z-index:100;
+   width:190px;
+   padding:7px;
+   border:1px solid var(--border);
+   border-radius:14px;
+   background:var(--panel);
+   box-shadow:0 5px 22px rgba(0,0,0,.35);
+  `;
+
+  const shareUrl = new URL(
+   window.location.href
+  );
+
+  shareUrl.searchParams.set("page","community");
+  shareUrl.hash = "post-" + encodeURIComponent(postId);
+
+  const url = shareUrl.toString();
+
+  function addShareOption(label,callback){
+
+   const button = createElement(
+    "button",
+    "community-share-option",
+    label
+   );
+
+   button.type = "button";
+
+   button.style.cssText = `
+    display:block;
+    width:100%;
+    padding:11px 10px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--white);
+    text-align:left;
+    font:inherit;
+    font-size:13px;
+    cursor:pointer;
+   `;
+
+   button.addEventListener("click",callback);
+
+   menu.appendChild(button);
+  }
+
+  addShareOption("🔗 Copy Link",async()=>{
+
+   try{
+
+    await navigator.clipboard.writeText(url);
+
+    showNotice("Post link copied.");
+
+   }catch(error){
+
+    showNotice("Could not copy link on this browser.");
+   }
+
+   menu.style.display = "none";
+  });
+
+  addShareOption("🟢 WhatsApp",()=>{
+
+   const text = encodeURIComponent(
+    (post.caption || "Check out this community post!") + "\n" + url
+   );
+
+   window.open(
+    "https://wa.me/?text=" + text,
+    "_blank",
+    "noopener,noreferrer"
+   );
+
+   menu.style.display = "none";
+  });
+
+  addShareOption("✈️ Telegram",()=>{
+
+   const text = encodeURIComponent(
+    post.caption || "Check out this community post!"
+   );
+
+   window.open(
+    "https://t.me/share/url?url=" +
+    encodeURIComponent(url) +
+    "&text=" + text,
+    "_blank",
+    "noopener,noreferrer"
+   );
+
+   menu.style.display = "none";
+  });
+
+  return menu;
+ }
+
+
+// ================================================
 // RENDER FEED
 // ================================================
 
@@ -1005,6 +1342,8 @@ function renderCommunityPage(){
    const postId = String(
     post.id || post.author + post.time
    );
+
+   card.id = "post-" + postId;
 
 
 // AUTHOR
@@ -1109,69 +1448,9 @@ function renderCommunityPage(){
    }
 
 
-// REACTIONS — NO COUNTS
-
-   const reactions = createElement(
-    "div",
-    "community-reactions"
-   );
-
-   if(!userReactions[postId]){
-    userReactions[postId] = "";
-   }
-
-   reactionOptions.forEach(emoji=>{
-
-    const selected = userReactions[postId] === emoji;
-
-    const button = createElement(
-     "button",
-     "community-reaction community-reaction-button"
-    );
-
-    button.type = "button";
-    button.textContent = emoji;
-    button.setAttribute(
-     "aria-label",
-     "React with " + emoji
-    );
-
-    if(selected){
-
-     button.classList.add("selected");
-
-     button.style.background = "var(--green)";
-     button.style.borderColor = "var(--green)";
-     button.style.color = "#052D3B";
-     button.style.transform = "scale(1.08)";
-     button.style.fontWeight = "900";
-    }
-
-    button.addEventListener("click",()=>{
-
-     const previous = userReactions[postId];
-
-     if(previous === emoji){
-
-      userReactions[postId] = "";
-      addReactionNotification(post,"");
-
-     }else{
-
-      userReactions[postId] = emoji;
-      addReactionNotification(post,emoji);
-     }
-
-     renderFeed();
-    });
-
-    reactions.appendChild(button);
-   });
-
-   card.appendChild(reactions);
-
-
-// COMMENT ACTION
+// ================================================
+// FACEBOOK-STYLE ACTION BAR
+// ================================================
 
    const actionRow = createElement(
     "div",
@@ -1181,39 +1460,207 @@ function renderCommunityPage(){
    actionRow.style.cssText = `
     display:flex;
     align-items:center;
-    gap:10px;
-    padding:10px 0;
+    justify-content:space-around;
+    gap:5px;
+    position:relative;
+    padding:11px 0;
+    margin-top:5px;
     border-top:1px solid var(--border);
     border-bottom:1px solid var(--border);
    `;
 
+
+// LIKE
+
+   const likeWrap = createElement(
+    "div",
+    "community-action-wrap community-like-wrap"
+   );
+
+   likeWrap.style.cssText = `
+    position:relative;
+    flex:1;
+    display:flex;
+    justify-content:center;
+   `;
+
+   const likeButton = createElement(
+    "button",
+    "community-action-button community-like-button"
+   );
+
+   likeButton.type = "button";
+
+   likeButton.style.cssText = `
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    width:100%;
+    min-height:40px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    touch-action:pan-y;
+    -webkit-tap-highlight-color:transparent;
+   `;
+
+   const selectedReaction = userReactions[postId] || "";
+
+   if(selectedReaction){
+
+    const selectedIcon = createElement(
+     "span",
+     "community-selected-reaction",
+     selectedReaction
+    );
+
+    selectedIcon.style.fontSize = "21px";
+
+    likeButton.appendChild(selectedIcon);
+
+    likeButton.style.color = "var(--green)";
+    likeButton.style.fontWeight = "900";
+
+   }else{
+
+    likeButton.appendChild(createIcon("like"));
+   }
+
+   likeButton.setAttribute(
+    "aria-label",
+    selectedReaction
+     ? "Your reaction: " + selectedReaction
+     : "Like. Hold and drag to react."
+   );
+
+   const reactionPicker = createReactionPicker(
+    post,
+    postId,
+    likeButton
+   );
+
+   likeWrap.appendChild(likeButton);
+   likeWrap.appendChild(reactionPicker);
+
+
+// COMMENT
+
+   const commentWrap = createElement(
+    "div",
+    "community-action-wrap community-comment-wrap"
+   );
+
+   commentWrap.style.cssText = `
+    flex:1;
+    display:flex;
+    justify-content:center;
+   `;
+
    const commentButton = createElement(
     "button",
-    "community-comment-toggle",
-    "Comment"
+    "community-action-button community-comment-toggle"
    );
 
    commentButton.type = "button";
+   commentButton.appendChild(createIcon("comment"));
+
+   commentButton.setAttribute(
+    "aria-label",
+    "Open comments"
+   );
 
    commentButton.style.cssText = `
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    min-height:40px;
     border:0;
+    border-radius:9px;
     background:transparent;
     color:var(--muted);
-    font:inherit;
-    font-weight:800;
     cursor:pointer;
-    padding:8px 12px;
    `;
 
    commentButton.addEventListener("click",()=>{
     openCommentSheet(post);
    });
 
-   actionRow.appendChild(commentButton);
+   commentWrap.appendChild(commentButton);
+
+
+// SHARE
+
+   const shareWrap = createElement(
+    "div",
+    "community-action-wrap community-share-wrap"
+   );
+
+   shareWrap.style.cssText = `
+    position:relative;
+    flex:1;
+    display:flex;
+    justify-content:center;
+   `;
+
+   const shareButton = createElement(
+    "button",
+    "community-action-button community-share-button"
+   );
+
+   shareButton.type = "button";
+   shareButton.appendChild(createIcon("share"));
+
+   shareButton.setAttribute(
+    "aria-label",
+    "Share post"
+   );
+
+   shareButton.style.cssText = `
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    min-height:40px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+   `;
+
+   const shareMenu = createShareMenu(post,postId);
+
+   shareButton.addEventListener("click",()=>{
+
+    const opening = shareMenu.style.display === "none";
+
+    feed.querySelectorAll(".community-share-menu").forEach(menu=>{
+     menu.style.display = "none";
+    });
+
+    shareMenu.style.display = opening ? "block" : "none";
+   });
+
+   shareWrap.appendChild(shareButton);
+   shareWrap.appendChild(shareMenu);
+
+
+// ADD THREE ICONS
+
+   actionRow.appendChild(likeWrap);
+   actionRow.appendChild(commentWrap);
+   actionRow.appendChild(shareWrap);
+
    card.appendChild(actionRow);
 
 
+// ================================================
 // SHOW ONLY TWO COMMENTS
+// ================================================
 
    const comments = Array.isArray(post.comments)
     ? post.comments
@@ -1301,7 +1748,7 @@ function renderCommunityPage(){
 
 
 // ================================================
-// IMPORTANT: ADD COMMUNITY TO PAGE CONTENT
+// ADD COMMUNITY TO PAGE CONTENT
 // ================================================
 
  pageContent.innerHTML = "";
