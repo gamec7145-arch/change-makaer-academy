@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,13 +11,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+<!-- MAIN WEBSITE CSS -->
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/community.css">
+
+<!-- FINAL COMMUNITY DESIGN CSS: MUST LOAD AFTER OLD CSS -->
+<link rel="stylesheet" href="css/cma-community-design.css">
 
 <style>
 
 /* =================================
-   HEADER — REFERENCE SIZE
+   HEADER
 ================================= */
 
 .header-inner{
@@ -124,7 +127,7 @@ body{
 }
 
 /* =================================
-   CLASSROOM LEARNING — ADMISSION CARD
+   CLASSROOM LEARNING
 ================================= */
 
 .classroom-option{
@@ -230,7 +233,7 @@ body{
 }
 
 /* =================================
-   BE A PRO — ONE MAIN CARD
+   BE A PRO
 ================================= */
 
 .be-pro-main-card{
@@ -317,6 +320,10 @@ body{
 
 <body>
 
+<!-- =================================
+     MAIN WEBSITE HEADER
+================================= -->
+
 <header class="header">
 
  <div class="header-inner">
@@ -349,6 +356,10 @@ body{
  </nav>
 
 </header>
+
+<!-- =================================
+     HOMEPAGE
+================================= -->
 
 <main id="homePage">
 
@@ -437,8 +448,6 @@ body{
     <p>Learn Better. Achieve More.</p>
    </div>
 
-   <!-- APPLY FOR ADMISSION -->
-
    <div class="classroom-option">
 
     <div class="classroom-option-header">
@@ -458,14 +467,12 @@ body{
 
     <div class="classroom-option-links">
 
-     <a href="?page=admission-programs"
-        class="classroom-option-link">
+     <a href="?page=admission-programs" class="classroom-option-link">
       <strong>SSC</strong>
       <span>Apply Now</span>
      </a>
 
-     <a href="?page=admission-programs"
-        class="classroom-option-link">
+     <a href="?page=admission-programs" class="classroom-option-link">
       <strong>HSC</strong>
       <span>Apply Now</span>
      </a>
@@ -678,7 +685,9 @@ body{
 
 </main>
 
-<!-- INNER PAGE -->
+<!-- =================================
+     INNER PAGE
+================================= -->
 
 <main id="innerPage" class="inner-page">
 
@@ -700,7 +709,9 @@ body{
 
 </main>
 
-<!-- FOOTER -->
+<!-- =================================
+     FOOTER
+================================= -->
 
 <footer class="footer" id="contact">
 
@@ -729,7 +740,9 @@ body{
 
 <a class="whatsapp" href="YOUR_WHATSAPP_LINK" target="_blank" rel="noopener" aria-label="WhatsApp Contact">☎</a>
 
-<!-- BOTTOM NAVIGATION -->
+<!-- =================================
+     BOTTOM NAVIGATION
+================================= -->
 
 <nav class="cma-bottom-nav" aria-label="Main navigation">
 
@@ -760,6 +773,10 @@ body{
 
 </nav>
 
+<!-- =================================
+     ACTIVE NAVIGATION
+================================= -->
+
 <script>
 (function () {
 
@@ -787,7 +804,9 @@ body{
 })();
 </script>
 
-<!-- EXISTING WEBSITE SCRIPTS -->
+<!-- =================================
+     EXISTING WEBSITE SCRIPTS
+================================= -->
 
 <script defer src="js/shared.js"></script>
 <script defer src="js/home.js"></script>
@@ -797,7 +816,10 @@ body{
 <script defer src="js/exam-preparation.js"></script>
 <script defer src="js/study-materials.js"></script>
 
-<!-- SUPABASE — MUST LOAD BEFORE COMMUNITY -->
+<!-- =================================
+     SUPABASE
+     LOAD BEFORE ACCOUNT AND ROUTER
+================================= -->
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="js/supabase-config.js"></script>
@@ -806,12 +828,18 @@ body{
 
 <script defer src="js/account.js"></script>
 
-<!-- COMMUNITY SCRIPTS -->
+<!-- =================================
+     COMMUNITY
+     OLD community.js AND community-data.js
+     REMOVED TO PREVENT CONFLICT WITH
+     THE NEW DYNAMIC COMMUNITY MODULES.
+================================= -->
 
-<script defer src="js/community-data.js"></script>
-<script defer src="js/community.js"></script>
+<!-- Community modules are loaded by router.js -->
 
-<!-- MAIN ROUTER -->
+<!-- =================================
+     MAIN ROUTER — LOAD LAST
+================================= -->
 
 <script defer src="js/router.js"></script>
 
