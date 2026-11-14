@@ -1,8 +1,56 @@
 
- // ==================================================
- // CHANGE MAKER ACADEMY
- // AUTOMATIC HEADER CONTROL SYSTEM
- // ==================================================
+// ==================================================
+// CHANGE MAKER ACADEMY
+// COMMUNITY MODULE LOADER
+// ==================================================
+
+function loadCommunityModules() {
+
+ const files = [
+  "js/cma-community/cma-community-core.js",
+  "js/cma-community/cma-community-feed.js",
+  "js/cma-community/cma-community-main.js"
+ ];
+
+ function loadFile(index) {
+
+  if (typeof window.renderCommunityPage === "function") {
+   return Promise.resolve();
+  }
+
+  if (index >= files.length) {
+   return Promise.reject(
+    new Error("Community renderer could not be loaded.")
+   );
+  }
+
+  const src = files[index];
+
+  return new Promise((resolve, reject) => {
+
+   const script = document.createElement("script");
+
+   script.src = src;
+   script.async = false;
+
+   script.onload = resolve;
+
+   script.onerror = () => {
+    reject(new Error("Failed to load: " + src));
+   };
+
+   document.head.appendChild(script);
+
+  }).then(() => loadFile(index + 1));
+ }
+
+ return loadFile(0);
+}
+
+
+// ==================================================
+// AUTOMATIC HEADER CONTROL SYSTEM
+// ==================================================
 
 function updatePageHeaders(page) {
 
@@ -29,25 +77,21 @@ function updatePageHeaders(page) {
   (page && page.startsWith("teachers-"))
  );
 
- // Community active body class
  document.body.classList.toggle(
   "community-active",
   !!isCommunity
  );
 
- // Top homepage header
  if (topHeader) {
   topHeader.style.display =
    (isDemoAI || isCommunity) ? "none" : "";
  }
 
- // Homepage bottom navigation
  if (secondHeader) {
   secondHeader.style.display =
    (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
  }
 
- // Account page: hide banner completely
  if (pageBanner) {
   pageBanner.style.display = isAccount ? "none" : "";
  }
@@ -122,7 +166,6 @@ function renderAdmissionPrograms() {
 
 
 // ==================================================
-// CHANGE MAKER ACADEMY
 // PAGE ROUTER
 // ==================================================
 
@@ -141,19 +184,30 @@ function openPage(page) {
 
  if (page === "community") {
 
-  if (typeof window.renderCommunityPage === "function") {
+  loadCommunityModules()
 
-   window.renderCommunityPage();
+   .then(() => {
 
-  } else {
+    if (typeof window.renderCommunityPage === "function") {
+     window.renderCommunityPage();
+    } else {
+     throw new Error("Community renderer not found.");
+    }
 
-   console.error(
-    "Community renderer not found. Check community.js loading."
-   );
+   })
 
-   showNotFound();
+   .catch(error => {
 
-  }
+    console.error("Community loading error:", error);
+
+    pageContent.innerHTML = `
+     <div style="padding:30px;text-align:center;">
+      <h3>Community could not load</h3>
+      <p>Please refresh the page and try again.</p>
+     </div>
+    `;
+
+   });
 
  }
 
@@ -717,9 +771,7 @@ function openPage(page) {
  // PAGE NOT FOUND
  // ==================================================
 
- else if (
-  page !== "community"
- ) {
+ else if (page !== "community") {
 
   showNotFound();
 
