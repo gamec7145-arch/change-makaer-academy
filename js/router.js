@@ -22,6 +22,7 @@ function updatePageHeaders(page) {
  const showBoth = (
   !page ||
   page === "teachers" ||
+  page === "account" ||
   (page && page.startsWith("teachers-"))
  );
 
@@ -140,6 +141,29 @@ function openPage(page) {
 
    console.error(
     "Community renderer not found. Check community.js loading."
+   );
+
+   showNotFound();
+
+  }
+
+ }
+
+
+ // ==================================================
+ // STUDENT ACCOUNT: LOGIN / SIGN UP
+ // ==================================================
+
+ else if (page === "account") {
+
+  if (typeof window.renderAccountPage === "function") {
+
+   window.renderAccountPage();
+
+  } else {
+
+   console.error(
+    "Account system not found. Check account.js loading."
    );
 
    showNotFound();
@@ -823,4 +847,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
- 
