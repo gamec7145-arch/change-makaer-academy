@@ -1,7 +1,8 @@
+
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY PROFILE MODULE
-   UPDATED COMPLETE VERSION
+   FIXED SHARED INTEGRATION VERSION
    PART 1 OF 4
 ========================================= */
 
@@ -14,7 +15,12 @@
   let activeTab = "posts";
   let lastRenderedRoot = null;
   let lastRenderedUser = null;
-  let currentFriendState = null;
+  let selectedProfilePhoto = null;
+  let profilePhotoObjectURL = null;
+  let currentPrivateInfo = {
+    mobile_number: "",
+    address: ""
+  };
 
   const Icons = {
     home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"></path><path d="M5 9v12h14V9"></path><path d="M9 21v-7h6v7"></path></svg>`,
@@ -47,10 +53,7 @@
     try {
       const parsed = new URL(url);
 
-      if (
-        parsed.protocol === "https:" ||
-        parsed.protocol === "http:"
-      ) {
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
         return escape(parsed.href);
       }
     } catch (error) {}
@@ -72,17 +75,35 @@
 
   function getAvatar(user) {
     const metadata = getMetadata(user);
-
-    return safeImage(
-      metadata.avatar_url || metadata.picture || ""
-    );
+    return safeImage(metadata.avatar_url || metadata.picture || "");
   }
 
-  function showNotice(message, type) {
+  function showNotice(message, type = "info") {
     if (Core && Core.showNotice) {
-      Core.showNotice(message, type || "info");
+      Core.showNotice(message, type);
     } else {
-      alert(message);
+      console.log(message);
+    }
+  }
+
+  function navigateCommunity(page, userId = null) {
+    window.dispatchEvent(new CustomEvent("cma:navigate", {
+      detail: {
+        page,
+        userId
+      }
+    }));
+  }
+
+  function getProfileRoot() {
+    return lastRenderedRoot ||
+      (Core && Core.getRoot ? Core.getRoot() : document.getElementById("pageContent"));
+  }
+
+  function revokeProfilePhotoPreview() {
+    if (profilePhotoObjectURL) {
+      URL.revokeObjectURL(profilePhotoObjectURL);
+      profilePhotoObjectURL = null;
     }
   }
 
@@ -102,9 +123,7 @@
         </button>
       </header>
 
-      <nav class="cma-navigation"
-        aria-label="Community navigation">
-
+      <nav class="cma-navigation" aria-label="Community navigation">
         <button class="cma-nav-item"
           type="button"
           data-cma-profile-page="home">
@@ -140,7 +159,6 @@
           <span class="cma-nav-icon">${Icons.notification}</span>
           <span>Notification</span>
         </button>
-
       </nav>
     `;
   }
@@ -163,13 +181,7 @@
         margin-bottom: 55px;
         border-radius: 16px;
         overflow: visible;
-        cursor: pointer;
-        background: linear-gradient(
-          135deg,
-          #08494B,
-          #052D3B,
-          #08C99A
-        );
+        background: linear-gradient(135deg,#08494B,#052D3B,#08C99A);
       }
 
       .cma-profile-cover > img {
@@ -203,11 +215,6 @@
         height: 100%;
         object-fit: cover;
         pointer-events: none;
-      }
-
-      .cma-profile-photo-edit,
-      .cma-profile-cover-edit {
-        display: none !important;
       }
 
       .cma-profile-heading {
@@ -314,154 +321,11 @@
         font-size: 12px;
       }
 
-      .cma-profile-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 10000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        background: #000b;
-      }
-
-      .cma-profile-modal.show {
-        display: flex;
-      }
-
-      .cma-profile-modal-content {
-        width: 100%;
-        max-width: 430px;
-        max-height: 85vh;
-        overflow-y: auto;
-        padding: 18px;
-        border-radius: 17px;
-        background: #073746;
-        border: 1px solid #245563;
-      }
-
-      .cma-profile-modal-title {
-        font-size: 17px;
-        font-weight: 800;
-        margin-bottom: 16px;
-      }
-
-      .cma-profile-field {
-        display: block;
-        width: 100%;
-        margin-bottom: 13px;
-      }
-
-      .cma-profile-field span {
-        display: block;
-        color: #A8C0CE;
-        font-size: 11px;
-        margin-bottom: 6px;
-      }
-
-      .cma-profile-field input,
-      .cma-profile-field textarea {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 11px;
-        border: 1px solid #245563;
-        border-radius: 10px;
-        outline: none;
-        background: #052D3B;
-        color: #fff;
-        font-family: inherit;
-        font-size: 13px;
-      }
-
-      .cma-profile-field textarea {
-        min-height: 75px;
-        resize: vertical;
-      }
-
-      .cma-profile-save {
-        width: 100%;
-        padding: 12px;
-        border: 0;
-        border-radius: 22px;
-        background: #08C99A;
-        color: #052D3B;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      .cma-profile-save:disabled {
-        opacity: .6;
-      }
-
-      .cma-profile-cancel {
-        width: 100%;
-        padding: 10px;
-        margin-top: 7px;
-        border: 0;
-        background: transparent;
-        color: #A8C0CE;
-        font-family: inherit;
-        cursor: pointer;
-      }
-
-      .cma-profile-file-input {
-        display: none !important;
-      }
-
-      .cma-profile .cma-composer {
-        margin-bottom: 15px;
-      }
-
-      .cma-profile .cma-composer .cma-avatar {
-        flex-shrink: 0;
-        overflow: hidden;
-      }
-
-      .cma-profile .cma-composer .cma-avatar img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      .cma-profile-photo-preview {
-        display: none;
-        padding: 0 12px 12px;
-      }
-
-      .cma-profile-photo-preview.show {
-        display: block;
-      }
-
-      .cma-profile-photo-preview img {
-        display: block;
-        width: auto;
-        max-width: 100%;
-        max-height: 220px;
-        object-fit: contain;
-        border-radius: 12px;
-      }
-
-      .cma-profile-photo-remove {
-        margin-top: 7px;
-        padding: 6px 10px;
-        border: 1px solid #245563;
-        border-radius: 16px;
-        background: #052D3B;
-        color: #A8C0CE;
-        font-size: 11px;
-        cursor: pointer;
-      }
-
       .cma-profile-posts {
         display: flex;
         flex-direction: column;
         gap: 12px;
       }
-
-      /* Profile friend actions */
 
       .cma-profile-actions {
         display: flex;
@@ -547,175 +411,340 @@
         font-weight: 700;
         cursor: pointer;
       }
+
+      .cma-profile-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #000b;
+      }
+
+      .cma-profile-modal.show {
+        display: flex;
+      }
+
+      .cma-profile-modal-content {
+        width: 100%;
+        max-width: 430px;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 18px;
+        border-radius: 17px;
+        background: #073746;
+        border: 1px solid #245563;
+      }
+
+      .cma-profile-modal-title {
+        font-size: 17px;
+        font-weight: 800;
+        margin-bottom: 16px;
+      }
+
+      .cma-profile-field {
+        display: block;
+        width: 100%;
+        margin-bottom: 13px;
+      }
+
+      .cma-profile-field span {
+        display: block;
+        color: #A8C0CE;
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
+
+      .cma-profile-field input,
+      .cma-profile-field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px;
+        border: 1px solid #245563;
+        border-radius: 10px;
+        outline: none;
+        background: #052D3B;
+        color: #fff;
+        font-family: inherit;
+        font-size: 13px;
+      }
+
+      .cma-profile-field textarea {
+        min-height: 75px;
+        resize: vertical;
+      }
+
+      .cma-profile-privacy-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: -5px 0 13px;
+        color: #A8C0CE;
+        font-size: 11px;
+      }
+
+      .cma-profile-privacy-row select {
+        padding: 7px 9px;
+        border: 1px solid #245563;
+        border-radius: 8px;
+        background: #052D3B;
+        color: #fff;
+        font: inherit;
+      }
+
+      .cma-profile-save {
+        width: 100%;
+        padding: 12px;
+        border: 0;
+        border-radius: 22px;
+        background: #08C99A;
+        color: #052D3B;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .cma-profile-save:disabled {
+        opacity: .6;
+      }
+
+      .cma-profile-cancel {
+        width: 100%;
+        padding: 10px;
+        margin-top: 7px;
+        border: 0;
+        background: transparent;
+        color: #A8C0CE;
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      .cma-profile-file-input {
+        display: none !important;
+      }
+
+      .cma-profile .cma-composer {
+        margin-bottom: 15px;
+      }
+
+      .cma-profile .cma-composer .cma-avatar {
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .cma-profile .cma-composer .cma-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .cma-profile-photo-preview {
+        display: none;
+        padding: 0 12px 12px;
+      }
+
+      .cma-profile-photo-preview.show {
+        display: block;
+      }
+
+      .cma-profile-photo-preview img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 220px;
+        object-fit: contain;
+        border-radius: 12px;
+      }
     `;
 
     document.head.appendChild(style);
   }
-     /* =========================================
-     PART 2 — PROFILE CONTENT
-  ========================================= */
+     
+  function renderProfileComposer(user) {
+    const metadata = getMetadata(user);
+    const avatar = safeImage(metadata.avatar_url || metadata.picture || "");
+
+    return `
+      <section class="cma-composer cma-profile-composer">
+        <div class="cma-composer-top">
+          <div class="cma-avatar">
+            ${
+              avatar
+                ? `<img src="${avatar}" alt="Your profile photo">`
+                : `<span>${escape((metadata.full_name || "U").charAt(0).toUpperCase())}</span>`
+            }
+          </div>
+
+          <textarea
+            id="cmaProfilePostInput"
+            class="cma-composer-input"
+            placeholder="What's on your mind?"
+            rows="2"
+            maxlength="5000"></textarea>
+        </div>
+
+        <div class="cma-profile-photo-preview" id="cmaProfilePhotoPreview">
+          <img id="cmaProfilePreviewImage" alt="Selected post photo">
+          <button type="button"
+            class="cma-composer-remove-photo"
+            data-cma-profile-action="remove-post-photo">
+            Remove photo
+          </button>
+        </div>
+
+        <input
+          type="file"
+          id="cmaProfilePhotoInput"
+          class="cma-profile-file-input"
+          accept="image/jpeg,image/png,image/webp">
+
+        <div class="cma-composer-bottom">
+          <button type="button"
+            class="cma-composer-photo"
+            data-cma-profile-action="select-post-photo">
+            <span aria-hidden="true">📷</span>
+            Photo
+          </button>
+
+          <button type="button"
+            class="cma-composer-submit"
+            data-cma-profile-action="publish-post">
+            Post
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderFriendActions(isOwnProfile) {
+    if (isOwnProfile) return "";
+
+    return `
+      <div class="cma-profile-actions" id="cmaProfileFriendActions">
+        <button type="button"
+          class="cma-profile-action-button"
+          data-cma-profile-action="friend-loading"
+          disabled>
+          Loading...
+        </button>
+
+        <button type="button"
+          class="cma-profile-action-button secondary"
+          data-cma-profile-action="message">
+          Message
+        </button>
+      </div>
+    `;
+  }
 
   function renderProfileContent(user, isOwnProfile) {
     const metadata = getMetadata(user);
-    const name = escape(
-      metadata.full_name ||
-      user.email ||
-      "Community Member"
-    );
-
-    const description = escape(
-      metadata.short_description || ""
-    );
-
-    const institution = escape(
-      metadata.institution || ""
-    );
-
-    const avatar = getAvatar(user);
-
-    const memberId = escape(
-      String(user.id || "").slice(0, 8).toUpperCase()
-    );
-
+    const fullName = metadata.full_name || "Community Member";
+    const description = metadata.short_description || "";
+    const institution = metadata.institution || "";
+    const avatar = safeImage(metadata.avatar_url || metadata.picture || "");
     const cover = safeImage(metadata.cover_url || "");
 
-    const avatarHTML = avatar
-      ? `<img src="${avatar}" alt="Profile photo">`
-      : "👤";
+    const memberId = user.id
+      ? String(user.id).slice(0, 8).toUpperCase()
+      : "MEMBER";
 
-    const coverHTML = cover
-      ? `<img src="${cover}" alt="Profile cover">`
-      : "";
-
-    const editButton = isOwnProfile
-      ? `
-        <button type="button"
-          class="cma-profile-edit"
-          data-cma-profile-action="edit-info">
-          Edit Profile
-        </button>
-      `
-      : "";
-
-    const privacy = metadata;
-
-    const institutionHTML = institution
-      ? `
-        <div class="cma-profile-info-row">
-          <span class="cma-profile-info-label">Institution</span>
-          ${institution}
-        </div>
-      `
-      : "";
-
-    const mobileHTML = isOwnProfile
-      ? `
-        <div class="cma-profile-info-row">
-          <span class="cma-profile-info-label">Mobile Number</span>
-          ${escape(privacy.mobile_number || "Not added")}
-        </div>
-      `
-      : (
-        privacy.mobile_number_is_public
-          ? `
-            <div class="cma-profile-info-row">
-              <span class="cma-profile-info-label">Mobile Number</span>
-              ${escape(privacy.mobile_number || "Not available")}
-            </div>
-          `
-          : ""
-      );
-
-    const addressHTML = isOwnProfile
-      ? `
-        <div class="cma-profile-info-row">
-          <span class="cma-profile-info-label">Address</span>
-          ${escape(privacy.address || "Not added")}
-        </div>
-      `
-      : (
-        privacy.address_is_public
-          ? `
-            <div class="cma-profile-info-row">
-              <span class="cma-profile-info-label">Address</span>
-              ${escape(privacy.address || "Not available")}
-            </div>
-          `
-          : ""
-      );
-
-    const friendActions = isOwnProfile
-      ? ""
-      : `
-        <div class="cma-profile-actions"
-          id="cmaProfileFriendActions"
-          data-profile-user-id="${escape(user.id)}">
-          <div class="cma-profile-empty">
-            Loading...
-          </div>
-        </div>
-      `;
-
-    const composer = isOwnProfile
-      ? renderProfileComposer(user)
-      : "";
+    const mobilePublic = metadata.mobile_number_is_public === true;
+    const addressPublic = metadata.address_is_public === true;
 
     return `
-      <main class="cma-profile"
-        data-profile-user-id="${escape(user.id)}">
+      <main class="cma-profile">
 
-        <section class="cma-profile-cover"
-          data-cma-profile-action="change-cover">
-          ${coverHTML}
+        <section class="cma-profile-cover">
+          ${
+            cover
+              ? `<img src="${cover}" alt="Profile cover">`
+              : ""
+          }
 
           <div class="cma-profile-avatar"
-            data-cma-profile-action="change-avatar">
-            ${avatarHTML}
+            ${
+              isOwnProfile
+                ? `data-cma-profile-action="change-avatar" role="button" tabindex="0" aria-label="Change profile photo"`
+                : ""
+            }>
+            ${
+              avatar
+                ? `<img src="${avatar}" alt="${escape(fullName)}">`
+                : `<span>${escape(fullName.charAt(0).toUpperCase())}</span>`
+            }
           </div>
         </section>
 
-        <section class="cma-profile-heading">
+        <input
+          type="file"
+          id="cmaProfileAvatarInput"
+          class="cma-profile-file-input"
+          accept="image/jpeg,image/png,image/webp">
+
+        <div class="cma-profile-heading">
           <div>
-            <div class="cma-profile-name">${name}</div>
-
-            <div class="cma-profile-id">
-              Member ID: ${memberId}
-            </div>
-
+            <div class="cma-profile-name">${escape(fullName)}</div>
+            <div class="cma-profile-id">Member ID: ${escape(memberId)}</div>
             ${
               description
-                ? `<div class="cma-profile-description">${description}</div>`
+                ? `<div class="cma-profile-description">${escape(description)}</div>`
                 : ""
             }
           </div>
 
-          ${editButton}
-        </section>
+          ${
+            isOwnProfile
+              ? `<button type="button"
+                  class="cma-profile-edit"
+                  data-cma-profile-action="edit-profile">
+                  Edit Profile
+                </button>`
+              : ""
+          }
+        </div>
 
-        ${friendActions}
+        ${renderFriendActions(isOwnProfile)}
 
         <section class="cma-profile-section">
-          <div class="cma-profile-section-title">
-            Personal Information
+          <div class="cma-profile-section-title">Personal Information</div>
+
+          <div class="cma-profile-info-row">
+            <span class="cma-profile-info-label">Institution</span>
+            ${institution ? escape(institution) : "Not added"}
           </div>
 
-          ${
-            institutionHTML ||
-            mobileHTML ||
-            addressHTML
-              ? institutionHTML + mobileHTML + addressHTML
-              : `
-                <div class="cma-profile-empty">
-                  No public information available.
-                </div>
-              `
-          }
+          <div class="cma-profile-info-row">
+            <span class="cma-profile-info-label">Mobile Number</span>
+            ${
+              isOwnProfile
+                ? escape(currentPrivateInfo.mobile_number || "Not added")
+                : (mobilePublic ? "Public contact information" : "Private")
+            }
+          </div>
+
+          <div class="cma-profile-info-row">
+            <span class="cma-profile-info-label">Address</span>
+            ${
+              isOwnProfile
+                ? escape(currentPrivateInfo.address || "Not added")
+                : (addressPublic ? "Public address information" : "Private")
+            }
+          </div>
         </section>
 
-        ${composer}
+        ${
+          isOwnProfile
+            ? renderProfileComposer(user)
+            : ""
+        }
 
         <div class="cma-profile-tabs">
-
           <button type="button"
             class="cma-profile-tab ${activeTab === "posts" ? "active" : ""}"
             data-cma-profile-tab="posts">
@@ -739,199 +768,94 @@
             data-cma-profile-tab="friends">
             Friends
           </button>
-
         </div>
 
-        <section class="cma-profile-posts"
-          id="cmaProfileTabContent">
-          <div class="cma-profile-empty">
-            Loading...
-          </div>
+        <section id="cmaProfileTabContent">
+          ${
+            activeTab === "posts"
+              ? `<div class="cma-profile-posts" id="cmaProfilePosts"></div>`
+              : `<div class="cma-profile-empty">Loading...</div>`
+          }
         </section>
-
       </main>
     `;
   }
 
+  async function loadOwnPrivateInfo(userId) {
+    currentPrivateInfo = {
+      mobile_number: "",
+      address: ""
+    };
 
-  /* =========================================
-     PROFILE COMPOSER STRUCTURE
-     Feed integration will be connected
-     in the following parts.
-  ========================================= */
+    if (!userId) return currentPrivateInfo;
 
-  function renderProfileComposer(user) {
-    const avatar = getAvatar(user);
+    const { data, error } = await db
+      .from("cma_community_private_info")
+      .select("mobile_number,address")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    const avatarHTML = avatar
-      ? `<img src="${avatar}" alt="">`
-      : "👤";
+    if (error) {
+      console.warn("Private profile information could not be loaded:", error.message);
+      return currentPrivateInfo;
+    }
 
-    return `
-      <section class="cma-profile-section cma-composer"
-        id="cmaProfileComposer">
+    if (data) {
+      currentPrivateInfo = {
+        mobile_number: data.mobile_number || "",
+        address: data.address || ""
+      };
+    }
 
-        <div class="cma-composer-top"
-          style="display:flex;align-items:center;gap:10px;">
-
-          <div class="cma-avatar"
-            style="width:40px;height:40px;border-radius:50%;
-            background:#103E4C;display:flex;align-items:center;
-            justify-content:center;overflow:hidden;">
-            ${avatarHTML}
-          </div>
-
-          <textarea
-            id="cmaProfilePostInput"
-            placeholder="What's on your mind?"
-            rows="2"
-            style="flex:1;min-width:0;resize:vertical;
-            border:0;outline:none;border-radius:12px;
-            padding:12px;background:#052D3B;color:#fff;
-            font:inherit;font-size:13px;"></textarea>
-
-        </div>
-
-        <div class="cma-profile-photo-preview"
-          id="cmaProfilePhotoPreview">
-          <img id="cmaProfilePreviewImage" src="" alt="Selected photo">
-
-          <button type="button"
-            class="cma-profile-photo-remove"
-            data-cma-profile-action="remove-photo">
-            Remove Photo
-          </button>
-        </div>
-
-        <input
-          type="file"
-          id="cmaProfilePhotoInput"
-          class="cma-profile-file-input"
-          accept="image/jpeg,image/png,image/webp">
-
-        <div class="cma-composer-actions"
-          style="display:flex;align-items:center;
-          justify-content:space-between;gap:8px;
-          margin-top:12px;padding-top:10px;
-          border-top:1px solid #245563;">
-
-          <button type="button"
-            data-cma-profile-action="select-photo"
-            style="border:0;background:transparent;
-            color:#68DDB9;font:inherit;font-size:12px;
-            font-weight:700;cursor:pointer;">
-            📷 Photo
-          </button>
-
-          <button type="button"
-            data-cma-profile-action="publish-post"
-            class="cma-profile-save"
-            style="width:auto;padding:9px 20px;">
-            Post
-          </button>
-
-        </div>
-      </section>
-    `;
+    return currentPrivateInfo;
   }
-
-
-  /* =========================================
-     FRIENDSHIP STATE
-  ========================================= */
 
   async function loadFriendship(viewedUserId) {
     const currentUser = getUser();
 
-    if (!currentUser || !viewedUserId) {
-      return {
-        status: "none",
-        relationship: null
-      };
-    }
-
-    if (currentUser.id === viewedUserId) {
-      return {
-        status: "self",
-        relationship: null
-      };
+    if (!currentUser || !viewedUserId || currentUser.id === viewedUserId) {
+      return { status: "none", relationship: null };
     }
 
     const { data, error } = await db
       .from("cma_community_friendships")
-      .select("*")
+      .select("id,requester_id,addressee_id,status")
       .or(
         `and(requester_id.eq.${currentUser.id},addressee_id.eq.${viewedUserId}),and(requester_id.eq.${viewedUserId},addressee_id.eq.${currentUser.id})`
       )
-      .limit(1);
+      .limit(1)
+      .maybeSingle();
 
     if (error) {
-      console.error("Friendship load error:", error);
-
-      return {
-        status: "none",
-        relationship: null
-      };
+      console.warn("Friendship lookup failed:", error.message);
+      return { status: "none", relationship: null };
     }
 
-    const relationship = data && data.length
-      ? data[0]
-      : null;
-
-    if (!relationship) {
-      return {
-        status: "none",
-        relationship: null
-      };
+    if (!data) {
+      return { status: "none", relationship: null };
     }
 
-    if (relationship.status === "accepted") {
-      return {
-        status: "accepted",
-        relationship
-      };
+    if (data.status === "accepted") {
+      return { status: "accepted", relationship: data };
     }
 
-    if (relationship.requester_id === currentUser.id) {
-      return {
-        status: "sent",
-        relationship
-      };
+    if (data.requester_id === currentUser.id) {
+      return { status: "sent", relationship: data };
     }
 
-    return {
-      status: "incoming",
-      relationship
-    };
+    return { status: "incoming", relationship: data };
   }
 
-
-  /* =========================================
-     PROFILE FRIEND ACTION BUTTONS
-  ========================================= */
-
   async function renderFriendActions(root, viewedUserId) {
-    const container = root.querySelector(
-      "#cmaProfileFriendActions"
-    );
-
+    const container = root.querySelector("#cmaProfileFriendActions");
     if (!container) return;
-
-    const currentUser = getUser();
-
-    if (!currentUser || currentUser.id === viewedUserId) {
-      container.innerHTML = "";
-      return;
-    }
 
     const state = await loadFriendship(viewedUserId);
 
-    currentFriendState = state;
-
-    let friendButton = "";
+    let button = "";
 
     if (state.status === "accepted") {
-      friendButton = `
+      button = `
         <button type="button"
           class="cma-profile-action-button secondary"
           data-cma-friend-action="unfriend">
@@ -939,7 +863,7 @@
         </button>
       `;
     } else if (state.status === "sent") {
-      friendButton = `
+      button = `
         <button type="button"
           class="cma-profile-action-button secondary"
           data-cma-friend-action="cancel">
@@ -947,7 +871,7 @@
         </button>
       `;
     } else if (state.status === "incoming") {
-      friendButton = `
+      button = `
         <button type="button"
           class="cma-profile-action-button"
           data-cma-friend-action="accept">
@@ -956,47 +880,43 @@
 
         <button type="button"
           class="cma-profile-action-button secondary"
-          data-cma-friend-action="delete">
-          Delete Request
+          data-cma-friend-action="decline">
+          Delete
         </button>
       `;
     } else {
-      friendButton = `
+      button = `
         <button type="button"
           class="cma-profile-action-button"
           data-cma-friend-action="add">
-          + Add Friend
+          Add Friend
         </button>
       `;
     }
 
     container.innerHTML = `
-      ${friendButton}
-
+      ${button}
       <button type="button"
         class="cma-profile-action-button secondary"
         data-cma-profile-action="message">
         Message
       </button>
     `;
-                                     }
-    /* =========================================
-     PART 3 — FRIEND ACTIONS
-  ========================================= */
-
-  async function performFriendAction(action, root, viewedUserId) {
+     }
+   
+  async function performFriendAction(root, viewedUserId, action) {
     const currentUser = getUser();
 
     if (!currentUser || !viewedUserId) return;
 
     const state = await loadFriendship(viewedUserId);
-    const relationship = state.relationship;
+    let error = null;
 
     try {
       if (action === "add") {
         if (state.status !== "none") return;
 
-        const { error } = await db
+        const result = await db
           .from("cma_community_friendships")
           .insert({
             requester_id: currentUser.id,
@@ -1004,79 +924,68 @@
             status: "pending"
           });
 
-        if (error) throw error;
+        error = result.error;
 
-        showNotice("Friend request sent.", "success");
-      }
-
-      else if (action === "accept") {
+      } else if (action === "accept") {
         if (
           state.status !== "incoming" ||
-          !relationship
+          !state.relationship
         ) return;
 
-        const { error } = await db
+        const result = await db
           .from("cma_community_friendships")
           .update({
             status: "accepted",
             updated_at: new Date().toISOString()
           })
-          .eq("id", relationship.id)
+          .eq("id", state.relationship.id)
           .eq("addressee_id", currentUser.id)
           .eq("status", "pending");
 
-        if (error) throw error;
+        error = result.error;
 
-        showNotice("Friend request accepted.", "success");
-      }
+      } else if (action === "cancel" || action === "decline") {
+        if (!state.relationship) return;
 
-      else if (
-        action === "delete" ||
-        action === "cancel"
-      ) {
-        if (!relationship || state.status === "accepted") {
-          return;
-        }
-
-        const { error } = await db
+        const result = await db
           .from("cma_community_friendships")
           .delete()
-          .eq("id", relationship.id);
+          .eq("id", state.relationship.id);
 
-        if (error) throw error;
+        error = result.error;
 
-        showNotice(
-          action === "cancel"
-            ? "Friend request cancelled."
-            : "Friend request deleted.",
-          "success"
-        );
-      }
-
-      else if (action === "unfriend") {
+      } else if (action === "unfriend") {
         if (
           state.status !== "accepted" ||
-          !relationship
+          !state.relationship
         ) return;
 
-        const { error } = await db
+        const result = await db
           .from("cma_community_friendships")
           .delete()
-          .eq("id", relationship.id);
+          .eq("id", state.relationship.id);
 
-        if (error) throw error;
-
-        showNotice("Friend removed.", "success");
-
-        window.dispatchEvent(
-          new CustomEvent("cma:friendship-changed", {
-            detail: {
-              userId: currentUser.id,
-              otherUserId: viewedUserId
-            }
-          })
-        );
+        error = result.error;
       }
+
+      if (error) throw error;
+
+      if (action === "add") {
+        showNotice("Friend request sent.", "success");
+      } else if (action === "accept") {
+        showNotice("Friend request accepted.", "success");
+      } else if (action === "unfriend") {
+        showNotice("Friend removed.", "success");
+      } else {
+        showNotice("Friend request updated.", "success");
+      }
+
+      window.dispatchEvent(new CustomEvent("cma:friendship-changed", {
+        detail: {
+          userId: currentUser.id,
+          otherUserId: viewedUserId
+        }
+      }));
 
       await renderFriendActions(root, viewedUserId);
 
@@ -1084,240 +993,149 @@
         await loadProfileFriends(lastRenderedUser.id, root);
       }
 
-    } catch (error) {
-      console.error("Friend action error:", error);
-
+    } catch (err) {
+      console.error("Friend action failed:", err);
       showNotice(
-        error.message || "Friend action failed. Please try again.",
+        err.message || "Could not update friendship. Please try again.",
         "error"
       );
-
       await renderFriendActions(root, viewedUserId);
     }
   }
 
-
-  /* =========================================
-     PROFILE FRIENDS LIST
-  ========================================= */
-
   async function loadProfileFriends(profileUserId, root) {
-    const container = root.querySelector(
-      "#cmaProfileTabContent"
-    );
+    const target = root.querySelector("#cmaProfileTabContent");
+    if (!target) return;
 
-    if (!container) return;
+    target.innerHTML = `<div class="cma-profile-empty">Loading friends...</div>`;
 
-    container.innerHTML = `
-      <div class="cma-profile-empty">
-        Loading friends...
-      </div>
-    `;
-
-    try {
-      const { data: relationships, error } = await db
-        .from("cma_community_friendships")
-        .select("requester_id, addressee_id")
-        .eq("status", "accepted")
-        .or(
-          `requester_id.eq.${profileUserId},addressee_id.eq.${profileUserId}`
-        );
-
-      if (error) throw error;
-
-      if (!relationships || relationships.length === 0) {
-        container.innerHTML = `
-          <div class="cma-profile-empty">
-            No friends to show yet.
-          </div>
-        `;
-        return;
-      }
-
-      const friendIds = relationships.map((item) =>
-        item.requester_id === profileUserId
-          ? item.addressee_id
-          : item.requester_id
+    const { data: relationships, error } = await db
+      .from("cma_community_friendships")
+      .select("requester_id,addressee_id")
+      .eq("status", "accepted")
+      .or(
+        `requester_id.eq.${profileUserId},addressee_id.eq.${profileUserId}`
       );
 
-      const { data: profiles, error: profileError } = await db
-        .from("cma_community_profiles")
-        .select("user_id, full_name, short_description, avatar_url")
-        .in("user_id", friendIds);
-
-      if (profileError) throw profileError;
-
-      if (!profiles || profiles.length === 0) {
-        container.innerHTML = `
-          <div class="cma-profile-empty">
-            No friends to show yet.
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="cma-profile-section">
-          <div class="cma-profile-section-title">
-            Friends (${profiles.length})
-          </div>
-
-          <div class="cma-profile-friends-list">
-            ${profiles.map((friend) => {
-              const avatar = safeImage(friend.avatar_url);
-
-              return `
-                <div class="cma-profile-friend-card">
-
-                  ${
-                    avatar
-                      ? `<img class="cma-profile-friend-avatar"
-                          src="${avatar}" alt="">`
-                      : `<div class="cma-profile-friend-avatar"
-                          style="display:flex;align-items:center;
-                          justify-content:center;">👤</div>`
-                  }
-
-                  <div class="cma-profile-friend-details">
-                    <div class="cma-profile-friend-name">
-                      ${escape(friend.full_name || "Community Member")}
-                    </div>
-
-                    <div class="cma-profile-friend-description">
-                      ${escape(friend.short_description || "")}
-                    </div>
-                  </div>
-
-                  <button type="button"
-                    class="cma-profile-friend-view"
-                    data-cma-view-profile="${escape(friend.user_id)}">
-                    View
-                  </button>
-
-                </div>
-              `;
-            }).join("")}
-          </div>
-        </div>
-      `;
-
-    } catch (error) {
-      console.error("Profile friends load error:", error);
-
-      container.innerHTML = `
+    if (error) {
+      console.error("Profile friends load failed:", error);
+      target.innerHTML = `
         <div class="cma-profile-empty">
-          Could not load friends. Please try again.
+          Could not load friends right now.
         </div>
       `;
+      return;
     }
-  }
 
-
-  /* =========================================
-     PROFILE POSTS
-     Uses shared Feed Post Card
-  ========================================= */
-
-  async function loadUserPosts(profileUserId, root) {
-    const container = root.querySelector(
-      "#cmaProfileTabContent"
+    const friendIds = (relationships || []).map((item) =>
+      item.requester_id === profileUserId
+        ? item.addressee_id
+        : item.requester_id
     );
 
+    if (!friendIds.length) {
+      target.innerHTML = `
+        <div class="cma-profile-empty">
+          No friends to show yet.
+        </div>
+      `;
+      return;
+    }
+
+    const { data: profiles, error: profileError } = await db
+      .from("cma_community_profiles")
+      .select("user_id,full_name,short_description,avatar_url")
+      .in("user_id", friendIds);
+
+    if (profileError) {
+      console.error("Friend profiles load failed:", profileError);
+      target.innerHTML = `
+        <div class="cma-profile-empty">
+          Could not load friend profiles.
+        </div>
+      `;
+      return;
+    }
+
+    target.innerHTML = `
+      <div class="cma-profile-section">
+        <div class="cma-profile-section-title">
+          Friends (${(profiles || []).length})
+        </div>
+
+        <div class="cma-profile-friends-list">
+          ${(profiles || []).map((friend) => {
+            const avatar = safeImage(friend.avatar_url || "");
+            const name = friend.full_name || "Community Member";
+
+            return `
+              <div class="cma-profile-friend-card">
+                ${
+                  avatar
+                    ? `<img class="cma-profile-friend-avatar"
+                        src="${avatar}" alt="">`
+                    : `<div class="cma-profile-friend-avatar"></div>`
+                }
+
+                <div class="cma-profile-friend-details">
+                  <div class="cma-profile-friend-name">
+                    ${escape(name)}
+                  </div>
+                  <div class="cma-profile-friend-description">
+                    ${escape(friend.short_description || "")}
+                  </div>
+                </div>
+
+                <button type="button"
+                  class="cma-profile-friend-view"
+                  data-cma-open-profile="${escape(friend.user_id)}">
+                  View
+                </button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadUserPosts(profileUserId, root) {
+    const container = root.querySelector("#cmaProfilePosts");
     if (!container) return;
 
     container.innerHTML = `
-      <div class="cma-profile-empty">
-        Loading posts...
-      </div>
+      <div class="cma-profile-empty">Loading posts...</div>
     `;
 
-    try {
-      const { data: posts, error } = await db
-        .from("cma_community_posts")
-        .select("*")
-        .eq("user_id", profileUserId)
-        .order("created_at", { ascending: false });
+    const Main = window.CMACommunityMain;
+    const profileUser = {
+      id: profileUserId
+    };
 
-      if (error) throw error;
+    if (Main && typeof Main.loadUserPosts === "function") {
+      try {
+        await Main.loadUserPosts(profileUser, root);
 
-      if (!posts || posts.length === 0) {
-        container.innerHTML = `
-          <div class="cma-profile-empty">
-            No posts yet.
-          </div>
-        `;
-        return;
-      }
-
-      const Feed = window.CMACommunityFeed;
-
-      if (!Feed || typeof Feed.createPostCard !== "function") {
-        console.error(
-          "CMACommunityFeed.createPostCard is unavailable."
-        );
-
-        container.innerHTML = `
-          <div class="cma-profile-empty">
-            Post display is temporarily unavailable.
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = "";
-
-      posts.forEach((post) => {
-        const cardData = {
-          ...post,
-          id: post.id,
-          user_id: post.user_id,
-          content: post.content,
-          image_url: post.image_url,
-          created_at: post.created_at,
-          author: {
-            id: profileUserId,
-            user_metadata: {
-              full_name:
-                lastRenderedUser?.user_metadata?.full_name ||
-                "Community Member",
-              avatar_url:
-                lastRenderedUser?.user_metadata?.avatar_url || ""
-            }
-          }
-        };
-
-        const card = Feed.createPostCard(cardData);
-
-        if (card instanceof HTMLElement) {
-          container.appendChild(card);
-        } else if (typeof card === "string") {
-          const wrapper = document.createElement("div");
-          wrapper.innerHTML = card;
-          while (wrapper.firstChild) {
-            container.appendChild(wrapper.firstChild);
-          }
+        if (!container.children.length) {
+          container.innerHTML = `
+            <div class="cma-profile-empty">
+              No posts yet.
+            </div>
+          `;
         }
-      });
 
-      if (typeof Feed.bindEvents === "function") {
-        Feed.bindEvents(root);
+        return;
+      } catch (error) {
+        console.error("Shared profile post loading failed:", error);
       }
-
-    } catch (error) {
-      console.error("Profile posts error:", error);
-
-      container.innerHTML = `
-        <div class="cma-profile-empty">
-          Could not load posts. Please try again.
-        </div>
-      `;
     }
+
+    container.innerHTML = `
+      <div class="cma-profile-empty">
+        Profile posts are temporarily unavailable.
+      </div>
+    `;
   }
-
-
-  /* =========================================
-     PROFILE DATA
-  ========================================= */
 
   async function loadPublicProfile(userId) {
     const { data, error } = await db
@@ -1334,114 +1152,77 @@
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     return data;
   }
 
-
   function makeProfileUser(profile) {
-    if (!profile) return null;
-
     return {
       id: profile.user_id,
-
       user_metadata: {
         full_name: profile.full_name || "",
         short_description: profile.short_description || "",
         institution: profile.institution || "",
         avatar_url: profile.avatar_url || "",
-        mobile_number_is_public:
-          profile.mobile_number_is_public === true,
-        address_is_public:
-          profile.address_is_public === true
+        mobile_number_is_public: profile.mobile_number_is_public === true,
+        address_is_public: profile.address_is_public === true
       }
     };
   }
 
-
-  /* =========================================
-     COMMUNITY NAVIGATION
-  ========================================= */
-
-  function navigateCommunity(page, userId) {
-    window.dispatchEvent(
-      new CustomEvent("cma:navigate", {
-        detail: {
-          page: page,
-          userId: userId || null
-        }
-      })
-    );
-  }
-
-
-  /* =========================================
-     PROFILE TAB LOADER
-  ========================================= */
-
-  async function loadTab(tab, user, root) {
+  async function loadTab(tab, root, profileUser) {
     activeTab = tab;
 
-    root.querySelectorAll("[data-cma-profile-tab]")
-      .forEach((button) => {
-        button.classList.toggle(
-          "active",
-          button.dataset.cmaProfileTab === tab
-        );
-      });
+    root.querySelectorAll("[data-cma-profile-tab]").forEach((button) => {
+      button.classList.toggle(
+        "active",
+        button.dataset.cmaProfileTab === tab
+      );
+    });
 
     if (tab === "posts") {
-      await loadUserPosts(user.id, root);
+      root.querySelector("#cmaProfileTabContent").innerHTML = `
+        <div class="cma-profile-posts" id="cmaProfilePosts"></div>
+      `;
+      await loadUserPosts(profileUser.id, root);
       return;
     }
 
     if (tab === "friends") {
-      await loadProfileFriends(user.id, root);
+      await loadProfileFriends(profileUser.id, root);
       return;
     }
 
-    const container = root.querySelector(
-      "#cmaProfileTabContent"
-    );
+    const target = root.querySelector("#cmaProfileTabContent");
 
-    if (!container) return;
+    if (target) {
+      const label = tab === "photos" ? "Photos" : "Reacted posts";
 
-    if (tab === "photos") {
-      container.innerHTML = `
+      target.innerHTML = `
         <div class="cma-profile-empty">
-          Photos will appear here.
-        </div>
-      `;
-      return;
-    }
-
-    if (tab === "reacted") {
-      container.innerHTML = `
-        <div class="cma-profile-empty">
-          Reacted posts will appear here.
+          ${label} will appear here.
         </div>
       `;
     }
   }
 
+  async function refreshPosts() {
+    if (!lastRenderedRoot || !lastRenderedUser) return;
 
-  /* =========================================
-     EDIT PROFILE MODAL
-  ========================================= */
-
-  function closeProfileModal(root) {
+    if (activeTab === "posts") {
+      await loadTab("posts", lastRenderedRoot, lastRenderedUser);
+    }
+           }
+       
+  function closeEditModal(root) {
     const modal = root.querySelector("#cmaProfileEditModal");
-
-    if (modal) {
-      modal.remove();
-    }
+    if (modal) modal.remove();
   }
 
-
-  function openProfileEditModal(user, root) {
-    closeProfileModal(root);
-
+  function openEditModal(root, user) {
     const metadata = getMetadata(user);
 
     const modal = document.createElement("div");
@@ -1450,15 +1231,12 @@
 
     modal.innerHTML = `
       <div class="cma-profile-modal-content">
-
-        <div class="cma-profile-modal-title">
-          Edit Personal Information
-        </div>
+        <div class="cma-profile-modal-title">Edit Personal Information</div>
 
         <label class="cma-profile-field">
           <span>Full Name</span>
           <input id="cmaEditFullName"
-            maxlength="80"
+            maxlength="100"
             value="${escape(metadata.full_name || "")}">
         </label>
 
@@ -1471,48 +1249,78 @@
         <label class="cma-profile-field">
           <span>Institution</span>
           <input id="cmaEditInstitution"
-            maxlength="120"
+            maxlength="150"
             value="${escape(metadata.institution || "")}">
         </label>
 
+        <label class="cma-profile-field">
+          <span>Mobile Number</span>
+          <input id="cmaEditMobile"
+            type="tel"
+            maxlength="30"
+            value="${escape(currentPrivateInfo.mobile_number || "")}">
+        </label>
+
+        <div class="cma-profile-privacy-row">
+          <span>Mobile Number visibility</span>
+          <select id="cmaEditMobilePrivacy">
+            <option value="private"
+              ${metadata.mobile_number_is_public === true ? "" : "selected"}>
+              Private
+            </option>
+            <option value="public"
+              ${metadata.mobile_number_is_public === true ? "selected" : ""}>
+              Public
+            </option>
+          </select>
+        </div>
+
+        <label class="cma-profile-field">
+          <span>Address</span>
+          <textarea id="cmaEditAddress"
+            maxlength="300">${escape(currentPrivateInfo.address || "")}</textarea>
+        </label>
+
+        <div class="cma-profile-privacy-row">
+          <span>Address visibility</span>
+          <select id="cmaEditAddressPrivacy">
+            <option value="private"
+              ${metadata.address_is_public === true ? "" : "selected"}>
+              Private
+            </option>
+            <option value="public"
+              ${metadata.address_is_public === true ? "selected" : ""}>
+              Public
+            </option>
+          </select>
+        </div>
+
         <button type="button"
           class="cma-profile-save"
-          data-cma-profile-action="save-info">
+          data-cma-profile-action="save-profile">
           Save Changes
         </button>
 
         <button type="button"
           class="cma-profile-cancel"
-          data-cma-profile-action="close-modal">
+          data-cma-profile-action="close-edit">
           Cancel
         </button>
-
       </div>
     `;
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeEditModal(root);
+      }
+    });
 
     root.appendChild(modal);
   }
 
-
-  async function saveProfileChanges(root) {
-    const currentUser = getUser();
-
-    if (!currentUser) {
-      showNotice("Please login first.", "error");
-      return;
-    }
-
-    const fullName = root.querySelector("#cmaEditFullName")?.value.trim();
-    const description = root.querySelector("#cmaEditDescription")?.value.trim();
-    const institution = root.querySelector("#cmaEditInstitution")?.value.trim();
-
-    if (!fullName) {
-      showNotice("Please enter your full name.", "error");
-      return;
-    }
-
+  async function saveProfileChanges(root, user) {
     const saveButton = root.querySelector(
-      '[data-cma-profile-action="save-info"]'
+      '[data-cma-profile-action="save-profile"]'
     );
 
     if (saveButton) {
@@ -1520,46 +1328,83 @@
       saveButton.textContent = "Saving...";
     }
 
+    const fullName = root.querySelector("#cmaEditFullName")?.value.trim() || "";
+    const description = root.querySelector("#cmaEditDescription")?.value.trim() || "";
+    const institution = root.querySelector("#cmaEditInstitution")?.value.trim() || "";
+    const mobile = root.querySelector("#cmaEditMobile")?.value.trim() || "";
+    const address = root.querySelector("#cmaEditAddress")?.value.trim() || "";
+
+    const mobilePublic =
+      root.querySelector("#cmaEditMobilePrivacy")?.value === "public";
+
+    const addressPublic =
+      root.querySelector("#cmaEditAddressPrivacy")?.value === "public";
+
+    if (!fullName) {
+      showNotice("Please enter your full name.", "error");
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Changes";
+      }
+      return;
+    }
+
     try {
-      const { error } = await db
+      const profileResult = await db
         .from("cma_community_profiles")
         .upsert({
-          user_id: currentUser.id,
+          user_id: user.id,
           full_name: fullName,
           short_description: description,
-          institution: institution,
+          institution,
+          mobile_number_is_public: mobilePublic,
+          address_is_public: addressPublic,
           updated_at: new Date().toISOString()
         }, {
           onConflict: "user_id"
         });
 
-      if (error) throw error;
+      if (profileResult.error) throw profileResult.error;
 
-      if (db.auth && db.auth.updateUser) {
-        const { error: authError } = await db.auth.updateUser({
-          data: {
-            full_name: fullName,
-            short_description: description,
-            institution: institution
-          }
+      const privateResult = await db
+        .from("cma_community_private_info")
+        .upsert({
+          user_id: user.id,
+          mobile_number: mobile,
+          address,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
         });
 
-        if (authError) {
-          console.warn("Auth metadata update warning:", authError);
+      if (privateResult.error) throw privateResult.error;
+
+      const metadataResult = await db.auth.updateUser({
+        data: {
+          full_name: fullName,
+          short_description: description,
+          institution,
+          mobile_number_is_public: mobilePublic,
+          address_is_public: addressPublic
         }
-      }
+      });
+
+      if (metadataResult.error) throw metadataResult.error;
+
+      currentPrivateInfo = {
+        mobile_number: mobile,
+        address
+      };
 
       showNotice("Profile updated successfully.", "success");
+      closeEditModal(root);
 
-      closeProfileModal(root);
-
-      await Profile.render(root, currentUser.id);
+      await Profile.render(root, user.id);
 
     } catch (error) {
-      console.error("Profile save error:", error);
-
+      console.error("Profile update failed:", error);
       showNotice(
-        error.message || "Could not save profile.",
+        error.message || "Could not save profile changes.",
         "error"
       );
 
@@ -1568,18 +1413,10 @@
         saveButton.textContent = "Save Changes";
       }
     }
-           }
-     /* =========================================
-     PART 4 — PHOTO UPLOAD & POST PUBLISH
-  ========================================= */
+  }
 
-  let selectedProfilePhoto = null;
-
-
-  async function uploadProfilePhoto(file, userId) {
-    if (!file || !userId) {
-      throw new Error("Photo is missing.");
-    }
+  async function uploadAvatar(root, user, file) {
+    if (!file) return;
 
     const allowedTypes = [
       "image/jpeg",
@@ -1588,495 +1425,356 @@
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      throw new Error("Only JPG, PNG and WEBP photos are allowed.");
+      showNotice("Choose a JPG, PNG or WEBP image.", "error");
+      return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      throw new Error("Photo size must be 5MB or less.");
+      showNotice("Image size must be 5MB or less.", "error");
+      return;
     }
 
-    const extension = file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : "jpg";
+    showNotice("Uploading profile photo...", "info");
 
-    const filePath =
-      `community-posts/${userId}/${Date.now()}.${extension}`;
+    try {
+      const extension = file.name.split(".").pop().toLowerCase();
+      const filePath =
+        `profiles/${user.id}/avatar-${Date.now()}.${extension}`;
 
-    const { error: uploadError } = await db.storage
-      .from("community-media")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
+      const { error: uploadError } = await db.storage
+        .from("community-media")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: file.type
+        });
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const { data } = db.storage
-      .from("community-media")
-      .getPublicUrl(filePath);
+      const { data: publicData } = db.storage
+        .from("community-media")
+        .getPublicUrl(filePath);
 
-    if (!data || !data.publicUrl) {
-      throw new Error("Could not get uploaded photo URL.");
-    }
+      const avatarUrl = publicData?.publicUrl;
 
-    return data.publicUrl;
-  }
-
-
-  function showSelectedPhoto(file, root) {
-    const preview = root.querySelector(
-      "#cmaProfilePhotoPreview"
-    );
-
-    const image = root.querySelector(
-      "#cmaProfilePreviewImage"
-    );
-
-    if (!preview || !image || !file) return;
-
-    if (image.dataset.objectUrl) {
-      URL.revokeObjectURL(image.dataset.objectUrl);
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-
-    image.src = objectUrl;
-    image.dataset.objectUrl = objectUrl;
-
-    preview.classList.add("show");
-  }
-
-
-  function removeSelectedPhoto(root) {
-    selectedProfilePhoto = null;
-
-    const input = root.querySelector(
-      "#cmaProfilePhotoInput"
-    );
-
-    const preview = root.querySelector(
-      "#cmaProfilePhotoPreview"
-    );
-
-    const image = root.querySelector(
-      "#cmaProfilePreviewImage"
-    );
-
-    if (input) input.value = "";
-
-    if (image) {
-      if (image.dataset.objectUrl) {
-        URL.revokeObjectURL(image.dataset.objectUrl);
+      if (!avatarUrl) {
+        throw new Error("Could not get uploaded image URL.");
       }
 
-      image.removeAttribute("src");
-      delete image.dataset.objectUrl;
-    }
+      const { error: profileError } = await db
+        .from("cma_community_profiles")
+        .upsert({
+          user_id: user.id,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
+        });
 
-    if (preview) {
-      preview.classList.remove("show");
+      if (profileError) throw profileError;
+
+      const { error: authError } = await db.auth.updateUser({
+        data: {
+          avatar_url: avatarUrl
+        }
+      });
+
+      if (authError) throw authError;
+
+      showNotice("Profile photo updated.", "success");
+      await Profile.render(root, user.id);
+
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      showNotice(
+        error.message || "Could not upload profile photo.",
+        "error"
+      );
     }
   }
 
+  function showPostPhoto(file, root) {
+    if (!file) return;
 
-  /* =========================================
-     CREATE PROFILE POST
-  ========================================= */
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
 
-  async function createProfilePost(root) {
-    const currentUser = getUser();
+    if (!allowedTypes.includes(file.type)) {
+      showNotice("Choose a JPG, PNG or WEBP image.", "error");
+      return;
+    }
 
-    if (!currentUser) {
-      showNotice("Please login first.", "error");
+    if (file.size > 5 * 1024 * 1024) {
+      showNotice("Image size must be 5MB or less.", "error");
+      return;
+    }
+
+    selectedProfilePhoto = file;
+    revokeProfilePhotoPreview();
+
+    profilePhotoObjectURL = URL.createObjectURL(file);
+
+    const preview = root.querySelector("#cmaProfilePhotoPreview");
+    const image = root.querySelector("#cmaProfilePreviewImage");
+
+    if (image) image.src = profilePhotoObjectURL;
+    if (preview) preview.classList.add("show");
+  }
+
+  function removePostPhoto(root) {
+    selectedProfilePhoto = null;
+    revokeProfilePhotoPreview();
+
+    const input = root.querySelector("#cmaProfilePhotoInput");
+    const preview = root.querySelector("#cmaProfilePhotoPreview");
+    const image = root.querySelector("#cmaProfilePreviewImage");
+
+    if (input) input.value = "";
+    if (image) image.removeAttribute("src");
+    if (preview) preview.classList.remove("show");
+  }
+
+  async function publishProfilePost(root) {
+    const user = getUser();
+    if (!user) {
+      showNotice("Please login to publish a post.", "error");
       return;
     }
 
     const input = root.querySelector("#cmaProfilePostInput");
-    const postButton = root.querySelector(
-      '[data-cma-profile-action="publish-post"]'
-    );
-
-    const content = input ? input.value.trim() : "";
+    const content = input?.value.trim() || "";
 
     if (!content && !selectedProfilePhoto) {
       showNotice("Write something or select a photo first.", "error");
       return;
     }
 
-    if (postButton) {
-      postButton.disabled = true;
-      postButton.textContent = "Posting...";
+    const button = root.querySelector(
+      '[data-cma-profile-action="publish-post"]'
+    );
+
+    const Main = window.CMACommunityMain;
+
+    if (!Main || typeof Main.createPost !== "function") {
+      showNotice("Post system is not ready. Please try again.", "error");
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Posting...";
     }
 
     try {
-      let imageUrl = null;
-
-      if (selectedProfilePhoto) {
-        imageUrl = await uploadProfilePhoto(
-          selectedProfilePhoto,
-          currentUser.id
-        );
-      }
-
-      const { error } = await db
-        .from("cma_community_posts")
-        .insert({
-          user_id: currentUser.id,
-          content: content,
-          image_url: imageUrl
-        });
-
-      if (error) throw error;
+      await Main.createPost(content, selectedProfilePhoto);
 
       if (input) input.value = "";
 
-      removeSelectedPhoto(root);
+      removePostPhoto(root);
 
-      showNotice("Post published successfully.", "success");
-
-      await loadUserPosts(currentUser.id, root);
+      await refreshPosts();
 
     } catch (error) {
-      console.error("Profile post publish error:", error);
-
+      console.error("Profile post failed:", error);
       showNotice(
         error.message || "Could not publish post.",
         "error"
       );
-
     } finally {
-      if (postButton) {
-        postButton.disabled = false;
-        postButton.textContent = "Post";
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Post";
       }
     }
   }
 
+  function bindEvents(root, profileUser, isOwnProfile) {
+    if (root.dataset.cmaProfileEvents !== "true") {
+      root.dataset.cmaProfileEvents = "true";
 
-  /* =========================================
-     PROFILE EVENT HANDLERS
-  ========================================= */
+      root.addEventListener("click", async (event) => {
+        const navButton = event.target.closest("[data-cma-profile-page]");
+        if (navButton) {
+          navigateCommunity(navButton.dataset.cmaProfilePage);
+          return;
+        }
 
-  function bindEvents(root, user, isOwnProfile) {
-    if (root.dataset.cmaProfileEvents === "true") {
-      return;
+        const tabButton = event.target.closest("[data-cma-profile-tab]");
+        if (tabButton) {
+          await loadTab(
+            tabButton.dataset.cmaProfileTab,
+            root,
+            lastRenderedUser
+          );
+          return;
+        }
+
+        const friendAction = event.target.closest("[data-cma-friend-action]");
+        if (friendAction) {
+          const action = friendAction.dataset.cmaFriendAction;
+          friendAction.disabled = true;
+
+          await performFriendAction(
+            root,
+            lastRenderedUser.id,
+            action
+          );
+          return;
+        }
+
+        const profileAction = event.target.closest("[data-cma-profile-action]");
+        if (profileAction) {
+          const action = profileAction.dataset.cmaProfileAction;
+
+          if (action === "search") {
+            navigateCommunity("search");
+          } else if (action === "edit-profile") {
+            openEditModal(root, lastRenderedUser);
+          } else if (action === "close-edit") {
+            closeEditModal(root);
+          } else if (action === "save-profile") {
+            await saveProfileChanges(root, lastRenderedUser);
+          } else if (action === "change-avatar") {
+            root.querySelector("#cmaProfileAvatarInput")?.click();
+          } else if (action === "select-post-photo") {
+            root.querySelector("#cmaProfilePhotoInput")?.click();
+          } else if (action === "remove-post-photo") {
+            removePostPhoto(root);
+          } else if (action === "publish-post") {
+            await publishProfilePost(root);
+          } else if (action === "message") {
+            if (
+              window.CMACommunityMessaging &&
+              typeof window.CMACommunityMessaging.openConversation === "function"
+            ) {
+              window.CMACommunityMessaging.openConversation(lastRenderedUser.id);
+            } else {
+              showNotice("Messaging is not available yet.", "info");
+            }
+          }
+
+          return;
+        }
+
+        const openProfile = event.target.closest("[data-cma-open-profile]");
+        if (openProfile) {
+          navigateCommunity("profile", openProfile.dataset.cmaOpenProfile);
+        }
+      });
+
+      root.addEventListener("change", async (event) => {
+        if (event.target.id === "cmaProfileAvatarInput") {
+          const file = event.target.files?.[0];
+          await uploadAvatar(root, lastRenderedUser, file);
+          event.target.value = "";
+        }
+
+        if (event.target.id === "cmaProfilePhotoInput") {
+          const file = event.target.files?.[0];
+          showPostPhoto(file, root);
+        }
+      });
     }
-
-    root.dataset.cmaProfileEvents = "true";
-
-    root.addEventListener("click", async function (event) {
-      const friendButton = event.target.closest(
-        "[data-cma-friend-action]"
-      );
-
-      if (friendButton) {
-        event.preventDefault();
-
-        if (friendButton.disabled) return;
-
-        friendButton.disabled = true;
-
-        const action = friendButton.dataset.cmaFriendAction;
-        const viewedUserId = root.querySelector(
-          "#cmaProfileFriendActions"
-        )?.dataset.profileUserId;
-
-        await performFriendAction(
-          action,
-          root,
-          viewedUserId
-        );
-
-        return;
-      }
-
-      const tabButton = event.target.closest(
-        "[data-cma-profile-tab]"
-      );
-
-      if (tabButton) {
-        event.preventDefault();
-
-        await loadTab(
-          tabButton.dataset.cmaProfileTab,
-          user,
-          root
-        );
-
-        return;
-      }
-
-      const viewProfileButton = event.target.closest(
-        "[data-cma-view-profile]"
-      );
-
-      if (viewProfileButton) {
-        navigateCommunity(
-          "profile",
-          viewProfileButton.dataset.cmaViewProfile
-        );
-
-        return;
-      }
-
-      const pageButton = event.target.closest(
-        "[data-cma-profile-page]"
-      );
-
-      if (pageButton) {
-        navigateCommunity(
-          pageButton.dataset.cmaProfilePage
-        );
-
-        return;
-      }
-
-      const actionButton = event.target.closest(
-        "[data-cma-profile-action]"
-      );
-
-      if (!actionButton) return;
-
-      const action = actionButton.dataset.cmaProfileAction;
-
-      if (action === "search") {
-        navigateCommunity("search");
-      }
-
-      else if (action === "edit-info" && isOwnProfile) {
-        openProfileEditModal(user, root);
-      }
-
-      else if (action === "close-modal") {
-        closeProfileModal(root);
-      }
-
-      else if (action === "save-info") {
-        await saveProfileChanges(root);
-      }
-
-      else if (action === "select-photo" && isOwnProfile) {
-        root.querySelector("#cmaProfilePhotoInput")?.click();
-      }
-
-      else if (action === "remove-photo") {
-        removeSelectedPhoto(root);
-      }
-
-      else if (action === "publish-post" && isOwnProfile) {
-        await createProfilePost(root);
-      }
-
-      else if (action === "message" && !isOwnProfile) {
-        if (
-          window.CMACommunityMessaging &&
-          typeof window.CMACommunityMessaging.openConversation === "function"
-        ) {
-          window.CMACommunityMessaging.openConversation(user.id);
-        } else {
-          showNotice(
-            "Messaging is not available yet.",
-            "info"
-          );
-        }
-      }
-    });
-
-
-    root.addEventListener("change", function (event) {
-      if (
-        event.target &&
-        event.target.id === "cmaProfilePhotoInput"
-      ) {
-        const file = event.target.files &&
-          event.target.files[0];
-
-        if (!file) return;
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (!allowedTypes.includes(file.type)) {
-          showNotice(
-            "Only JPG, PNG and WEBP photos are allowed.",
-            "error"
-          );
-
-          event.target.value = "";
-          return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-          showNotice(
-            "Photo size must be 5MB or less.",
-            "error"
-          );
-
-          event.target.value = "";
-          return;
-        }
-
-        selectedProfilePhoto = file;
-
-        showSelectedPhoto(file, root);
-      }
-    });
-
-
-    root.addEventListener("click", function (event) {
-      const modal = event.target;
-
-      if (
-        modal &&
-        modal.id === "cmaProfileEditModal"
-      ) {
-        closeProfileModal(root);
-      }
-    });
   }
-
-
-  /* =========================================
-     PROFILE RENDER
-  ========================================= */
 
   const Profile = {
-
     async render(root, targetUserId = null) {
-      if (!root) {
-        console.error("Profile root element is missing.");
+      if (!Core || !db) {
+        console.error("Community Core or Supabase is missing.");
         return;
       }
 
+      root = root || (Core.getRoot ? Core.getRoot() : null);
+      if (!root) return;
+
+      injectStyles();
+
+      await Core.loadSession();
+
+      const currentUser = getUser();
+
+      if (!currentUser) {
+        root.innerHTML = `
+          <div class="cma-profile-empty">
+            Please login to view the Community Profile.
+          </div>
+        `;
+        return;
+      }
+
+      const profileUserId = targetUserId || currentUser.id;
+      const isOwnProfile = profileUserId === currentUser.id;
+
       try {
-        if (Core && typeof Core.loadSession === "function") {
-          await Core.loadSession();
-        }
+        const profile = await loadPublicProfile(profileUserId);
 
-        const currentUser = getUser();
-
-        if (!currentUser) {
+        if (!profile) {
           root.innerHTML = `
             <div class="cma-profile-empty">
-              Please login to view the Community Profile.
+              This profile could not be found.
             </div>
           `;
           return;
         }
 
-        const viewedUserId = targetUserId || currentUser.id;
-
-        const isOwnProfile =
-          viewedUserId === currentUser.id;
-
-        let profileUser;
+        const profileUser = makeProfileUser(profile);
 
         if (isOwnProfile) {
-          const profile = await loadPublicProfile(
-            currentUser.id
-          );
+          await loadOwnPrivateInfo(currentUser.id);
 
-          profileUser = profile
-            ? makeProfileUser(profile)
-            : currentUser;
-
-          if (
-            profileUser &&
-            currentUser.user_metadata
-          ) {
-            profileUser.user_metadata = {
-              ...currentUser.user_metadata,
-              ...profileUser.user_metadata
-            };
-          }
-
+          profileUser.user_metadata.mobile_number = currentPrivateInfo.mobile_number;
+          profileUser.user_metadata.address = currentPrivateInfo.address;
         } else {
-          const profile = await loadPublicProfile(
-            viewedUserId
-          );
-
-          if (!profile) {
-            root.innerHTML = `
-              <div class="cma-profile-empty">
-                This profile could not be found.
-              </div>
-            `;
-            return;
-          }
-
-          profileUser = makeProfileUser(profile);
+          currentPrivateInfo = {
+            mobile_number: "",
+            address: ""
+          };
         }
-
-        if (!profileUser) {
-          throw new Error("Could not load profile information.");
-        }
-
-        selectedProfilePhoto = null;
-
-        injectStyles();
-
-        root.innerHTML =
-          renderNavigation() +
-          renderProfileContent(
-            profileUser,
-            isOwnProfile
-          );
 
         lastRenderedRoot = root;
         lastRenderedUser = profileUser;
 
-        bindEvents(
-          root,
-          profileUser,
-          isOwnProfile
-        );
+        root.innerHTML =
+          renderNavigation() +
+          renderProfileContent(profileUser, isOwnProfile);
+
+        bindEvents(root, profileUser, isOwnProfile);
 
         if (!isOwnProfile) {
-          await renderFriendActions(
-            root,
-            viewedUserId
-          );
+          await renderFriendActions(root, profileUserId);
         }
 
-        await loadTab(
-          activeTab,
-          profileUser,
-          root
-        );
+        await loadTab(activeTab, root, profileUser);
 
-        const Feed = window.CMACommunityFeed;
-
-        if (
-          Feed &&
-          typeof Feed.bindEvents === "function"
-        ) {
-          Feed.bindEvents(root);
+        if (window.CMACommunityFeed &&
+            typeof window.CMACommunityFeed.bindEvents === "function") {
+          window.CMACommunityFeed.bindEvents(root);
         }
 
       } catch (error) {
-        console.error("Profile render error:", error);
+        console.error("Profile render failed:", error);
 
         root.innerHTML = `
           <div class="cma-profile-empty">
-            Profile could not be loaded. Please refresh and try again.
+            Could not load this profile. Please refresh and try again.
           </div>
         `;
       }
+    },
+
+    refreshPosts,
+
+    clearComposerPhoto() {
+      if (lastRenderedRoot) {
+        removePostPhoto(lastRenderedRoot);
+      }
     }
-
   };
-
-
-  /* =========================================
-     MODULE EXPORT
-  ========================================= */
 
   window.CMACommunityProfile = Profile;
 
 })();
+   
