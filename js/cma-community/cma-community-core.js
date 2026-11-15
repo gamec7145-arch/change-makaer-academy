@@ -1,8 +1,9 @@
+
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY CORE
    Shared utilities and session management
-   SAFE PUBLIC PROFILE SYNC UPDATE
+   SESSION RACE CONDITION FIX
 ========================================= */
 
 (function () {
@@ -12,6 +13,12 @@
   const BUCKET = "community-media";
 
   let currentUser = null;
+  let sessionRevision = 0;
+  let sessionReady = false;
+
+  // =========================================
+  // HTML SECURITY
+  // =========================================
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, function (char) {
@@ -25,10 +32,16 @@
     });
   }
 
+  // =========================================
+  // ELEMENT HELPERS
+  // =========================================
+
   function createElement(tag, className = "", text = "") {
     const element = document.createElement(tag);
 
-    if (className) element.className = className;
+    if (className) {
+      element.className = className;
+    }
 
     if (text !== undefined && text !== null) {
       element.textContent = String(text);
@@ -41,7 +54,10 @@
     return document.getElementById("pageContent");
   }
 
-  // Read public name and avatar from the member's own account metadata.
+  // =========================================
+  // PUBLIC PROFILE METADATA
+  // =========================================
+
   function getProfileMetadata(user) {
     const metadata = user?.user_metadata || {};
 
@@ -63,14 +79,31 @@
     };
   }
 
-  // Sync only the currently logged-in member's public profile.
-  async function syncPublicProfile(user) {
+  // =========================================
+  // PUBLIC PROFILE SYNC
+  // =========================================
+
+  async function syncPublicProfile(user, expectedRevision = null) {
     if (!db || !user?.id) return false;
+
+    // Prevent an old session from updating profile data.
+    if (
+      expectedRevision !== null &&
+      expectedRevision !== sessionRevision
+    ) {
+      return false;
+    }
+
+    if (
+      currentUser &&
+      currentUser.id !== user.id
+    ) {
+      return false;
+    }
 
     try {
       const metadata = getProfileMetadata(user);
 
-      // IMPORTANT: Read existing profile fields before updating.
       const { data: existing, error: readError } = await db
         .from("cma_community_profiles")
         .select(
@@ -81,7 +114,21 @@
 
       if (readError) throw readError;
 
-      // Keep existing values if account metadata is empty.
+      // Check session again after asynchronous database read.
+      if (
+        expectedRevision !== null &&
+        expectedRevision !== sessionRevision
+      ) {
+        return false;
+      }
+
+      if (
+        currentUser &&
+        currentUser.id !== user.id
+      ) {
+        return false;
+      }
+
       const fullName =
         metadata.full_name ||
         existing?.full_name ||
@@ -92,11 +139,11 @@
         existing?.avatar_url ||
         "";
 
-      // Do not create an incomplete profile without a real name.
       if (!fullName) {
         console.warn(
           "Profile sync skipped: member name is not available."
         );
+
         return false;
       }
 
@@ -123,7 +170,17 @@
 
       if (saveError) throw saveError;
 
-      console.log("Community public profile synced:", user.id);
+      if (
+        expectedRevision !== null &&
+        expectedRevision !== sessionRevision
+      ) {
+        return false;
+      }
+
+      console.log(
+        "Community public profile synced:",
+        user.id
+      );
 
       return true;
 
@@ -133,25 +190,60 @@
     }
   }
 
+  // =========================================
+  // SESSION MANAGEMENT
+  // =========================================
+
   async function loadSession() {
-    if (!db) {
+
+    if (!db || !db.auth) {
+      sessionRevision++;
       currentUser = null;
+      sessionReady = true;
 
       return {
         user: null,
-        error: new Error("Supabase connection is unavailable.")
+        error: new Error(
+          "Supabase connection is unavailable."
+        )
       };
     }
+
+    // Each request gets a unique revision.
+    const requestRevision = ++sessionRevision;
 
     try {
       const { data, error } = await db.auth.getUser();
 
       if (error) throw error;
 
+      // Ignore outdated requests.
+      if (requestRevision !== sessionRevision) {
+        return {
+          user: currentUser,
+          error: null,
+          stale: true
+        };
+      }
+
       currentUser = data.user || null;
+      sessionReady = true;
 
       if (currentUser) {
-        await syncPublicProfile(currentUser);
+        await syncPublicProfile(
+          currentUser,
+          requestRevision
+        );
+      }
+
+      // An auth event may have changed the session
+      // while public profile sync was running.
+      if (requestRevision !== sessionRevision) {
+        return {
+          user: currentUser,
+          error: null,
+          stale: true
+        };
       }
 
       return {
@@ -160,7 +252,18 @@
       };
 
     } catch (error) {
+
+      // Never let an old failed request clear a newer session.
+      if (requestRevision !== sessionRevision) {
+        return {
+          user: currentUser,
+          error: null,
+          stale: true
+        };
+      }
+
       currentUser = null;
+      sessionReady = true;
 
       return {
         user: null,
@@ -169,14 +272,31 @@
     }
   }
 
+  // =========================================
+  // SESSION ACCESS
+  // =========================================
+
   function getCurrentUser() {
     return currentUser;
   }
 
   function setCurrentUser(user) {
+    // Invalidate pending session requests.
+    sessionRevision++;
+
     currentUser = user || null;
+    sessionReady = true;
   }
-    function formatRelativeTime(value) {
+
+  function isSessionReady() {
+    return sessionReady;
+  }
+
+  // =========================================
+  // RELATIVE TIME
+  // =========================================
+
+  function formatRelativeTime(value) {
     if (!value) return "";
 
     const date = new Date(value);
@@ -191,41 +311,64 @@
     if (seconds < 60) return "Just now";
 
     const minutes = Math.floor(seconds / 60);
+
     if (minutes < 60) {
-      return minutes + (minutes === 1 ? " minute ago" : " minutes ago");
+      return minutes +
+        (minutes === 1 ? " minute ago" : " minutes ago");
     }
 
     const hours = Math.floor(minutes / 60);
+
     if (hours < 24) {
-      return hours + (hours === 1 ? " hour ago" : " hours ago");
+      return hours +
+        (hours === 1 ? " hour ago" : " hours ago");
     }
 
     const days = Math.floor(hours / 24);
+
     if (days < 7) {
-      return days + (days === 1 ? " day ago" : " days ago");
+      return days +
+        (days === 1 ? " day ago" : " days ago");
     }
 
     const weeks = Math.floor(days / 7);
+
     if (days < 30) {
-      return weeks + (weeks === 1 ? " week ago" : " weeks ago");
+      return weeks +
+        (weeks === 1 ? " week ago" : " weeks ago");
     }
 
     const months = Math.floor(days / 30);
+
     if (days < 365) {
-      return months + (months === 1 ? " month ago" : " months ago");
+      return months +
+        (months === 1 ? " month ago" : " months ago");
     }
 
     const years = Math.floor(days / 365);
-    return years + (years === 1 ? " year ago" : " years ago");
+
+    return years +
+      (years === 1 ? " year ago" : " years ago");
   }
 
+  // =========================================
+  // NOTICE SYSTEM
+  // =========================================
+
   function showNotice(message, type = "info") {
-    let notice = document.getElementById("cmaCommunityNotice");
+    let notice = document.getElementById(
+      "cmaCommunityNotice"
+    );
 
     if (!notice) {
-      notice = createElement("div", "cma-community-notice");
+      notice = createElement(
+        "div",
+        "cma-community-notice"
+      );
+
       notice.id = "cmaCommunityNotice";
       notice.setAttribute("role", "status");
+
       document.body.appendChild(notice);
     }
 
@@ -240,6 +383,10 @@
     }, 3000);
   }
 
+  // =========================================
+  // LOGIN PROTECTION
+  // =========================================
+
   function requireLogin() {
     if (currentUser) return true;
 
@@ -251,13 +398,23 @@
     return false;
   }
 
+  // =========================================
+  // SAFE IMAGE URL
+  // =========================================
+
   function safeImageURL(value) {
     if (!value) return "";
 
     try {
-      const url = new URL(String(value), window.location.origin);
+      const url = new URL(
+        String(value),
+        window.location.origin
+      );
 
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
+      if (
+        url.protocol !== "https:" &&
+        url.protocol !== "http:"
+      ) {
         return "";
       }
 
@@ -268,35 +425,83 @@
     }
   }
 
+  // =========================================
+  // CORE PUBLIC API
+  // =========================================
+
   window.CMACommunityCore = {
     db,
     BUCKET,
+
     escapeHTML,
     createElement,
     getRoot,
+
     loadSession,
     getCurrentUser,
     setCurrentUser,
+    isSessionReady,
+
     formatRelativeTime,
     showNotice,
     requireLogin,
     safeImageURL,
+
     syncPublicProfile
   };
 
-  if (db) {
-    db.auth.onAuthStateChange(function (_event, session) {
-      currentUser = session?.user || null;
+  // =========================================
+  // SUPABASE AUTH STATE LISTENER
+  // =========================================
 
-      // Capture this session's user before starting async sync.
+  if (
+    db &&
+    db.auth &&
+    typeof db.auth.onAuthStateChange === "function"
+  ) {
+
+    db.auth.onAuthStateChange(function (_event, session) {
+
+      // Every auth event invalidates older requests.
+      const eventRevision = ++sessionRevision;
+
+      currentUser = session?.user || null;
+      sessionReady = true;
+
+      // Capture the user associated with this event.
       const userToSync = currentUser;
 
       if (userToSync) {
+
+        // Run database work after the auth callback.
         Promise.resolve().then(function () {
-          return syncPublicProfile(userToSync);
+
+          // Do not sync if another auth event has occurred.
+          if (eventRevision !== sessionRevision) {
+            return false;
+          }
+
+          if (
+            !currentUser ||
+            currentUser.id !== userToSync.id
+          ) {
+            return false;
+          }
+
+          return syncPublicProfile(
+            userToSync,
+            eventRevision
+          );
+
+        }).catch(function (error) {
+          console.error(
+            "CMA Auth Profile Sync Error:",
+            error
+          );
         });
       }
     });
   }
 
-})(); 
+})();
+     
