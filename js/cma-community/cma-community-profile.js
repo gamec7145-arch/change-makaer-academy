@@ -1,8 +1,7 @@
-
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY PROFILE MODULE
-   PART 1 OF 2
+   UPDATED VERSION - PART 1 OF 2
 ========================================= */
 
 (function () {
@@ -15,15 +14,10 @@
 
   const Icons = {
     home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"></path><path d="M5 9v12h14V9"></path><path d="M9 21v-7h6v7"></path></svg>`,
-
     profile: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>`,
-
     friends: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
-
     creator: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="5" rx="1.5"></rect><rect x="13" y="10" width="8" height="11" rx="1.5"></rect><rect x="3" y="13" width="8" height="8" rx="1.5"></rect></svg>`,
-
     notification: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>`,
-
     search: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>`
   };
 
@@ -69,6 +63,11 @@
       : {};
   }
 
+  function getAvatar(user) {
+    const metadata = getMetadata(user);
+    return safeImage(metadata.avatar_url || metadata.picture || "");
+  }
+
   function showNotice(message, type) {
     if (Core && Core.showNotice) {
       Core.showNotice(message, type || "info");
@@ -85,12 +84,10 @@
           <span class="cma-green">Community</span>
         </div>
 
-        <button
-          class="cma-icon-button"
+        <button class="cma-icon-button"
           type="button"
           data-cma-profile-action="search"
-          aria-label="Search"
-        >
+          aria-label="Search">
           ${Icons.search}
         </button>
       </header>
@@ -396,11 +393,51 @@
         margin-bottom: 15px;
       }
 
+      .cma-profile .cma-composer .cma-avatar {
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
       .cma-profile .cma-composer .cma-avatar img {
         width: 100%;
         height: 100%;
         border-radius: 50%;
         object-fit: cover;
+      }
+
+      .cma-profile-photo-preview {
+        display: none;
+        padding: 0 12px 12px;
+      }
+
+      .cma-profile-photo-preview.show {
+        display: block;
+      }
+
+      .cma-profile-photo-preview img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 220px;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+
+      .cma-profile-photo-remove {
+        margin-top: 7px;
+        padding: 6px 10px;
+        border: 1px solid #245563;
+        border-radius: 16px;
+        background: #052D3B;
+        color: #A8C0CE;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      .cma-profile-posts {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
       }
     `;
 
@@ -419,7 +456,7 @@
       metadata.phone_number || "";
     const address = metadata.address || "";
 
-    const avatar = safeImage(metadata.avatar_url);
+    const avatar = getAvatar(user);
     const cover = safeImage(metadata.cover_url);
 
     return `
@@ -481,14 +518,13 @@
           </div>
         </section>
 
-        <!-- SAME COMPOSER STRUCTURE AS COMMUNITY HOMEPAGE -->
         <section class="cma-composer">
 
           <div class="cma-composer-top">
             <div class="cma-avatar">
               ${avatar
-                ? `<img src="${avatar}" alt="">`
-                : ""}
+                ? `<img src="${avatar}" alt="Your profile picture">`
+                : "👤"}
             </div>
 
             <textarea
@@ -499,6 +535,9 @@
               aria-label="Write a post"
             ></textarea>
           </div>
+
+          <div class="cma-profile-photo-preview"
+            id="cmaProfilePhotoPreview"></div>
 
           <div class="cma-composer-bottom">
             <button
@@ -537,7 +576,7 @@
 
         <div id="cmaProfileTabContent">
           <div class="cma-profile-empty">
-            Your posts will appear here.
+            Loading your posts...
           </div>
         </div>
 
@@ -595,8 +634,13 @@
         </div>
       </div>
     `;
-             }
-   
+  }
+   /* =========================================
+   CHANGE MAKER ACADEMY
+   COMMUNITY PROFILE MODULE
+   UPDATED VERSION - PART 2 OF 2
+========================================= */
+
   async function uploadProfileImage(file, kind, user, root) {
     if (!db || !db.storage || !db.auth || !user) {
       throw new Error("Storage or login is unavailable.");
@@ -673,6 +717,218 @@
     await Profile.render(root);
   }
 
+  async function loadUserPosts(user, root) {
+    const content = root.querySelector("#cmaProfileTabContent");
+
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="cma-profile-empty">Loading your posts...</div>
+    `;
+
+    if (!db || !db.from || !user) {
+      content.innerHTML = `
+        <div class="cma-profile-empty">
+          Could not load your posts.
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      const result = await db
+        .from("cma_community_posts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      const posts = result.data || [];
+
+      if (!posts.length) {
+        content.innerHTML = `
+          <div class="cma-profile-empty">
+            You haven't shared any posts yet.
+          </div>
+        `;
+        return;
+      }
+
+      const Feed = window.CMACommunityFeed;
+
+      if (!Feed || typeof Feed.createPostCard !== "function") {
+        content.innerHTML = `
+          <div class="cma-profile-empty">
+            Your posts are saved, but the post display module is unavailable.
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="cma-profile-posts">
+          ${posts.map(function (post) {
+            return Feed.createPostCard({
+              id: post.id,
+              user_id: post.user_id,
+              caption: post.content,
+              image_url: post.image_url,
+              created_at: post.created_at,
+              author_name:
+                getMetadata(user).full_name ||
+                getMetadata(user).display_name ||
+                "Community Member",
+              avatar_url: getAvatar(user)
+            });
+          }).join("")}
+        </div>
+      `;
+
+    } catch (error) {
+      console.error("CMA Profile Posts Error:", error);
+
+      content.innerHTML = `
+        <div class="cma-profile-empty">
+          Could not load your posts. Please try again.
+        </div>
+      `;
+    }
+  }
+
+  async function createProfilePost(root, user) {
+    if (!db || !user) {
+      showNotice("Please log in first.", "error");
+      return;
+    }
+
+    const textarea = root.querySelector("#cmaProfilePostInput");
+    const photoInput = root.querySelector("#cmaProfilePostPhoto");
+    const postButton = root.querySelector(
+      '[data-cma-profile-action="post"]'
+    );
+
+    const content = textarea ? textarea.value.trim() : "";
+    const file = photoInput && photoInput.files
+      ? photoInput.files[0]
+      : null;
+
+    if (!content && !file) {
+      showNotice("Write something or select a photo first.", "error");
+      return;
+    }
+
+    if (file) {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        showNotice("Only JPG, PNG and WEBP images are allowed.", "error");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotice("Image size must be 5MB or less.", "error");
+        return;
+      }
+    }
+
+    if (postButton) {
+      postButton.disabled = true;
+      postButton.textContent = "Posting...";
+    }
+
+    try {
+      let imageUrl = null;
+
+      if (file) {
+        const extension = file.type === "image/jpeg"
+          ? "jpg"
+          : file.type === "image/png"
+            ? "png"
+            : "webp";
+
+        const path = user.id + "/post-" +
+          Date.now() + "." + extension;
+
+        const uploadResult = await db.storage
+          .from("community-media")
+          .upload(path, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type
+          });
+
+        if (uploadResult.error) {
+          throw uploadResult.error;
+        }
+
+        const publicResult = db.storage
+          .from("community-media")
+          .getPublicUrl(path);
+
+        imageUrl = publicResult.data &&
+          publicResult.data.publicUrl;
+
+        if (!imageUrl) {
+          throw new Error("Could not create photo URL.");
+        }
+      }
+
+      const insertResult = await db
+        .from("cma_community_posts")
+        .insert({
+          user_id: user.id,
+          content: content,
+          image_url: imageUrl
+        });
+
+      if (insertResult.error) {
+        throw insertResult.error;
+      }
+
+      if (textarea) textarea.value = "";
+      if (photoInput) photoInput.value = "";
+
+      const preview = root.querySelector("#cmaProfilePhotoPreview");
+
+      if (preview) {
+        preview.innerHTML = "";
+        preview.classList.remove("show");
+      }
+
+      showNotice("Your post has been published.", "success");
+
+      await loadUserPosts(user, root);
+
+      if (
+        window.CMACommunityMain &&
+        typeof window.CMACommunityMain.loadPosts === "function"
+      ) {
+        await window.CMACommunityMain.loadPosts();
+      }
+
+    } catch (error) {
+      console.error("CMA Profile Post Error:", error);
+
+      showNotice(
+        error.message || "Could not publish your post.",
+        "error"
+      );
+
+    } finally {
+      if (postButton) {
+        postButton.disabled = false;
+        postButton.textContent = "Post";
+      }
+    }
+  }
+
   function bindEvents(root, user) {
 
     // COMMUNITY NAVIGATION
@@ -721,22 +977,19 @@
     if (coverArea && coverInput) {
       coverArea.addEventListener("click", function (event) {
         if (event.target.closest("#cmaAvatarArea")) return;
-
         coverInput.click();
       });
     }
 
     if (avatarInput) {
       avatarInput.addEventListener("change", async function () {
-        const file = avatarInput.files &&
-          avatarInput.files[0];
+        const file = avatarInput.files && avatarInput.files[0];
 
         if (file) {
           try {
             await uploadProfileImage(file, "avatar", user, root);
           } catch (error) {
             console.error("CMA Avatar Upload Error:", error);
-
             showNotice(
               error.message || "Could not upload profile picture.",
               "error"
@@ -750,15 +1003,13 @@
 
     if (coverInput) {
       coverInput.addEventListener("change", async function () {
-        const file = coverInput.files &&
-          coverInput.files[0];
+        const file = coverInput.files && coverInput.files[0];
 
         if (file) {
           try {
             await uploadProfileImage(file, "cover", user, root);
           } catch (error) {
             console.error("CMA Cover Upload Error:", error);
-
             showNotice(
               error.message || "Could not upload cover photo.",
               "error"
@@ -877,18 +1128,77 @@
       });
     }
 
-    // PROFILE POST PHOTO
+    // PROFILE POST PHOTO INPUT
     const photoButton = root.querySelector(
       '[data-cma-profile-action="photo"]'
     );
 
+    const profilePhotoInput = document.createElement("input");
+
+    profilePhotoInput.type = "file";
+    profilePhotoInput.id = "cmaProfilePostPhoto";
+    profilePhotoInput.accept = "image/jpeg,image/png,image/webp";
+    profilePhotoInput.className = "cma-profile-file-input";
+
+    root.appendChild(profilePhotoInput);
+
     if (photoButton) {
       photoButton.addEventListener("click", function () {
         if (Core && !Core.requireLogin()) return;
+        profilePhotoInput.click();
+      });
+    }
 
-        window.dispatchEvent(
-          new CustomEvent("cma:select-photo")
+    if (profilePhotoInput) {
+      profilePhotoInput.addEventListener("change", function () {
+        const file = profilePhotoInput.files &&
+          profilePhotoInput.files[0];
+
+        const preview = root.querySelector(
+          "#cmaProfilePhotoPreview"
         );
+
+        if (!file || !preview) return;
+
+        if (
+          !["image/jpeg", "image/png", "image/webp"].includes(file.type)
+        ) {
+          showNotice("Only JPG, PNG and WEBP images are allowed.", "error");
+          profilePhotoInput.value = "";
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          showNotice("Image size must be 5MB or less.", "error");
+          profilePhotoInput.value = "";
+          return;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+
+        preview.innerHTML = `
+          <img src="${objectUrl}" alt="Selected post photo">
+          <button type="button"
+            class="cma-profile-photo-remove"
+            id="cmaRemoveProfilePostPhoto">
+            Remove photo
+          </button>
+        `;
+
+        preview.classList.add("show");
+
+        const removeButton = preview.querySelector(
+          "#cmaRemoveProfilePostPhoto"
+        );
+
+        if (removeButton) {
+          removeButton.addEventListener("click", function () {
+            profilePhotoInput.value = "";
+            preview.innerHTML = "";
+            preview.classList.remove("show");
+            URL.revokeObjectURL(objectUrl);
+          });
+        }
       });
     }
 
@@ -900,33 +1210,13 @@
     if (postButton) {
       postButton.addEventListener("click", function () {
         if (Core && !Core.requireLogin()) return;
-
-        const textarea = root.querySelector(
-          "#cmaProfilePostInput"
-        );
-
-        const content = textarea
-          ? textarea.value.trim()
-          : "";
-
-        if (!content) {
-          showNotice("Please write something first.", "error");
-          return;
-        }
-
-        window.dispatchEvent(
-          new CustomEvent("cma:submit-post", {
-            detail: {
-              content: content
-            }
-          })
-        );
+        createProfilePost(root, user);
       });
     }
 
     // PROFILE TABS
     root.querySelectorAll("[data-tab]").forEach(function (button) {
-      button.addEventListener("click", function () {
+      button.addEventListener("click", async function () {
         activeTab = button.dataset.tab;
 
         root.querySelectorAll("[data-tab]").forEach(
@@ -935,24 +1225,28 @@
           }
         );
 
+        const content = root.querySelector(
+          "#cmaProfileTabContent"
+        );
+
+        if (!content) return;
+
+        if (activeTab === "posts") {
+          await loadUserPosts(user, root);
+          return;
+        }
+
         const messages = {
-          posts: "Your posts will appear here.",
           photos: "Your photos will appear here.",
           reacted: "Posts you reacted to will appear here.",
           friends: "Your friends list will appear here."
         };
 
-        const content = root.querySelector(
-          "#cmaProfileTabContent"
-        );
-
-        if (content) {
-          content.innerHTML = `
-            <div class="cma-profile-empty">
-              ${messages[activeTab] || messages.posts}
-            </div>
-          `;
-        }
+        content.innerHTML = `
+          <div class="cma-profile-empty">
+            ${messages[activeTab] || ""}
+          </div>
+        `;
       });
     });
   }
@@ -1008,6 +1302,10 @@
         );
       }
 
+      if (activeTab === "posts") {
+        await loadUserPosts(user, root);
+      }
+
       return true;
     }
   };
@@ -1015,4 +1313,3 @@
   window.CMACommunityProfile = Profile;
 
 })();
-                                    
