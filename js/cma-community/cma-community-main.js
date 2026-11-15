@@ -2,9 +2,10 @@
 /* ==========================================
    CHANGE MAKER ACADEMY
    COMMUNITY MAIN
-   Fixed:
+   Updated:
    - Home Feed loading
-   - Author name and avatar
+   - Current user profile sync
+   - Author name and avatar sync
    - Photo picker and upload
    - Profile post loading
    - Post create/delete refresh
@@ -101,6 +102,89 @@
         return currentUser;
     }
 
+    /*
+      IMPORTANT:
+      Each member syncs their own public-safe profile.
+      We never read another user's Auth Metadata.
+    */
+    async function syncCurrentUserProfile(user) {
+        user = user || currentUser;
+
+        if (!user?.id) return null;
+
+        try {
+            const { data: existing, error: readError } = await db
+                .from("cma_community_profiles")
+                .select(
+                    "user_id, full_name, short_description, institution, avatar_url"
+                )
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+            if (readError) {
+                console.error(
+                    "Existing profile lookup error:",
+                    readError
+                );
+            }
+
+            const meta = getMetadata(user);
+
+            const fullName =
+                meta.full_name ||
+                meta.display_name ||
+                existing?.full_name ||
+                user.email?.split("@")[0] ||
+                "Community Member";
+
+            const avatar =
+                meta.avatar_url ||
+                meta.picture ||
+                meta.avatar ||
+                existing?.avatar_url ||
+                "";
+
+            const profileData = {
+                user_id: user.id,
+                full_name: fullName,
+                avatar_url: avatar,
+                short_description:
+                    existing?.short_description || "",
+                institution:
+                    existing?.institution || "",
+                updated_at: new Date().toISOString()
+            };
+
+            const { data, error } = await db
+                .from("cma_community_profiles")
+                .upsert(profileData, {
+                    onConflict: "user_id"
+                })
+                .select(
+                    "user_id, full_name, short_description, institution, avatar_url"
+                )
+                .single();
+
+            if (error) {
+                console.error(
+                    "Profile sync error:",
+                    error
+                );
+                return existing || null;
+            }
+
+            return data;
+
+        } catch (error) {
+            console.error(
+                "Profile sync exception:",
+                error
+            );
+
+            return null;
+        }
+    }
+
     async function loadPublicProfiles(userIds) {
         const profileMap = {};
 
@@ -110,6 +194,14 @@
 
         if (!uniqueIds.length) return profileMap;
 
+        // Sync only the currently logged-in user's own profile.
+        if (
+            currentUser?.id &&
+            uniqueIds.includes(currentUser.id)
+        ) {
+            await syncCurrentUserProfile(currentUser);
+        }
+
         const { data, error } = await db
             .from("cma_community_profiles")
             .select(
@@ -118,7 +210,11 @@
             .in("user_id", uniqueIds);
 
         if (error) {
-            console.error("Public profile loading error:", error);
+            console.error(
+                "Public profile loading error:",
+                error
+            );
+
             return profileMap;
         }
 
@@ -144,6 +240,7 @@
             };
         }
 
+        // Fallback only for the logged-in user's own account.
         if (currentUser?.id === userId) {
             return {
                 author_name: getDisplayName(currentUser),
@@ -246,7 +343,13 @@
 
         async init() {
             await loadSession();
+
+            if (currentUser) {
+                await syncCurrentUserProfile(currentUser);
+            }
+
             this.bindEvents();
+
             return this.render();
         },
 
@@ -263,6 +366,8 @@
                     return false;
                 }
 
+                await syncCurrentUserProfile(user);
+
                 content = String(content || "").trim();
 
                 if (!content && !imageFile) {
@@ -270,6 +375,7 @@
                         "Write something or select a photo first.",
                         "error"
                     );
+
                     return false;
                 }
 
@@ -287,6 +393,7 @@
                             "Only JPG, PNG and WEBP images are allowed.",
                             "error"
                         );
+
                         return false;
                     }
 
@@ -295,6 +402,7 @@
                             "Image must be under 5MB.",
                             "error"
                         );
+
                         return false;
                     }
 
@@ -336,6 +444,7 @@
                             "Could not get the uploaded image URL.",
                             "error"
                         );
+
                         return false;
                     }
                 }
@@ -350,10 +459,12 @@
 
                 if (error) {
                     console.error("Post insert error:", error);
+
                     notify(
                         "Post could not be published.",
                         "error"
                     );
+
                     return false;
                 }
 
@@ -372,11 +483,17 @@
                 }
 
                 notify("Post published successfully.", "success");
+
                 return true;
 
             } catch (error) {
                 console.error("Create post error:", error);
-                notify("Something went wrong while posting.", "error");
+
+                notify(
+                    "Something went wrong while posting.",
+                    "error"
+                );
+
                 return false;
 
             } finally {
@@ -407,6 +524,7 @@
             }
 
             const posts = data || [];
+
             postsCache = posts;
 
             const userIds = posts.map(post => post.user_id);
@@ -474,6 +592,11 @@
             root = root || getRoot();
 
             if (!user || !root) return [];
+
+            // Only sync the logged-in user's own profile.
+            if (currentUser?.id === user.id) {
+                await syncCurrentUserProfile(user);
+            }
 
             const postsContainer = getProfilePostList(root);
 
@@ -565,7 +688,9 @@
 
             if (error) {
                 console.error("Delete post error:", error);
+
                 notify("Post could not be deleted.", "error");
+
                 return false;
             }
 
@@ -573,6 +698,7 @@
             await this.loadUserPosts(user);
 
             notify("Post deleted.", "success");
+
             return true;
         },
 
@@ -669,7 +795,9 @@
 
         getPostsCache() {
             return postsCache.slice();
-        }
+        },
+
+        syncCurrentUserProfile
     };
 
     window.CMACommunityMain = Main;
