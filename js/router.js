@@ -1,4 +1,3 @@
-
 // ==================================================
 // CHANGE MAKER ACADEMY
 // COMMUNITY MODULE LOADER + MAIN ROUTER
@@ -40,6 +39,9 @@ const CMA_COMMUNITY_FILES = [
 let cmaCommunityLoadPromise = null;
 const cmaCommunityScriptPromises = {};
 
+// প্রতিটি navigation-এর আলাদা revision
+let cmaNavigationRevision = 0;
+
 function getCommunityModuleName(src) {
   const names = {
     "cma-community-core.js": "CMACommunityCore",
@@ -56,13 +58,31 @@ function getCommunityModuleName(src) {
   return names[src.split("/").pop()] || null;
 }
 
+function validateCommunityModule(src) {
+  const moduleName = getCommunityModuleName(src);
+
+  if (!moduleName) {
+    throw new Error("Unknown Community module: " + src);
+  }
+
+  if (!window[moduleName] || typeof window[moduleName] !== "object") {
+    throw new Error(
+      "Community module did not initialize correctly: " + moduleName
+    );
+  }
+
+  return true;
+}
+
 function loadCommunityModules() {
   if (cmaCommunityLoadPromise) {
     return cmaCommunityLoadPromise;
   }
 
   cmaCommunityLoadPromise = CMA_COMMUNITY_FILES.reduce(
-    (promise, src) => promise.then(() => loadCommunityFile(src)),
+    (promise, src) => {
+      return promise.then(() => loadCommunityFile(src));
+    },
     Promise.resolve()
   ).catch(error => {
     cmaCommunityLoadPromise = null;
@@ -73,14 +93,21 @@ function loadCommunityModules() {
 }
 
 function loadCommunityFile(src) {
-  if (cmaCommunityScriptPromises[src]) {
-    return cmaCommunityScriptPromises[src];
-  }
-
   const moduleName = getCommunityModuleName(src);
 
-  if (moduleName && window[moduleName]) {
-    return Promise.resolve();
+  if (!moduleName) {
+    return Promise.reject(
+      new Error("Unknown Community module: " + src)
+    );
+  }
+
+  // আগে থেকেই module তৈরি থাকলে সেটি যাচাই করে ব্যবহার
+  if (window[moduleName] && typeof window[moduleName] === "object") {
+    return Promise.resolve(true);
+  }
+
+  if (cmaCommunityScriptPromises[src]) {
+    return cmaCommunityScriptPromises[src];
   }
 
   const existing = Array.from(document.scripts).find(script => {
@@ -96,23 +123,15 @@ function loadCommunityFile(src) {
     }
   });
 
-  if (existing && existing.dataset.cmaLoaded === "true") {
-    return Promise.resolve();
+  // পুরোনো script loaded দেখালেও module না থাকলে নতুন করে load
+  let script = existing;
+
+  if (script && script.dataset.cmaLoaded === "true") {
+    script.remove();
+    script = null;
   }
 
   const promise = new Promise((resolve, reject) => {
-    let script = existing;
-
-    if (script && !moduleName) {
-      script.remove();
-      script = null;
-    }
-
-    if (script && moduleName && !window[moduleName]) {
-      script.remove();
-      script = null;
-    }
-
     if (!script) {
       script = document.createElement("script");
       script.src = src;
@@ -129,20 +148,25 @@ function loadCommunityFile(src) {
 
     const onLoad = () => {
       if (finished) return;
-
       finished = true;
-      script.dataset.cmaLoaded = "true";
 
       cleanup();
-      resolve();
+
+      try {
+        validateCommunityModule(src);
+        script.dataset.cmaLoaded = "true";
+        resolve(true);
+      } catch (error) {
+        delete cmaCommunityScriptPromises[src];
+        reject(error);
+      }
     };
 
     const onError = () => {
       if (finished) return;
-
       finished = true;
-      cleanup();
 
+      cleanup();
       delete cmaCommunityScriptPromises[src];
 
       reject(
@@ -153,13 +177,12 @@ function loadCommunityFile(src) {
     script.addEventListener("load", onLoad);
     script.addEventListener("error", onError);
 
-    if (!existing || !script.isConnected) {
+    if (!script.isConnected) {
       document.head.appendChild(script);
     }
   });
 
   cmaCommunityScriptPromises[src] = promise;
-
   return promise;
 }
 
@@ -168,23 +191,45 @@ function loadCommunityFile(src) {
 // COMMUNITY PAGE RENDERING
 // ==================================================
 
-async function renderCommunitySection(page, targetUserId = null) {
-  const root = document.getElementById("pageContent");
+function showCommunityError(root, message) {
+  if (!root) return;
 
+  root.innerHTML = `
+    <div class="cma-community">
+      <div style="
+        padding:30px 16px;
+        text-align:center;
+        color:#A8C0CE;
+      ">
+        <h3 style="color:#FFFFFF;">Community could not load</h3>
+        <p>${message}</p>
+      </div>
+    </div>
+  `;
+}
+
+async function renderCommunitySection(
+  page,
+  targetUserId = null,
+  navigationRevision = cmaNavigationRevision
+) {
+  const root = document.getElementById("pageContent");
   if (!root) return;
 
   try {
     await loadCommunityModules();
 
+    // অপেক্ষার সময় অন্য page খোলা হলে পুরোনো render বন্ধ
+    if (navigationRevision !== cmaNavigationRevision) return;
+
     if (page === "home") {
-      if (typeof window.renderCommunityPage === "function") {
-        await window.renderCommunityPage();
-      } else {
-        throw new Error(
-          "Community homepage renderer not found."
-        );
+      if (typeof window.renderCommunityPage !== "function") {
+        throw new Error("Community homepage renderer not found.");
       }
 
+      await window.renderCommunityPage();
+
+      if (navigationRevision !== cmaNavigationRevision) return;
       return;
     }
 
@@ -199,60 +244,58 @@ async function renderCommunitySection(page, targetUserId = null) {
 
     const selectedModule = moduleMap[page];
 
-    if (
-      selectedModule &&
-      typeof selectedModule.render === "function"
-    ) {
-      if (page === "profile") {
-        await selectedModule.render(root, targetUserId);
-      } else {
-        await selectedModule.render(root);
-      }
+    if (!selectedModule) {
+      throw new Error("Community module is missing: " + page);
+    }
 
+    // যেসব module এখনো তৈরি হয়নি, তাদের জন্য placeholder
+    if (typeof selectedModule.render !== "function") {
+      const titles = {
+        profile: "Profile",
+        friends: "Friends",
+        creator: "Creator Panel",
+        notifications: "Notifications",
+        search: "Search",
+        messaging: "Messages"
+      };
+
+      if (navigationRevision !== cmaNavigationRevision) return;
+
+      root.innerHTML = `
+        <div class="cma-community">
+          <div style="
+            padding:30px 16px;
+            text-align:center;
+            color:#A8C0CE;
+          ">
+            <h3 style="color:#FFFFFF;">
+              ${titles[page] || "Community"}
+            </h3>
+            <p>This section is not available yet.</p>
+          </div>
+        </div>
+      `;
       return;
     }
 
-    const titles = {
-      profile: "Profile",
-      friends: "Friends",
-      creator: "Creator Panel",
-      notifications: "Notifications",
-      search: "Search",
-      messaging: "Messages"
-    };
+    if (page === "profile") {
+      await selectedModule.render(root, targetUserId);
+    } else {
+      await selectedModule.render(root);
+    }
 
-    root.innerHTML = `
-      <div class="cma-community">
-        <div style="
-          padding:30px 16px;
-          text-align:center;
-          color:#A8C0CE;
-        ">
-          <h3 style="color:#FFFFFF;">
-            ${titles[page] || "Community"}
-          </h3>
-          <p>This section is not available yet.</p>
-        </div>
-      </div>
-    `;
+    // Render চলার সময় অন্য page-এ গেলে stale result উপেক্ষা
+    if (navigationRevision !== cmaNavigationRevision) return;
 
   } catch (error) {
     console.error("Community section error:", error);
 
-    root.innerHTML = `
-      <div class="cma-community">
-        <div style="
-          padding:30px 16px;
-          text-align:center;
-          color:#A8C0CE;
-        ">
-          <h3 style="color:#FFFFFF;">
-            Community could not load
-          </h3>
-          <p>Please refresh the page and try again.</p>
-        </div>
-      </div>
-    `;
+    if (navigationRevision !== cmaNavigationRevision) return;
+
+    showCommunityError(
+      root,
+      "Please refresh the page and try again."
+    );
   }
 }
 
@@ -279,7 +322,6 @@ function navigateCommunity(
   if (!allowedPages.includes(page)) return;
 
   const urlPage = CMA_COMMUNITY_URLS[page];
-
   if (!urlPage) return;
 
   if (updateHistory) {
@@ -348,7 +390,6 @@ window.CMANavigateCommunity = navigateCommunity;
 function updatePageHeaders(page) {
   const topHeader = document.querySelector(".header");
   const secondHeader = document.querySelector(".cma-bottom-nav");
-
   const pageBanner = document.getElementById("pageBanner");
   const pageIntro = document.querySelector("#innerPage .page-intro");
   const backLink = document.getElementById("backLink");
@@ -456,152 +497,42 @@ function renderAdmissionPrograms() {
 
     content.append(heading, description);
     card.append(icon, content, arrow);
-
     grid.appendChild(card);
   });
 
   pageContent.appendChild(grid);
 }
-
-// ==================================================
-// AUTOMATIC HEADER AND PAGE ELEMENT CONTROL
-// ==================================================
-
-function updatePageHeaders(page) {
-  const topHeader = document.querySelector(".header");
-  const secondHeader = document.querySelector(".cma-bottom-nav");
-
-  const pageBanner = document.getElementById("pageBanner");
-  const pageIntro = document.querySelector("#innerPage .page-intro");
-  const backLink = document.getElementById("backLink");
-
-  const isDemoAI = (
-    page === "demo-ai" ||
-    (page && page.startsWith("demo-ai-"))
-  );
-
-  const isCommunity = (
-    page === "community" ||
-    (page && page.startsWith("community-"))
-  );
-
-  const isAccount = page === "account";
-
-  const showBoth = (
-    !page ||
-    page === "teachers" ||
-    page === "account" ||
-    (page && page.startsWith("teachers-"))
-  );
-
-  document.body.classList.toggle(
-    "community-active",
-    !!isCommunity
-  );
-
-  if (topHeader) {
-    topHeader.style.display =
-      (isDemoAI || isCommunity) ? "none" : "";
-  }
-
-  if (secondHeader) {
-    secondHeader.style.display =
-      (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
-  }
-
-  if (pageBanner) {
-    pageBanner.style.display =
-      (isAccount || isCommunity) ? "none" : "";
-  }
-
-  if (pageIntro) {
-    pageIntro.style.display = isCommunity ? "none" : "";
-  }
-
-  if (backLink) {
-    backLink.style.display = isCommunity ? "none" : "";
-  }
-}
-
-
-// ==================================================
-// CLASSROOM LEARNING
-// ADMISSION PROGRAM SELECTION
-// ==================================================
-
-function renderAdmissionPrograms() {
-  setPage(
-    "Choose Your Program",
-    "Classroom Learning",
-    "Select your academic program to explore admission opportunities.",
-    demoImages.classroom,
-    "?"
-  );
-
-  const grid = document.createElement("div");
-  grid.className = "offline-grid";
-
-  const programs = [
-    {
-      name: "SSC",
-      description: "Class 9 & 10",
-      icon: "▤",
-      page: "admission-ssc"
-    },
-    {
-      name: "HSC",
-      description: "College",
-      icon: "▣",
-      page: "admission-hsc"
-    }
-  ];
-
-  programs.forEach(program => {
-    const card = document.createElement("a");
-    card.href = "?page=" + program.page;
-    card.className = "offline-card";
-
-    const icon = document.createElement("div");
-    icon.className = "offline-icon";
-    icon.textContent = program.icon;
-
-    const content = document.createElement("div");
-
-    const heading = document.createElement("h3");
-    heading.textContent = program.name;
-
-    const description = document.createElement("p");
-    description.textContent = program.description;
-
-    const arrow = document.createElement("span");
-    arrow.textContent = "›";
-
-    content.append(heading, description);
-    card.append(icon, content, arrow);
-
-    grid.appendChild(card);
-  });
-
-  pageContent.appendChild(grid);
-}
-
-
 // ==================================================
 // PAGE ROUTER
 // ==================================================
 
 function openPage(page) {
   if (!page || typeof page !== "string") {
-    showNotFound();
+    if (typeof showNotFound === "function") {
+      showNotFound();
+    }
+    return;
+  }
+
+  // নতুন navigation শুরু
+  const navigationRevision = ++cmaNavigationRevision;
+
+  const homePageElement = document.getElementById("homePage");
+  const innerPageElement = document.getElementById("innerPage");
+
+  if (!homePageElement || !innerPageElement) {
+    console.error("Router: Required page elements are missing.");
     return;
   }
 
   updatePageHeaders(page);
 
-  homePage.style.display = "none";
-  innerPage.classList.add("active");
+  homePageElement.style.display = "none";
+  innerPageElement.classList.add("active");
 
-  clearContent();
+  if (typeof clearContent === "function") {
+    clearContent();
+  }
 
   // COMMUNITY ROUTES
   if (CMA_COMMUNITY_ROUTES[page]) {
@@ -613,12 +544,15 @@ function openPage(page) {
 
     renderCommunitySection(
       CMA_COMMUNITY_ROUTES[page],
-      targetUserId
+      targetUserId,
+      navigationRevision
     );
+
+    return;
   }
 
   // STUDENT ACCOUNT
-  else if (page === "account") {
+  if (page === "account") {
     if (typeof window.renderAccountPage === "function") {
       window.renderAccountPage();
     } else {
@@ -999,9 +933,7 @@ function openPage(page) {
   }
 
   window.scrollTo(0, 0);
-}
-
-
+    }
 // ==================================================
 // URL ROUTING
 // ==================================================
@@ -1016,19 +948,39 @@ function renderRoute() {
   if (page) {
     openPage(page);
   } else {
+    // চলমান পুরোনো async navigation বাতিল
+    cmaNavigationRevision++;
+
     updatePageHeaders(null);
 
-    clearContent();
+    const homePageElement = document.getElementById("homePage");
+    const innerPageElement = document.getElementById("innerPage");
 
-    innerPage.classList.remove("active");
-    homePage.style.display = "block";
+    if (typeof clearContent === "function") {
+      clearContent();
+    }
+
+    if (innerPageElement) {
+      innerPageElement.classList.remove("active");
+    }
+
+    if (homePageElement) {
+      homePageElement.style.display = "block";
+    }
 
     document.title =
       "Change Maker Academy | Learn. Grow. Lead.";
   }
 }
 
-window.addEventListener("popstate", renderRoute);
+
+// ==================================================
+// BROWSER BACK / FORWARD
+// ==================================================
+
+window.addEventListener("popstate", function() {
+  renderRoute();
+});
 
 
 // ==================================================
@@ -1036,7 +988,13 @@ window.addEventListener("popstate", renderRoute);
 // ==================================================
 
 document.addEventListener("click", event => {
-  const link = event.target.closest("a");
+  const clickedElement = event.target;
+
+  if (!clickedElement || typeof clickedElement.closest !== "function") {
+    return;
+  }
+
+  const link = clickedElement.closest("a");
 
   if (!link) return;
 
@@ -1059,17 +1017,31 @@ document.addEventListener("click", event => {
   // Homepage section links from inner pages
   if (
     href.startsWith("#") &&
-    innerPage.classList.contains("active")
+    document.getElementById("innerPage")?.classList.contains("active")
   ) {
     const targetId = href.slice(1);
 
     event.preventDefault();
 
-    clearContent();
+    // চলমান Community navigation বাতিল
+    cmaNavigationRevision++;
+
+    if (typeof clearContent === "function") {
+      clearContent();
+    }
+
     updatePageHeaders(null);
 
-    innerPage.classList.remove("active");
-    homePage.style.display = "block";
+    const innerPageElement = document.getElementById("innerPage");
+    const homePageElement = document.getElementById("homePage");
+
+    if (innerPageElement) {
+      innerPageElement.classList.remove("active");
+    }
+
+    if (homePageElement) {
+      homePageElement.style.display = "block";
+    }
 
     history.pushState({}, "", href);
 
@@ -1085,13 +1057,12 @@ document.addEventListener("click", event => {
   // Homepage section links
   if (
     href.startsWith("#") &&
-    !innerPage.classList.contains("active")
+    !document.getElementById("innerPage")?.classList.contains("active")
   ) {
     const target = document.querySelector(href);
 
     if (target) {
       event.preventDefault();
-
       target.scrollIntoView({ behavior: "smooth" });
     }
   }
@@ -1103,4 +1074,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-     
