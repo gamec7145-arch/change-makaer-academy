@@ -1,61 +1,153 @@
 
 // ==================================================
 // CHANGE MAKER ACADEMY
-// COMMUNITY MODULE LOADER
+// COMMUNITY MODULE LOADER + MAIN ROUTER
 // ==================================================
 
+const CMA_COMMUNITY_ROUTES = {
+  "community": "home",
+  "community-home": "home",
+  "community-profile": "profile",
+  "community-friends": "friends",
+  "community-creator": "creator",
+  "community-notifications": "notifications",
+  "community-search": "search",
+  "community-messaging": "messaging"
+};
+
+const CMA_COMMUNITY_URLS = {
+  home: "community",
+  profile: "community-profile",
+  friends: "community-friends",
+  creator: "community-creator",
+  notifications: "community-notifications",
+  search: "community-search",
+  messaging: "community-messaging"
+};
+
+const CMA_COMMUNITY_FILES = [
+  "js/cma-community/cma-community-core.js",
+  "js/cma-community/cma-community-feed.js",
+  "js/cma-community/cma-community-profile.js",
+  "js/cma-community/cma-community-friends.js",
+  "js/cma-community/cma-community-search.js",
+  "js/cma-community/cma-community-notifications.js",
+  "js/cma-community/cma-community-creator.js",
+  "js/cma-community/cma-community-messaging.js",
+  "js/cma-community/cma-community-main.js"
+];
+
+let cmaCommunityLoadPromise = null;
+const cmaCommunityScriptPromises = {};
+
 function loadCommunityModules() {
-  const files = [
-    "js/cma-community/cma-community-core.js",
-    "js/cma-community/cma-community-feed.js",
-    "js/cma-community/cma-community-profile.js",
-    "js/cma-community/cma-community-friends.js",
-    "js/cma-community/cma-community-search.js",
-    "js/cma-community/cma-community-notifications.js",
-    "js/cma-community/cma-community-creator.js",
-    "js/cma-community/cma-community-messaging.js",
-    "js/cma-community/cma-community-main.js"
-  ];
-
-  function loadFile(src) {
-    const existing = Array.from(document.scripts).find(
-      script => script.src && script.src.endsWith(src)
-    );
-
-    if (existing) {
-      if (existing.dataset.cmaLoaded === "true") {
-        return Promise.resolve();
-      }
-
-      return new Promise((resolve, reject) => {
-        existing.addEventListener("load", resolve, { once: true });
-        existing.addEventListener("error", reject, { once: true });
-      });
-    }
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-
-      script.src = src;
-      script.async = false;
-
-      script.onload = () => {
-        script.dataset.cmaLoaded = "true";
-        resolve();
-      };
-
-      script.onerror = () => {
-        reject(new Error("Failed to load: " + src));
-      };
-
-      document.head.appendChild(script);
-    });
+  if (cmaCommunityLoadPromise) {
+    return cmaCommunityLoadPromise;
   }
 
-  return files.reduce(
-    (promise, src) => promise.then(() => loadFile(src)),
+  cmaCommunityLoadPromise = CMA_COMMUNITY_FILES.reduce(
+    (promise, src) => promise.then(() => loadCommunityFile(src)),
     Promise.resolve()
-  );
+  ).catch(error => {
+    cmaCommunityLoadPromise = null;
+    throw error;
+  });
+
+  return cmaCommunityLoadPromise;
+}
+
+function loadCommunityFile(src) {
+  if (cmaCommunityScriptPromises[src]) {
+    return cmaCommunityScriptPromises[src];
+  }
+
+  const existing = Array.from(document.scripts).find(script => {
+    if (!script.src) return false;
+
+    try {
+      return new URL(script.src, window.location.href).pathname.endsWith(src);
+    } catch (error) {
+      return script.src.endsWith(src);
+    }
+  });
+
+  if (existing && existing.dataset.cmaLoaded === "true") {
+    return Promise.resolve();
+  }
+
+  const promise = new Promise((resolve, reject) => {
+    let script = existing;
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = src;
+      script.async = false;
+      script.dataset.cmaCommunityModule = "true";
+    }
+
+    let finished = false;
+
+    const cleanup = () => {
+      script.removeEventListener("load", onLoad);
+      script.removeEventListener("error", onError);
+    };
+
+    const onLoad = () => {
+      if (finished) return;
+      finished = true;
+
+      script.dataset.cmaLoaded = "true";
+      cleanup();
+      resolve();
+    };
+
+    const onError = () => {
+      if (finished) return;
+      finished = true;
+
+      cleanup();
+      delete cmaCommunityScriptPromises[src];
+
+      reject(new Error("Failed to load Community module: " + src));
+    };
+
+    script.addEventListener("load", onLoad);
+    script.addEventListener("error", onError);
+
+    if (!existing) {
+      document.head.appendChild(script);
+    } else if (
+      existing.dataset.cmaLoaded !== "true" &&
+      existing.dataset.cmaCommunityModule !== "true"
+    ) {
+      // Existing scripts from an earlier loader may already have loaded.
+      // Check their corresponding module namespace before waiting.
+      const moduleName = getCommunityModuleName(src);
+
+      if (moduleName && window[moduleName]) {
+        onLoad();
+      }
+    }
+  });
+
+  cmaCommunityScriptPromises[src] = promise;
+  return promise;
+}
+
+function getCommunityModuleName(src) {
+  const names = {
+    "cma-community-core.js": "CMACommunityCore",
+    "cma-community-feed.js": "CMACommunityFeed",
+    "cma-community-profile.js": "CMACommunityProfile",
+    "cma-community-friends.js": "CMACommunityFriends",
+    "cma-community-search.js": "CMACommunitySearch",
+    "cma-community-notifications.js": "CMACommunityNotifications",
+    "cma-community-creator.js": "CMACommunityCreator",
+    "cma-community-messaging.js": "CMACommunityMessaging"
+  };
+
+  const filename = src.split("/").pop();
+  return names[filename] || null;
 }
 
 
@@ -72,9 +164,12 @@ async function renderCommunitySection(page) {
     await loadCommunityModules();
 
     if (page === "home") {
-      if (window.renderCommunityPage) {
+      if (typeof window.renderCommunityPage === "function") {
         await window.renderCommunityPage();
+      } else {
+        throw new Error("Community homepage renderer not found.");
       }
+
       return;
     }
 
@@ -89,31 +184,91 @@ async function renderCommunitySection(page) {
 
     const selectedModule = moduleMap[page];
 
-    if (selectedModule && typeof selectedModule.render === "function") {
+    if (
+      selectedModule &&
+      typeof selectedModule.render === "function"
+    ) {
       await selectedModule.render(root);
       return;
     }
 
+    const titles = {
+      profile: "Profile",
+      friends: "Friends",
+      creator: "Creator Panel",
+      notifications: "Notifications",
+      search: "Search",
+      messaging: "Messages"
+    };
+
     root.innerHTML = `
       <div class="cma-community">
-        <div style="padding:30px 16px;text-align:center;color:#A8C0CE;">
-          <h3 style="color:#FFFFFF;">${page === "notifications" ? "Notifications" :
-            page === "creator" ? "Creator Panel" :
-            page === "friends" ? "Friends" : "Community"}</h3>
-          <p>This section is waiting for its action module.</p>
+        <div style="
+          padding:30px 16px;
+          text-align:center;
+          color:#A8C0CE;
+        ">
+          <h3 style="color:#FFFFFF;">
+            ${titles[page] || "Community"}
+          </h3>
+          <p>This section is not available yet.</p>
         </div>
       </div>
     `;
+
   } catch (error) {
     console.error("Community section error:", error);
 
     root.innerHTML = `
-      <div style="padding:30px;text-align:center;">
-        <h3>Community could not load</h3>
-        <p>Please refresh the page and try again.</p>
+      <div class="cma-community">
+        <div style="
+          padding:30px 16px;
+          text-align:center;
+          color:#A8C0CE;
+        ">
+          <h3 style="color:#FFFFFF;">
+            Community could not load
+          </h3>
+          <p>Please refresh the page and try again.</p>
+        </div>
       </div>
     `;
   }
+}
+
+
+// ==================================================
+// COMMUNITY NAVIGATION
+// ==================================================
+
+function navigateCommunity(page, updateHistory = true) {
+  const allowedPages = [
+    "home",
+    "profile",
+    "friends",
+    "creator",
+    "notifications",
+    "search",
+    "messaging"
+  ];
+
+  if (!allowedPages.includes(page)) return;
+
+  const urlPage = CMA_COMMUNITY_URLS[page];
+
+  if (!urlPage) return;
+
+  if (updateHistory) {
+    const currentPage = new URLSearchParams(
+      window.location.search
+    ).get("page");
+
+    if (currentPage !== urlPage) {
+      history.pushState({}, "", "?page=" + urlPage);
+    }
+  }
+
+  openPage(urlPage);
 }
 
 
@@ -124,29 +279,28 @@ async function renderCommunitySection(page) {
 if (!window.cmaRouterEventsBound) {
   window.cmaRouterEventsBound = true;
 
-  window.addEventListener("cma:navigate", function (event) {
+  window.addEventListener("cma:navigate", function(event) {
     const detail = event.detail || {};
-    const page = typeof detail === "string" ? detail : detail.page;
 
-    const allowedPages = [
-      "home",
-      "profile",
-      "friends",
-      "creator",
-      "notifications"
-    ];
+    const page = typeof detail === "string"
+      ? detail
+      : detail.page;
 
-    if (!allowedPages.includes(page)) return;
+    if (CMA_COMMUNITY_ROUTES[page]) {
+      navigateCommunity(CMA_COMMUNITY_ROUTES[page]);
+      return;
+    }
 
-    renderCommunitySection(page);
-    window.scrollTo(0, 0);
+    navigateCommunity(page);
   });
 
-  window.addEventListener("cma:open-search", function () {
-    renderCommunitySection("search");
-    window.scrollTo(0, 0);
+  window.addEventListener("cma:open-search", function() {
+    navigateCommunity("search");
   });
 }
+
+// Allow other Community modules to use the same navigation system.
+window.CMANavigateCommunity = navigateCommunity;
 
 
 // ==================================================
@@ -274,6 +428,11 @@ function renderAdmissionPrograms() {
 // ==================================================
 
 function openPage(page) {
+  if (!page || typeof page !== "string") {
+    showNotFound();
+    return;
+  }
+
   updatePageHeaders(page);
 
   homePage.style.display = "none";
@@ -281,9 +440,9 @@ function openPage(page) {
 
   clearContent();
 
-  // COMMUNITY
-  if (page === "community") {
-    renderCommunitySection("home");
+  // COMMUNITY ROUTES
+  if (CMA_COMMUNITY_ROUTES[page]) {
+    renderCommunitySection(CMA_COMMUNITY_ROUTES[page]);
   }
 
   // STUDENT ACCOUNT
@@ -663,4 +822,3 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-   
