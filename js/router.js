@@ -103,9 +103,6 @@ function loadCommunityFile(src) {
   const promise = new Promise((resolve, reject) => {
     let script = existing;
 
-    // If an old script tag exists but its module is unavailable,
-    // replace it so the loader does not wait forever for an event
-    // that may already have happened.
     if (script && !moduleName) {
       script.remove();
       script = null;
@@ -171,7 +168,7 @@ function loadCommunityFile(src) {
 // COMMUNITY PAGE RENDERING
 // ==================================================
 
-async function renderCommunitySection(page) {
+async function renderCommunitySection(page, targetUserId = null) {
   const root = document.getElementById("pageContent");
 
   if (!root) return;
@@ -206,7 +203,12 @@ async function renderCommunitySection(page) {
       selectedModule &&
       typeof selectedModule.render === "function"
     ) {
-      await selectedModule.render(root);
+      if (page === "profile") {
+        await selectedModule.render(root, targetUserId);
+      } else {
+        await selectedModule.render(root);
+      }
+
       return;
     }
 
@@ -259,7 +261,11 @@ async function renderCommunitySection(page) {
 // COMMUNITY NAVIGATION
 // ==================================================
 
-function navigateCommunity(page, updateHistory = true) {
+function navigateCommunity(
+  page,
+  updateHistory = true,
+  targetUserId = null
+) {
   const allowedPages = [
     "home",
     "profile",
@@ -277,16 +283,22 @@ function navigateCommunity(page, updateHistory = true) {
   if (!urlPage) return;
 
   if (updateHistory) {
-    const currentPage = new URLSearchParams(
+    const params = new URLSearchParams(
       window.location.search
-    ).get("page");
+    );
 
-    if (currentPage !== urlPage) {
-      history.pushState(
-        {},
-        "",
-        "?page=" + urlPage
-      );
+    params.set("page", urlPage);
+
+    if (page === "profile" && targetUserId) {
+      params.set("userId", targetUserId);
+    } else {
+      params.delete("userId");
+    }
+
+    const newUrl = "?" + params.toString();
+
+    if (window.location.search !== newUrl) {
+      history.pushState({}, "", newUrl);
     }
   }
 
@@ -308,12 +320,17 @@ if (!window.cmaRouterEventsBound) {
       ? detail
       : detail.page;
 
-    if (CMA_COMMUNITY_ROUTES[page]) {
-      navigateCommunity(CMA_COMMUNITY_ROUTES[page]);
-      return;
-    }
+    const targetUserId = typeof detail === "object"
+      ? (detail.userId || detail.targetUserId || null)
+      : null;
 
-    navigateCommunity(page);
+    const normalizedPage = CMA_COMMUNITY_ROUTES[page] || page;
+
+    navigateCommunity(
+      normalizedPage,
+      true,
+      targetUserId
+    );
   });
 
   window.addEventListener("cma:open-search", function() {
@@ -447,6 +464,129 @@ function renderAdmissionPrograms() {
 }
 
 // ==================================================
+// AUTOMATIC HEADER AND PAGE ELEMENT CONTROL
+// ==================================================
+
+function updatePageHeaders(page) {
+  const topHeader = document.querySelector(".header");
+  const secondHeader = document.querySelector(".cma-bottom-nav");
+
+  const pageBanner = document.getElementById("pageBanner");
+  const pageIntro = document.querySelector("#innerPage .page-intro");
+  const backLink = document.getElementById("backLink");
+
+  const isDemoAI = (
+    page === "demo-ai" ||
+    (page && page.startsWith("demo-ai-"))
+  );
+
+  const isCommunity = (
+    page === "community" ||
+    (page && page.startsWith("community-"))
+  );
+
+  const isAccount = page === "account";
+
+  const showBoth = (
+    !page ||
+    page === "teachers" ||
+    page === "account" ||
+    (page && page.startsWith("teachers-"))
+  );
+
+  document.body.classList.toggle(
+    "community-active",
+    !!isCommunity
+  );
+
+  if (topHeader) {
+    topHeader.style.display =
+      (isDemoAI || isCommunity) ? "none" : "";
+  }
+
+  if (secondHeader) {
+    secondHeader.style.display =
+      (!isDemoAI && !isCommunity && showBoth) ? "" : "none";
+  }
+
+  if (pageBanner) {
+    pageBanner.style.display =
+      (isAccount || isCommunity) ? "none" : "";
+  }
+
+  if (pageIntro) {
+    pageIntro.style.display = isCommunity ? "none" : "";
+  }
+
+  if (backLink) {
+    backLink.style.display = isCommunity ? "none" : "";
+  }
+}
+
+
+// ==================================================
+// CLASSROOM LEARNING
+// ADMISSION PROGRAM SELECTION
+// ==================================================
+
+function renderAdmissionPrograms() {
+  setPage(
+    "Choose Your Program",
+    "Classroom Learning",
+    "Select your academic program to explore admission opportunities.",
+    demoImages.classroom,
+    "?"
+  );
+
+  const grid = document.createElement("div");
+  grid.className = "offline-grid";
+
+  const programs = [
+    {
+      name: "SSC",
+      description: "Class 9 & 10",
+      icon: "▤",
+      page: "admission-ssc"
+    },
+    {
+      name: "HSC",
+      description: "College",
+      icon: "▣",
+      page: "admission-hsc"
+    }
+  ];
+
+  programs.forEach(program => {
+    const card = document.createElement("a");
+    card.href = "?page=" + program.page;
+    card.className = "offline-card";
+
+    const icon = document.createElement("div");
+    icon.className = "offline-icon";
+    icon.textContent = program.icon;
+
+    const content = document.createElement("div");
+
+    const heading = document.createElement("h3");
+    heading.textContent = program.name;
+
+    const description = document.createElement("p");
+    description.textContent = program.description;
+
+    const arrow = document.createElement("span");
+    arrow.textContent = "›";
+
+    content.append(heading, description);
+    card.append(icon, content, arrow);
+
+    grid.appendChild(card);
+  });
+
+  pageContent.appendChild(grid);
+}
+
+
+// ==================================================
 // PAGE ROUTER
 // ==================================================
 
@@ -465,7 +605,16 @@ function openPage(page) {
 
   // COMMUNITY ROUTES
   if (CMA_COMMUNITY_ROUTES[page]) {
-    renderCommunitySection(CMA_COMMUNITY_ROUTES[page]);
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const targetUserId = params.get("userId");
+
+    renderCommunitySection(
+      CMA_COMMUNITY_ROUTES[page],
+      targetUserId
+    );
   }
 
   // STUDENT ACCOUNT
@@ -954,4 +1103,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
-    
+     
