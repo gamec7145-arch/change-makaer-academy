@@ -2,7 +2,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY PROFILE MODULE
-   UPDATED VERSION - PART 1 OF 2
+   FIXED COMPLETE VERSION - PART 1 OF 2
 ========================================= */
 
 (function () {
@@ -647,8 +647,6 @@
     `;
   }
 
-  /* Part 2 continues... */
-
   // =========================================
   // PUBLIC PROFILE LOADING
   // =========================================
@@ -686,7 +684,6 @@
       }
     };
   }
-
 
   // =========================================
   // PROFILE IMAGE UPLOAD
@@ -794,7 +791,6 @@
     await Profile.render(root);
   }
 
-
   // =========================================
   // PROFILE POSTS
   // =========================================
@@ -897,7 +893,6 @@
       `;
     }
   }
-
 
   // =========================================
   // CREATE PROFILE POST
@@ -1047,7 +1042,6 @@
       }
     }
   }
-
 
   // =========================================
   // PROFILE EVENTS
@@ -1426,7 +1420,6 @@
     }
   }
 
-
   // =========================================
   // PROFILE MODULE
   // =========================================
@@ -1443,56 +1436,81 @@
         return false;
       }
 
-      if (Core && Core.loadSession) {
-        await Core.loadSession();
-      }
+      try {
+        if (Core && Core.loadSession) {
+          await Core.loadSession();
+        }
 
-      const loggedInUser = getUser();
+        const loggedInUser = getUser();
 
-      if (!loggedInUser) {
+        if (!loggedInUser) {
+          root.innerHTML = `
+            <div class="cma-profile-empty">
+              Please log in to view this profile.
+            </div>
+          `;
+          return false;
+        }
+
+        const requestedUserId = targetUserId
+          ? String(targetUserId).trim()
+          : null;
+
+        const isOwnProfile =
+          !requestedUserId ||
+          requestedUserId === String(loggedInUser.id);
+
+        let profileUser = loggedInUser;
+
+        if (!isOwnProfile) {
+          const profileData = await loadPublicProfile(requestedUserId);
+          profileUser = makeProfileUser(profileData);
+        }
+
+        injectStyles();
+
+        root.innerHTML =
+          renderNavigation() +
+          renderProfileContent(profileUser, isOwnProfile);
+
+        bindEvents(root, profileUser, isOwnProfile);
+
+        if (
+          window.CMACommunityFeed &&
+          typeof window.CMACommunityFeed.bindEvents === "function"
+        ) {
+          window.CMACommunityFeed.bindEvents(root);
+        }
+
+        await loadUserPosts(profileUser, root);
+        return true;
+
+      } catch (error) {
+        console.error("CMA Profile Render Error:", error);
+
         root.innerHTML = `
           <div class="cma-profile-empty">
-            Please log in to view this profile.
+            <p>Profile is not available.</p>
+            <button type="button" id="cmaProfileGoBack">
+              Go Back
+            </button>
           </div>
         `;
+
+        const backButton = root.querySelector("#cmaProfileGoBack");
+
+        if (backButton) {
+          backButton.addEventListener("click", function () {
+            window.history.back();
+          });
+        }
+
         return false;
       }
-
-      const isOwnProfile =
-    !targetUserId ||
-    targetUserId === currentUser.id;
-
-let profileUser = currentUser;
-
-if (!isOwnProfile) {
-    const profileData = await loadPublicProfile(targetUserId);
-
-    if (!profileData) {
-        root.innerHTML = `
-            <div class="cma-profile-error">
-                <p>Profile could not be loaded.</p>
-                <button type="button" onclick="history.back()">
-                    Go Back
-                </button>
-            </div>
-        `;
-        return;
     }
+  };
 
-    profileUser = makeProfileUser(profileData);
-}
-
-renderProfileContent(profileUser, isOwnProfile);
-bindEvents(root, profileUser, isOwnProfile);
-
-if (window.CMACommunityFeed &&
-    typeof window.CMACommunityFeed.bindEvents === "function") {
-    window.CMACommunityFeed.bindEvents(root);
-}
-
-await loadUserPosts(profileUser, root);
-}
-
-window.CMACommunityProfile = Profile;
+  window.CMACommunityProfile = Profile;
 
 })();
+     
