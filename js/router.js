@@ -123,10 +123,10 @@ function loadCommunityFile(src) {
     }
   });
 
-  // পুরোনো script loaded দেখালেও module না থাকলে নতুন করে load
+  // Module তৈরি না হলে পুরোনো script সরিয়ে নতুন করে load
   let script = existing;
 
-  if (script && script.dataset.cmaLoaded === "true") {
+  if (script) {
     script.remove();
     script = null;
   }
@@ -349,35 +349,72 @@ function navigateCommunity(
 
 
 // ==================================================
-// COMMUNITY EVENT LISTENERS
+// COMMUNITY EVENT LISTENERS — FIXED
 // ==================================================
 
+const cmaHandledCommunityEvents = new WeakSet();
+
+function handleCMACommunityNavigate(event) {
+  if (!event || cmaHandledCommunityEvents.has(event)) {
+    return;
+  }
+
+  cmaHandledCommunityEvents.add(event);
+
+  const detail = event.detail || {};
+
+  const page = typeof detail === "string"
+    ? detail
+    : detail.page;
+
+  const targetUserId = typeof detail === "object"
+    ? (detail.userId || detail.targetUserId || null)
+    : null;
+
+  if (!page) return;
+
+  const normalizedPage = CMA_COMMUNITY_ROUTES[page] || page;
+
+  navigateCommunity(
+    normalizedPage,
+    true,
+    targetUserId
+  );
+}
+
+function handleCMACommunitySearch(event) {
+  if (!event || cmaHandledCommunityEvents.has(event)) {
+    return;
+  }
+
+  cmaHandledCommunityEvents.add(event);
+
+  navigateCommunity("search");
+}
+
+// Document এবং Window — দুই জায়গার event গ্রহণ
 if (!window.cmaRouterEventsBound) {
   window.cmaRouterEventsBound = true;
 
-  window.addEventListener("cma:navigate", function(event) {
-    const detail = event.detail || {};
+  document.addEventListener(
+    "cma:navigate",
+    handleCMACommunityNavigate
+  );
 
-    const page = typeof detail === "string"
-      ? detail
-      : detail.page;
+  window.addEventListener(
+    "cma:navigate",
+    handleCMACommunityNavigate
+  );
 
-    const targetUserId = typeof detail === "object"
-      ? (detail.userId || detail.targetUserId || null)
-      : null;
+  document.addEventListener(
+    "cma:open-search",
+    handleCMACommunitySearch
+  );
 
-    const normalizedPage = CMA_COMMUNITY_ROUTES[page] || page;
-
-    navigateCommunity(
-      normalizedPage,
-      true,
-      targetUserId
-    );
-  });
-
-  window.addEventListener("cma:open-search", function() {
-    navigateCommunity("search");
-  });
+  window.addEventListener(
+    "cma:open-search",
+    handleCMACommunitySearch
+  );
 }
 
 window.CMANavigateCommunity = navigateCommunity;
@@ -933,7 +970,9 @@ function openPage(page) {
   }
 
   window.scrollTo(0, 0);
-    }
+}
+
+
 // ==================================================
 // URL ROUTING
 // ==================================================
