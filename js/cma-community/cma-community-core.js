@@ -13,7 +13,6 @@
 
   let currentUser = null;
 
-  // HTML নিরাপদভাবে দেখানোর জন্য
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, function (char) {
       return {
@@ -26,13 +25,10 @@
     });
   }
 
-  // HTML element তৈরি
   function createElement(tag, className = "", text = "") {
     const element = document.createElement(tag);
 
-    if (className) {
-      element.className = className;
-    }
+    if (className) element.className = className;
 
     if (text !== undefined && text !== null) {
       element.textContent = String(text);
@@ -41,12 +37,10 @@
     return element;
   }
 
-  // Community page-এর মূল content
   function getRoot() {
     return document.getElementById("pageContent");
   }
 
-  // Supabase login session
   async function loadSession() {
     if (!db) {
       currentUser = null;
@@ -79,7 +73,6 @@
     }
   }
 
-  // Current user
   function getCurrentUser() {
     return currentUser;
   }
@@ -88,7 +81,6 @@
     currentUser = user || null;
   }
 
-  // Relative time
   function formatRelativeTime(value) {
     if (!value) return "";
 
@@ -132,7 +124,6 @@
     return years + (years === 1 ? " year ago" : " years ago");
   }
 
-  // Notification message
   function showNotice(message, type = "info") {
     let notice = document.getElementById("cmaCommunityNotice");
 
@@ -154,7 +145,6 @@
     }, 3000);
   }
 
-  // Login check
   function requireLogin() {
     if (currentUser) return true;
 
@@ -166,7 +156,6 @@
     return false;
   }
 
-  // Safe image URL
   function safeImageURL(value) {
     if (!value) return "";
 
@@ -184,7 +173,6 @@
     }
   }
 
-  // Shared Community tools
   window.CMACommunityCore = {
     db,
     BUCKET,
@@ -200,7 +188,6 @@
     safeImageURL
   };
 
-  // Keep session updated after login/logout
   if (db) {
     db.auth.onAuthStateChange(function (_event, session) {
       currentUser = session?.user || null;
@@ -208,4 +195,3 @@
   }
 
 })();
-  
