@@ -46,6 +46,7 @@
 
         return (
             meta.full_name ||
+            meta.name ||
             meta.display_name ||
             user?.email?.split("@")[0] ||
             "Community Member"
@@ -132,6 +133,7 @@
 
             const fullName =
                 meta.full_name ||
+                meta.name ||
                 meta.display_name ||
                 existing?.full_name ||
                 user.email?.split("@")[0] ||
@@ -249,8 +251,13 @@
             };
         }
 
+        console.warn(
+            "Public profile is not synced for member:",
+            userId
+        );
+
         return {
-            author_name: "Community Member",
+            author_name: "Member",
             avatar_url: "",
             user_id: userId
         };
@@ -807,3 +814,4 @@
     };
 
 })();
+           
