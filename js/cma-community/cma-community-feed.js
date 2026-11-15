@@ -316,6 +316,7 @@
     async toggleReaction(postId, reactionType) {
       if (!Core.requireLogin()) return;
       if (!postId || !db) return;
+       
        async toggleReaction(postId, reactionType) {
   if (!Core.requireLogin()) return;
 
