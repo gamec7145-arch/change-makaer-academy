@@ -1,1141 +1,862 @@
-/* CHANGE MAKER ACADEMY
+/* =========================================
+   CHANGE MAKER ACADEMY
    COMMUNITY FEED MODULE
-   UPDATED VERSION — PART 1 OF 2
-*/
+   Nested Comments & Replies
+   PROFILE IDENTITY UPDATE — PART 1/2
+========================================= */
 
 (function () {
   "use strict";
 
   const Core = window.CMACommunityCore;
-  const Feed = {};
-  const db = Core ? Core.db : window.cmaSupabase;
+
+  if (!Core || !Core.db) {
+    console.error("Community Core is not loaded.");
+    return;
+  }
+
+  const db = Core.db;
 
   const Icons = {
-    home: "⌂",
-    profile: "♙",
-    friends: "♧",
-    creator: "✦",
-    notification: "♧",
-    search: "⌕",
-    more: "⋯",
-    close: "×",
-    comment: "▢",
-    photo: "▧"
+    home: `<svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg>`,
+    profile: `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+    friends: `<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    creator: `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>`,
+    notification: `<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>`,
+    search: `<svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>`
   };
 
-  function escapeHTML(value) {
-    if (Core && typeof Core.escapeHTML === "function") {
-      return Core.escapeHTML(value ?? "");
-    }
+  const Feed = {
+    activePostId: null,
+    activeReplyId: null,
+    activeReplyName: "",
 
-    return String(value ?? "").replace(/[&<>"']/g, function (char) {
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[char];
-    });
-  }
+    // Open another member's profile
+    openMemberProfile(userId) {
+      if (!userId) return;
 
-  function getCurrentUser() {
-    return Core && typeof Core.getCurrentUser === "function"
-      ? Core.getCurrentUser()
-      : null;
-  }
-
-  function safeImage(url) {
-    if (!url) return "";
-
-    if (Core && typeof Core.safeImageURL === "function") {
-      return Core.safeImageURL(url);
-    }
-
-    try {
-      const parsed = new URL(url, window.location.origin);
-      return ["http:", "https:"].includes(parsed.protocol)
-        ? parsed.href
-        : "";
-    } catch (error) {
-      return "";
-    }
-  }
-
-  function avatarHTML(url, name, className) {
-    const image = safeImage(url);
-    const label = escapeHTML(name || "Community Member");
-
-    if (image) {
-      return `
-        <img
-          class="${className || "cma-avatar"}"
-          src="${escapeHTML(image)}"
-          alt="${label}"
-          loading="lazy"
-          onerror="this.style.display='none';"
-        >
-      `;
-    }
-
-    const initial = label.trim().charAt(0).toUpperCase() || "C";
-
-    return `
-      <span class="${className || "cma-avatar"} cma-avatar-fallback">
-        ${initial}
-      </span>
-    `;
-  }
-
-  function openMemberProfile(userId) {
-    if (!userId) return;
-
-    window.dispatchEvent(
-      new CustomEvent("cma:navigate", {
+      window.dispatchEvent(new CustomEvent("cma:navigate", {
         detail: {
           page: "profile",
           userId: userId
         }
-      })
-    );
-  }
+      }));
+    },
 
-  function authorButton(userId, name) {
-    if (!userId) {
-      return `<strong>${escapeHTML(name || "Community Member")}</strong>`;
-    }
+    async renderHome(root) {
+      root = root || Core.getRoot();
+      if (!root) return;
 
-    return `
-      <button
-        type="button"
-        class="cma-author-link"
-        data-cma-profile-user="${escapeHTML(userId)}"
-      >
-        ${escapeHTML(name || "Community Member")}
-      </button>
-    `;
-  }
+      root.innerHTML = `
+        <main class="cma-community">
 
-  Feed.renderHome = function (root) {
-    if (!root) return;
+          <header class="cma-header">
+            <div class="cma-header-title">
+              <span>Change Maker</span>
+              <span class="cma-green">Community</span>
+            </div>
+            <button class="cma-icon-button"
+              type="button" data-cma-action="search"
+              aria-label="Search">${Icons.search}</button>
+          </header>
 
-    root.innerHTML = `
-      <main class="cma-community-home">
-
-        <section class="cma-post-composer">
-          <textarea
-            id="cmaPostInput"
-            placeholder="What's on your mind?"
-            rows="2"
-          ></textarea>
-
-          <div id="cmaSelectedPhoto"></div>
-
-          <div class="cma-composer-actions">
-            <button
-              type="button"
-              data-cma-action="photo"
-            >
-              ${Icons.photo} Photo
+          <nav class="cma-navigation">
+            <button class="cma-nav-item active" type="button" data-cma-page="home">
+              <span class="cma-nav-icon">${Icons.home}</span><span>Home</span>
             </button>
-
-            <button
-              type="button"
-              data-cma-action="post"
-            >
-              Post
+            <button class="cma-nav-item" type="button" data-cma-page="profile">
+              <span class="cma-nav-icon">${Icons.profile}</span><span>Profile</span>
             </button>
-          </div>
-        </section>
+            <button class="cma-nav-item" type="button" data-cma-page="friends">
+              <span class="cma-nav-icon">${Icons.friends}</span><span>Friends</span>
+            </button>
+            <button class="cma-nav-item" type="button" data-cma-page="creator">
+              <span class="cma-nav-icon">${Icons.creator}</span><span>Creator Panel</span>
+            </button>
+            <button class="cma-nav-item" type="button" data-cma-page="notifications">
+              <span class="cma-nav-icon">${Icons.notification}</span><span>Notification</span>
+            </button>
+          </nav>
 
-        <input
-          type="file"
-          id="cmaFeedPhotoInput"
-          accept="image/*"
-          hidden
-        >
+          <section class="cma-composer">
+            <div class="cma-composer-top">
+              <div class="cma-avatar"></div>
+              <textarea class="cma-post-input" id="cmaPostInput"
+                placeholder="What's on your mind?" rows="1"
+                aria-label="Write a post"></textarea>
+            </div>
+            <div class="cma-composer-bottom">
+              <button type="button" class="cma-photo-button"
+                data-cma-action="photo">▧ Photo</button>
+              <button type="button" class="cma-post-button"
+                data-cma-action="post">Post</button>
+            </div>
+            <div id="cmaSelectedPhoto" class="cma-selected-photo"></div>
+          </section>
 
-        <section id="cmaFeedList"></section>
+          <section class="cma-feed-list" id="cmaFeedList">
+            <div class="cma-empty-feed">
+              <div class="cma-empty-icon">✦</div>
+              <p>Welcome to Change Maker Community</p>
+              <span>Community posts will appear here.</span>
+            </div>
+          </section>
 
-        <div
-          id="cmaPostMenuLayer"
-          class="cma-post-menu-layer"
-          hidden
-        ></div>
+        </main>
+        <div id="cmaPostMenuLayer"></div>
+        <div id="cmaCommentsLayer"></div>
+      `;
 
-        <div
-          id="cmaCommentsLayer"
-          class="cma-comments-layer"
-          hidden
-        ></div>
+      this.bindEvents(root);
+    },
 
-      </main>
-    `;
+    bindEvents(root) {
+      if (root.dataset.cmaFeedBound === "true") return;
+      root.dataset.cmaFeedBound = "true";
 
-    Feed.bindEvents(root);
-  };
+      root.addEventListener("click", async event => {
 
-  Feed.bindEvents = function (root) {
-    if (!root || root.dataset.cmaFeedBound === "true") return;
-
-    root.dataset.cmaFeedBound = "true";
-
-    root.addEventListener("click", async function (event) {
-      const profileButton = event.target.closest(
-        "[data-cma-profile-user]"
-      );
-
-      if (profileButton) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        openMemberProfile(
-          profileButton.dataset.cmaProfileUser
+        // Click a member's name or profile picture
+        const profileButton = event.target.closest(
+          "[data-cma-open-profile]"
         );
 
-        return;
-      }
+        if (profileButton) {
+          event.preventDefault();
+          event.stopPropagation();
 
-      const actionButton = event.target.closest("[data-cma-action]");
+          this.openMemberProfile(
+            profileButton.dataset.cmaOpenProfile
+          );
 
-      if (actionButton) {
-        const action = actionButton.dataset.cmaAction;
+          return;
+        }
+
+        const button = event.target.closest(
+          "[data-cma-action], [data-cma-page], [data-cma-post-menu], [data-reaction], [data-cma-comments], [data-cma-send-comment], [data-cma-reply], [data-cma-cancel-reply]"
+        );
+
+        if (!button) return;
+
+        if (button.dataset.cmaPage) {
+          window.dispatchEvent(new CustomEvent("cma:navigate", {
+            detail: { page: button.dataset.cmaPage }
+          }));
+          return;
+        }
+
+        const action = button.dataset.cmaAction;
+
+        if (action === "search") {
+          window.dispatchEvent(new CustomEvent("cma:open-search"));
+          return;
+        }
 
         if (action === "photo") {
-          const picker = root.querySelector("#cmaFeedPhotoInput");
-          if (picker) picker.click();
+          if (!Core.requireLogin()) return;
+          window.dispatchEvent(new CustomEvent("cma:select-photo"));
           return;
         }
 
         if (action === "post") {
-          const input = root.querySelector("#cmaPostInput");
+          if (!Core.requireLogin()) return;
 
-          window.dispatchEvent(
-            new CustomEvent("cma:submit-post", {
-              detail: {
-                content: input ? input.value.trim() : ""
-              }
-            })
+          const input = root.querySelector("#cmaPostInput");
+          const content = input?.value.trim() || "";
+          const photoSelected = !!document.querySelector("#cmaSelectedPhoto img");
+
+          if (!content && !photoSelected) {
+            Core.showNotice("কিছু লিখো অথবা একটি ছবি নির্বাচন করো।", "error");
+            return;
+          }
+
+          window.dispatchEvent(new CustomEvent("cma:submit-post", {
+            detail: { content }
+          }));
+          return;
+        }
+
+        if (button.dataset.cmaPostMenu) {
+          this.openPostMenu(button.dataset.cmaPostMenu);
+          return;
+        }
+
+        if (button.dataset.reaction) {
+          await this.toggleReaction(
+            button.closest("[data-post-id]")?.dataset.postId,
+            button.dataset.reaction
           );
+          return;
+        }
+
+        if (button.dataset.cmaComments) {
+          this.openComments(button.dataset.cmaComments);
+          return;
+        }
+
+        if (button.dataset.cmaSendComment) {
+          await this.sendComment(button.dataset.cmaSendComment);
+          return;
+        }
+
+        if (button.dataset.cmaReply) {
+          this.activeReplyId = button.dataset.cmaReply;
+          this.activeReplyName = button.dataset.replyName || "Member";
+
+          const input = document.querySelector("#cmaCommentInput");
+
+          if (input) {
+            input.placeholder = "Replying to " + this.activeReplyName + "...";
+            input.focus();
+          }
+
+          const status = document.querySelector("#cmaReplyStatus");
+
+          if (status) {
+            status.innerHTML = `
+              Replying to <strong>${Core.escapeHTML(this.activeReplyName)}</strong>
+              <button type="button" data-cma-cancel-reply
+                style="border:0;background:none;color:#68DDB9;margin-left:8px;">
+                Cancel
+              </button>
+            `;
+          }
 
           return;
         }
+
+        if (button.hasAttribute("data-cma-cancel-reply")) {
+          this.activeReplyId = null;
+          this.activeReplyName = "";
+
+          const input = document.querySelector("#cmaCommentInput");
+          if (input) input.placeholder = "Write a comment...";
+
+          const status = document.querySelector("#cmaReplyStatus");
+          if (status) status.innerHTML = "";
+
+          return;
+        }
+      });
+
+      root.addEventListener("click", event => {
+        const remove = event.target.closest("[data-cma-remove-photo]");
+        if (!remove) return;
+
+        window.dispatchEvent(new CustomEvent("cma:remove-photo"));
+
+        const preview = root.querySelector("#cmaSelectedPhoto");
+        if (preview) preview.innerHTML = "";
+      });
+    },
+
+    showSelectedPhoto(file) {
+      const preview = document.getElementById("cmaSelectedPhoto");
+      if (!preview || !file) return;
+
+      if (preview.dataset.objectUrl) {
+        URL.revokeObjectURL(preview.dataset.objectUrl);
       }
 
-      const reactionButton = event.target.closest(
-        "[data-cma-reaction]"
-      );
+      const url = URL.createObjectURL(file);
+      preview.dataset.objectUrl = url;
 
-      if (reactionButton) {
-        await Feed.toggleReaction(
-          reactionButton.dataset.postId,
-          reactionButton.dataset.cmaReaction
-        );
-        return;
-      }
-
-      const commentButton = event.target.closest(
-        "[data-cma-comments]"
-      );
-
-      if (commentButton) {
-        Feed.openComments(commentButton.dataset.cmaComments);
-        return;
-      }
-
-      const replyButton = event.target.closest(
-        "[data-cma-reply]"
-      );
-
-      if (replyButton) {
-        Feed.showReplyInput(
-          replyButton.dataset.cmaReply,
-          replyButton.dataset.parentName || ""
-        );
-        return;
-      }
-
-      const sendButton = event.target.closest(
-        "[data-cma-send-comment]"
-      );
-
-      if (sendButton) {
-        await Feed.sendComment(
-          sendButton.dataset.postId,
-          sendButton.dataset.parentId || null
-        );
-        return;
-      }
-
-      const menuButton = event.target.closest(
-        "[data-cma-post-menu]"
-      );
-
-      if (menuButton) {
-        Feed.openPostMenu(menuButton.dataset.cmaPostMenu);
-        return;
-      }
-
-      const closeButton = event.target.closest(
-        "[data-cma-close-comments]"
-      );
-
-      if (closeButton) {
-        const layer = root.querySelector("#cmaCommentsLayer");
-        if (layer) layer.hidden = true;
-        return;
-      }
-    });
-
-    root.addEventListener("change", function (event) {
-      if (event.target.id === "cmaFeedPhotoInput") {
-        Feed.showSelectedPhoto(event.target.files?.[0]);
-      }
-    });
-  };
-
-  Feed.showSelectedPhoto = function (file) {
-    const preview = document.getElementById("cmaSelectedPhoto");
-    if (!preview || !file) return;
-
-    if (!file.type.startsWith("image/")) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function () {
       preview.innerHTML = `
-        <img
-          src="${reader.result}"
-          class="cma-selected-photo-preview"
-          alt="Selected photo"
-        >
-        <button
-          type="button"
-          data-cma-action="remove-photo"
-        >
-          Remove
-        </button>
+        <img src="${url}" alt="Selected photo preview"
+          style="max-width:100%;max-height:220px;border-radius:12px;margin-top:10px;">
+        <button type="button" data-cma-remove-photo
+          style="display:block;margin-top:6px;">Remove photo</button>
       `;
-    };
+    },
 
-    reader.readAsDataURL(file);
-  };
+    createPostCard(post) {
+      const item = post || {};
+      const user = Core.getCurrentUser();
 
-  Feed.createPostCard = function (item) {
-    if (!item) return "";
+      const author = Core.escapeHTML(item.author_name || "Member");
+      const caption = Core.escapeHTML(item.caption || "");
+      const time = Core.escapeHTML(Core.formatRelativeTime(item.created_at));
 
-    const user = getCurrentUser();
-    const isOwner = user && user.id === item.user_id;
+      const imageURL = Core.safeImageURL(item.image_url);
+      const avatarURL = Core.safeImageURL(item.avatar_url);
+      const isOwner = !!user && item.user_id === user.id;
+      const postId = Core.escapeHTML(item.id || "");
+      const authorId = Core.escapeHTML(item.user_id || "");
 
-    const authorName =
-      item.author_name || "Community Member";
-
-    const avatar = avatarHTML(
-      item.avatar_url,
-      authorName,
-      "cma-post-avatar"
-    );
-
-    const image = safeImage(item.image_url);
-
-    return `
-      <article
-        class="cma-post-card"
-        data-post-id="${escapeHTML(item.id)}"
-      >
-
-        <header class="cma-post-header">
-
-          ${avatar}
-
-          <div class="cma-post-author-info">
-            ${authorButton(item.user_id, authorName)}
-
-            <time>
-              ${escapeHTML(
-                item.created_at
-                  ? Core.formatRelativeTime(item.created_at)
-                  : ""
-              )}
-            </time>
+      return `
+        <article class="cma-post-card" data-post-id="${postId}">
+          <div class="cma-post-header">
+            ${
+              avatarURL
+                ? `<button type="button"
+                    data-cma-open-profile="${authorId}"
+                    aria-label="Open ${author}'s profile"
+                    style="border:0;background:none;padding:0;cursor:pointer;">
+                    <img class="cma-avatar" src="${avatarURL}" alt="Profile picture">
+                  </button>`
+                : `<button type="button"
+                    data-cma-open-profile="${authorId}"
+                    aria-label="Open ${author}'s profile"
+                    class="cma-avatar"
+                    style="border:0;cursor:pointer;"></button>`
+            }
+            <div class="cma-post-author">
+              <button type="button"
+                data-cma-open-profile="${authorId}"
+                style="border:0;background:none;padding:0;
+                color:inherit;font:inherit;font-weight:inherit;
+                cursor:pointer;text-align:left;">
+                <strong>${author}</strong>
+              </button>
+              <span>${time}</span>
+            </div>
+            ${
+              isOwner
+                ? `<button class="cma-icon-button" type="button"
+                    aria-label="Post options"
+                    data-cma-post-menu="${postId}">⋯</button>`
+                : ""
+            }
           </div>
 
+          ${caption ? `<div class="cma-post-caption">${caption}</div>` : ""}
           ${
-            isOwner
-              ? `
-                <button
-                  type="button"
-                  class="cma-post-more"
-                  data-cma-post-menu="${escapeHTML(item.id)}"
-                  aria-label="Post options"
-                >
-                  ${Icons.more}
-                </button>
-              `
+            imageURL
+              ? `<img class="cma-post-image" src="${imageURL}"
+                   alt="Post image" loading="lazy">`
               : ""
           }
 
-        </header>
+          <div class="cma-reactions">
+            <button type="button" data-reaction="like">👍</button>
+            <button type="button" data-reaction="love">❤️</button>
+            <button type="button" data-reaction="haha">😂</button>
+            <button type="button" data-reaction="wow">😮</button>
+          </div>
 
-        ${
-          item.caption || item.content
-            ? `
-              <div class="cma-post-caption">
-                ${escapeHTML(item.caption || item.content)}
-              </div>
-            `
-            : ""
-        }
+          <div class="cma-comment-preview"
+            data-cma-random-comment="${postId}">
+            Comments will appear here.
+          </div>
 
-        ${
-          image
-            ? `
-              <img
-                class="cma-post-image"
-                src="${escapeHTML(image)}"
-                alt="Community post image"
-                loading="lazy"
-              >
-            `
-            : ""
-        }
+          <button class="cma-view-comments" type="button"
+            data-cma-comments="${postId}">Write a comment</button>
+        </article>
+      `;
+    },
+         async toggleReaction(postId, reactionType) {
+      if (!Core.requireLogin() || !postId) return;
 
-        <div class="cma-post-reactions">
+      const user = Core.getCurrentUser();
+      if (!user) return;
 
-          <button
-            type="button"
-            data-cma-reaction="like"
-            data-post-id="${escapeHTML(item.id)}"
-            aria-label="Like"
-          >👍</button>
-
-          <button
-            type="button"
-            data-cma-reaction="love"
-            data-post-id="${escapeHTML(item.id)}"
-            aria-label="Love"
-          >❤️</button>
-
-          <button
-            type="button"
-            data-cma-reaction="haha"
-            data-post-id="${escapeHTML(item.id)}"
-            aria-label="Haha"
-          >😂</button>
-
-          <button
-            type="button"
-            data-cma-reaction="wow"
-            data-post-id="${escapeHTML(item.id)}"
-            aria-label="Wow"
-          >😮</button>
-
-        </div>
-
-        <div
-          class="cma-post-comment-preview"
-          id="cmaCommentPreview-${escapeHTML(item.id)}"
-        ></div>
-
-        <button
-          type="button"
-          class="cma-view-comments"
-          data-cma-comments="${escapeHTML(item.id)}"
-        >
-          View all comments
-        </button>
-
-        <button
-          type="button"
-          class="cma-write-comment"
-          data-cma-comments="${escapeHTML(item.id)}"
-        >
-          Write a comment...
-        </button>
-
-      </article>
-    `;
-  };
-   /* CHANGE MAKER ACADEMY
-   COMMUNITY FEED MODULE
-   UPDATED VERSION — PART 2 OF 2
-*/
-
-  Feed.toggleReaction = async function (postId, reactionType) {
-    if (!db || !postId || !reactionType) return;
-
-    const user = getCurrentUser();
-
-    if (!user) {
-      if (Core && Core.requireLogin) Core.requireLogin();
-      return;
-    }
-
-    try {
-      const { data: existing, error: findError } = await db
-        .from("cma_community_reactions")
-        .select("id,reaction_type")
-        .eq("post_id", postId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (findError) throw findError;
-
-      if (existing && existing.reaction_type === reactionType) {
-        const { error } = await db
+      try {
+        const { data: existing, error: readError } = await db
           .from("cma_community_reactions")
-          .delete()
-          .eq("id", existing.id)
-          .eq("user_id", user.id);
+          .select("id,reaction_type")
+          .eq("post_id", postId)
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-        if (error) throw error;
-      } else {
-        const { error } = await db
-          .from("cma_community_reactions")
-          .upsert(
-            {
+        if (readError) throw readError;
+
+        if (existing && existing.reaction_type === reactionType) {
+          const { error } = await db
+            .from("cma_community_reactions")
+            .delete()
+            .eq("id", existing.id)
+            .eq("user_id", user.id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await db
+            .from("cma_community_reactions")
+            .upsert({
               post_id: postId,
               user_id: user.id,
               reaction_type: reactionType
-            },
-            {
+            }, {
               onConflict: "post_id,user_id"
-            }
-          );
+            });
+
+          if (error) throw error;
+        }
+
+        await this.loadReactionCounts(postId);
+
+      } catch (error) {
+        console.error("Reaction error:", error);
+        Core.showNotice("Reaction দেওয়া যায়নি। আবার চেষ্টা করো।", "error");
+      }
+    },
+
+    async loadReactionCounts(postId) {
+      if (!postId) return;
+
+      try {
+        const { data, error } = await db
+          .from("cma_community_reactions")
+          .select("reaction_type")
+          .eq("post_id", postId);
 
         if (error) throw error;
-      }
 
-      // Reaction count বা reactor list এখানে দেখানো হবে না।
-      // এগুলোর access Supabase RLS দিয়েও নিয়ন্ত্রণ করতে হবে।
+        const card = document.querySelector(
+          `[data-post-id="${CSS.escape(postId)}"]`
+        );
 
-    } catch (error) {
-      console.error("Reaction error:", error);
+        if (!card) return;
 
-      if (Core && Core.showNotice) {
-        Core.showNotice("Reaction দিতে সমস্যা হয়েছে।");
-      }
-    }
-  };
+        const counts = { like: 0, love: 0, haha: 0, wow: 0 };
 
-
-  Feed.loadReactionCounts = async function () {
-    // Reaction count UI-তে দেখানো হবে না।
-    // Reactor identity প্রকাশ করে এমন query এখানে করা হচ্ছে না।
-    return;
-  };
-
-
-  Feed.loadRandomComment = async function (postId) {
-    if (!db || !postId) return;
-
-    const preview = document.getElementById(
-      "cmaCommentPreview-" + postId
-    );
-
-    if (!preview) return;
-
-    try {
-      const { data, error } = await db
-        .from("cma_community_comments")
-        .select("id,user_id,content,created_at")
-        .eq("post_id", postId)
-        .is("parent_id", null)
-        .order("created_at", { ascending: false })
-        .limit(2);
-
-      if (error) throw error;
-
-      if (!data || !data.length) {
-        preview.innerHTML = "";
-        return;
-      }
-
-      const userIds = [
-        ...new Set(data.map(item => item.user_id).filter(Boolean))
-      ];
-
-      let profiles = {};
-
-      if (userIds.length) {
-        const { data: profileRows } = await db
-          .from("cma_community_profiles")
-          .select("user_id,full_name,avatar_url")
-          .in("user_id", userIds);
-
-        (profileRows || []).forEach(profile => {
-          profiles[profile.user_id] = profile;
+        (data || []).forEach(item => {
+          if (counts[item.reaction_type] !== undefined) {
+            counts[item.reaction_type]++;
+          }
         });
+
+        card.querySelectorAll("[data-reaction]").forEach(button => {
+          button.dataset.count = counts[button.dataset.reaction] || 0;
+        });
+
+      } catch (error) {
+        console.error("Reaction loading error:", error);
       }
+    },
 
-      preview.innerHTML = data.map(comment => {
-        const profile = profiles[comment.user_id] || {};
-        const name = profile.full_name || "Community Member";
+    async loadRandomComment(postId) {
+      if (!postId) return;
 
-        return `
-          <div class="cma-comment-preview-item">
-            ${avatarHTML(
-              profile.avatar_url,
-              name,
-              "cma-comment-avatar"
-            )}
+      try {
+        const { data, error } = await db
+          .from("cma_community_comments")
+          .select("content,created_at,user_id")
+          .eq("post_id", postId)
+          .is("parent_id", null);
 
-            <div class="cma-comment-preview-content">
-              ${authorButton(comment.user_id, name)}
-              <span>${escapeHTML(comment.content)}</span>
-            </div>
-          </div>
-        `;
-      }).join("");
+        if (error) throw error;
 
-    } catch (error) {
-      console.error("Comment preview error:", error);
-    }
-  };
+        const preview = document.querySelector(
+          `[data-cma-random-comment="${CSS.escape(postId)}"]`
+        );
 
+        if (!preview) return;
 
-  Feed.openPostMenu = function (postId) {
-    const layer = document.getElementById("cmaPostMenuLayer");
-    const user = getCurrentUser();
-
-    if (!layer || !user || !postId) return;
-
-    layer.hidden = false;
-
-    layer.innerHTML = `
-      <div class="cma-post-menu-box">
-        <button
-          type="button"
-          data-cma-edit-post="${escapeHTML(postId)}"
-        >
-          Edit Post
-        </button>
-
-        <button
-          type="button"
-          data-cma-delete-post="${escapeHTML(postId)}"
-        >
-          Delete Post
-        </button>
-
-        <button
-          type="button"
-          data-cma-close-post-menu
-        >
-          Cancel
-        </button>
-      </div>
-    `;
-
-    layer.onclick = async function (event) {
-      if (
-        event.target === layer ||
-        event.target.closest("[data-cma-close-post-menu]")
-      ) {
-        layer.hidden = true;
-        return;
-      }
-
-      const deleteButton = event.target.closest(
-        "[data-cma-delete-post]"
-      );
-
-      if (deleteButton) {
-        const id = deleteButton.dataset.cmaDeletePost;
-
-        if (!confirm("Are you sure you want to delete this post?")) {
+        if (!data?.length) {
+          preview.textContent = "Be the first to comment.";
           return;
         }
 
-        try {
+        const random = data[Math.floor(Math.random() * data.length)];
+
+        preview.textContent = random.content;
+
+      } catch (error) {
+        console.error("Comment preview error:", error);
+      }
+    },
+
+    openPostMenu(postId) {
+      const user = Core.getCurrentUser();
+      if (!user || !postId) return;
+
+      const card = document.querySelector(
+        `[data-post-id="${CSS.escape(postId)}"]`
+      );
+
+      const menuLayer = document.getElementById("cmaPostMenuLayer");
+      if (!card || !menuLayer) return;
+
+      menuLayer.innerHTML = `
+        <div class="cma-post-menu-backdrop" data-cma-close-menu></div>
+        <div class="cma-post-menu-panel"
+          style="position:fixed;z-index:9999;right:16px;top:120px;
+          background:#103E4C;padding:12px;border-radius:14px;
+          min-width:170px;box-shadow:0 8px 30px #0006;">
+          <button type="button" data-cma-edit="${Core.escapeHTML(postId)}"
+            style="display:block;width:100%;padding:12px;text-align:left;
+            background:transparent;color:white;border:0;">✏️ Edit Post</button>
+          <button type="button" data-cma-delete="${Core.escapeHTML(postId)}"
+            style="display:block;width:100%;padding:12px;text-align:left;
+            background:transparent;color:#ff8585;border:0;">🗑 Delete Post</button>
+        </div>
+      `;
+
+      menuLayer.onclick = async event => {
+        if (event.target.closest("[data-cma-close-menu]")) {
+          menuLayer.innerHTML = "";
+          return;
+        }
+
+        const edit = event.target.closest("[data-cma-edit]");
+        const remove = event.target.closest("[data-cma-delete]");
+
+        if (edit) {
+          menuLayer.innerHTML = "";
+
+          const caption = card.querySelector(".cma-post-caption");
+          const newText = window.prompt(
+            "Edit your post:",
+            caption?.textContent || ""
+          );
+
+          if (newText === null) return;
+
           const { error } = await db
             .from("cma_community_posts")
-            .delete()
-            .eq("id", id)
+            .update({ content: newText.trim() })
+            .eq("id", postId)
             .eq("user_id", user.id);
 
-          if (error) throw error;
-
-          layer.hidden = true;
-
-          window.dispatchEvent(
-            new CustomEvent("cma:refresh-feed")
-          );
-
-          const card = document.querySelector(
-            `[data-post-id="${id}"]`
-          );
-
-          if (card) card.remove();
-
-        } catch (error) {
-          console.error("Delete post error:", error);
-          alert("Post delete করা যায়নি।");
-        }
-
-        return;
-      }
-
-      const editButton = event.target.closest(
-        "[data-cma-edit-post]"
-      );
-
-      if (editButton) {
-        const id = editButton.dataset.cmaEditPost;
-
-        try {
-          const { data: post, error } = await db
-            .from("cma_community_posts")
-            .select("id,user_id,content")
-            .eq("id", id)
-            .eq("user_id", user.id)
-            .single();
-
-          if (error) throw error;
-
-          const updatedContent = prompt(
-            "Edit your post:",
-            post.content || ""
-          );
-
-          if (updatedContent === null) return;
-
-          const { error: updateError } = await db
-            .from("cma_community_posts")
-            .update({
-              content: updatedContent.trim()
-            })
-            .eq("id", id)
-            .eq("user_id", user.id);
-
-          if (updateError) throw updateError;
-
-          layer.hidden = true;
-
-          window.dispatchEvent(
-            new CustomEvent("cma:refresh-feed")
-          );
-
-          const card = document.querySelector(
-            `[data-post-id="${id}"]`
-          );
-
-          if (card) {
-            const caption = card.querySelector(".cma-post-caption");
-
-            if (caption) {
-              caption.textContent = updatedContent.trim();
-            }
+          if (error) {
+            console.error(error);
+            Core.showNotice("Post Edit করা যায়নি।", "error");
+            return;
           }
 
-        } catch (error) {
-          console.error("Edit post error:", error);
-          alert("Post edit করা যায়নি।");
+          Core.showNotice("Post Updated Successfully!");
+
+          await window.CMACommunityMain?.loadPosts?.();
+          await window.CMACommunityProfile?.loadUserPosts?.();
+          return;
         }
-      }
-    };
-  };
 
+        if (remove) {
+          menuLayer.innerHTML = "";
 
-  Feed.openComments = async function (postId) {
-    const layer = document.getElementById("cmaCommentsLayer");
+          if (!window.confirm("তুমি কি নিজের এই Post Delete করতে চাও?")) return;
 
-    if (!layer || !postId) return;
+          window.dispatchEvent(new CustomEvent("cma:delete-post", {
+            detail: { postId }
+          }));
+        }
+      };
+    },
 
-    layer.hidden = false;
+    async openComments(postId) {
+      if (!postId) return;
 
-    layer.innerHTML = `
-      <div class="cma-comments-backdrop"
-           data-cma-close-comments></div>
+      this.activePostId = postId;
+      this.activeReplyId = null;
+      this.activeReplyName = "";
 
-      <section class="cma-comments-sheet">
+      const layer = document.getElementById("cmaCommentsLayer");
+      if (!layer) return;
 
-        <header class="cma-comments-header">
-          <strong>Comments</strong>
+      layer.innerHTML = `
+        <div data-cma-close-comments
+          style="position:fixed;inset:0;background:#0008;z-index:9998;"></div>
 
-          <button
-            type="button"
-            data-cma-close-comments
-            aria-label="Close comments"
-          >
-            ×
-          </button>
-        </header>
+        <section id="cmaCommentsSheet"
+          style="position:fixed;bottom:0;left:0;right:0;
+          height:75vh;max-height:650px;z-index:9999;
+          background:#073746;color:white;border-radius:20px 20px 0 0;
+          padding:16px;display:flex;flex-direction:column;
+          box-shadow:0 -8px 30px #0005;">
 
-        <div
-          class="cma-comments-list"
-          id="cmaCommentsList"
-        >
-          <p>Loading comments...</p>
-        </div>
+          <div style="width:42px;height:4px;background:#68DDB9;
+            border-radius:10px;margin:0 auto 14px;"></div>
 
-        <div class="cma-comment-input-area">
-          <textarea
-            id="cmaCommentInput"
-            placeholder="Write a comment..."
-            rows="1"
-          ></textarea>
+          <div style="display:flex;align-items:center;
+            justify-content:space-between;border-bottom:1px solid #245563;
+            padding-bottom:12px;">
+            <strong>Comments</strong>
+            <button type="button" data-cma-close-comments
+              style="background:none;border:0;color:white;font-size:24px;">×</button>
+          </div>
 
-          <button
-            type="button"
-            data-cma-send-comment
-            data-post-id="${escapeHTML(postId)}"
-          >
-            Send
-          </button>
-        </div>
+          <div id="cmaCommentsList"
+            style="flex:1;overflow-y:auto;padding:12px 0;">
+            Loading comments...
+          </div>
 
-      </section>
-    `;
+          <div id="cmaReplyStatus"
+            style="font-size:12px;color:#68DDB9;padding:4px 2px;"></div>
 
-    await Feed.loadComments(postId);
-  };
+          <div style="display:flex;gap:8px;padding-top:12px;
+            border-top:1px solid #245563;">
+            <input id="cmaCommentInput" type="text"
+              placeholder="Write a comment..."
+              style="flex:1;min-width:0;border:0;outline:0;
+              border-radius:20px;padding:12px;background:#103E4C;color:white;">
 
+            <button type="button" data-cma-send-comment="${Core.escapeHTML(postId)}"
+              style="border:0;border-radius:20px;padding:0 16px;
+              background:#08C99A;color:#052D3B;">Send</button>
+          </div>
+        </section>
+      `;
 
-  Feed.formatCommentTime = function (date) {
-    if (!date) return "";
+      layer.onclick = event => {
+        if (event.target.closest("[data-cma-close-comments]")) {
+          layer.innerHTML = "";
+          this.activePostId = null;
+          this.activeReplyId = null;
+          this.activeReplyName = "";
+        }
+      };
 
-    try {
-      return new Date(date).toLocaleString("en-BD", {
-        dateStyle: "medium",
-        timeStyle: "short"
+      await this.loadComments(postId);
+    },
+
+    formatCommentTime(value) {
+      if (!value) return "";
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+
+      return date.toLocaleString("en-BD", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
       });
-    } catch (error) {
-      return "";
-    }
-  };
+    },
 
+    async loadComments(postId) {
+      const list = document.getElementById("cmaCommentsList");
+      if (!list || !db) return;
 
-  Feed.loadComments = async function (postId) {
-    const list = document.getElementById("cmaCommentsList");
+      list.textContent = "Loading comments...";
 
-    if (!list || !db) return;
+      try {
+        const { data, error } = await db
+          .from("cma_community_comments")
+          .select("*")
+          .eq("post_id", postId)
+          .order("created_at", { ascending: true });
 
-    list.innerHTML = "<p>Loading comments...</p>";
+        if (error) throw error;
 
-    try {
-      const { data: comments, error } = await db
-        .from("cma_community_comments")
-        .select("*")
-        .eq("post_id", postId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      if (!comments || !comments.length) {
-        list.innerHTML = `
-          <p class="cma-no-comments">
-            No comments yet. Be the first to comment.
-          </p>
-        `;
-        return;
-      }
-
-      const userIds = [
-        ...new Set(
-          comments.map(comment => comment.user_id).filter(Boolean)
-        )
-      ];
-
-      let profiles = {};
-
-      if (userIds.length) {
-        const { data: profileRows, error: profileError } = await db
-          .from("cma_community_profiles")
-          .select("user_id,full_name,avatar_url")
-          .in("user_id", userIds);
-
-        if (profileError) {
-          console.error("Comment profile loading error:", profileError);
+        if (!data?.length) {
+          list.innerHTML = `
+            <p style="text-align:center;color:#A8C0CE;padding:30px 0;">
+              No comments yet. Be the first to comment!
+            </p>`;
+          return;
         }
 
-        (profileRows || []).forEach(profile => {
-          profiles[profile.user_id] = profile;
+        const userIds = [
+          ...new Set(data.map(item => item.user_id).filter(Boolean))
+        ];
+
+        let profiles = {};
+
+        if (userIds.length) {
+          const { data: profileRows, error: profileError } = await db
+            .from("cma_community_profiles")
+            .select("user_id,full_name,avatar_url")
+            .in("user_id", userIds);
+
+          if (profileError) {
+            console.error("Comment profiles error:", profileError);
+          } else {
+            (profileRows || []).forEach(pr => {
+              profiles[pr.user_id] = pr;
+            });
+          }
+        }
+
+        const currentUser = Core.getCurrentUser();
+        const nodes = new Map();
+
+        data.forEach(item => {
+          const profile = profiles[item.user_id] || {};
+
+          let authorName = profile.full_name || "Community Member";
+          let avatarURL = profile.avatar_url || "";
+
+          if (currentUser && item.user_id === currentUser.id) {
+            const metadata = currentUser.user_metadata || {};
+
+            authorName =
+              profile.full_name ||
+              metadata.full_name ||
+              metadata.name ||
+              currentUser.email ||
+              "Community Member";
+
+            avatarURL =
+              profile.avatar_url ||
+              metadata.avatar_url ||
+              metadata.picture ||
+              "";
+          }
+
+          nodes.set(item.id, {
+            ...item,
+            author_name: authorName,
+            avatar_url: avatarURL,
+            children: []
+          });
         });
-      }
 
-      const currentUser = getCurrentUser();
+        const rootComments = [];
 
-      function getCommentAuthor(comment) {
-        const profile = profiles[comment.user_id] || {};
+        nodes.forEach(node => {
+          if (node.parent_id && nodes.has(node.parent_id)) {
+            nodes.get(node.parent_id).children.push(node);
+          } else {
+            rootComments.push(node);
+          }
+        });
 
-        let name = profile.full_name || "Community Member";
-        let avatar = profile.avatar_url || "";
+        const renderComment = (comment, level = 0) => {
+          const author = Core.escapeHTML(comment.author_name);
+          const content = Core.escapeHTML(comment.content || "");
+          const avatar = Core.safeImageURL(comment.avatar_url);
+          const createdTime = this.formatCommentTime(comment.created_at);
+          const authorId = Core.escapeHTML(comment.user_id || "");
 
-        if (currentUser && currentUser.id === comment.user_id) {
-          const metadata = currentUser.user_metadata || {};
+          const updatedTime =
+            comment.updated_at &&
+            new Date(comment.updated_at).getTime() >
+              new Date(comment.created_at).getTime() + 1000
+              ? this.formatCommentTime(comment.updated_at)
+              : "";
 
-          name =
-            profile.full_name ||
-            metadata.full_name ||
-            metadata.name ||
-            currentUser.email ||
-            name;
+          const avatarHTML = `
+            <button type="button"
+              data-cma-open-profile="${authorId}"
+              aria-label="Open ${author}'s profile"
+              style="border:0;background:none;padding:0;
+              cursor:pointer;flex-shrink:0;">
 
-          avatar =
-            profile.avatar_url ||
-            metadata.avatar_url ||
-            metadata.picture ||
-            "";
-        }
+              ${
+                avatar
+                  ? `<img src="${avatar}" alt="Profile picture"
+                      style="width:32px;height:32px;border-radius:50%;
+                      object-fit:cover;display:block;">`
+                  : `<div style="width:32px;height:32px;border-radius:50%;
+                      background:#245563;"></div>`
+              }
 
-        return { name, avatar };
-      }
+            </button>
+          `;
 
-      const commentMap = {};
-      const rootComments = [];
+          const repliesHTML = comment.children
+            .map(reply => renderComment(reply, level + 1))
+            .join("");
 
-      comments.forEach(comment => {
-        comment.children = [];
-        commentMap[comment.id] = comment;
-      });
+          return `
+            <div style="margin-bottom:14px;
+              margin-left:${Math.min(level * 22, 88)}px;">
 
-      comments.forEach(comment => {
-        if (
-          comment.parent_id &&
-          commentMap[comment.parent_id]
-        ) {
-          commentMap[comment.parent_id].children.push(comment);
-        } else {
-          rootComments.push(comment);
-        }
-      });
+              <div style="display:flex;gap:9px;align-items:flex-start;">
 
-      function renderComment(comment, depth) {
-        const author = getCommentAuthor(comment);
-        const createdTime = Feed.formatCommentTime(
-          comment.created_at
-        );
+                ${avatarHTML}
 
-        const updatedTime =
-          comment.updated_at &&
-          comment.created_at &&
-          new Date(comment.updated_at).getTime() >
-          new Date(comment.created_at).getTime() + 1000
-            ? `
-              <span class="cma-comment-edited">
-                · Edited ${escapeHTML(
-                  Feed.formatCommentTime(comment.updated_at)
-                )}
-              </span>
-            `
-            : "";
+                <div style="flex:1;min-width:0;">
+                  <div style="background:#103E4C;
+                    border-radius:14px;padding:10px 12px;">
 
-        const replies = comment.children.map(child => {
-          return renderComment(child, depth + 1);
-        }).join("");
+                    <button type="button"
+                      data-cma-open-profile="${authorId}"
+                      style="border:0;background:none;padding:0;
+                      color:inherit;font-size:13px;font-weight:700;
+                      cursor:pointer;text-align:left;">
+                      ${author}
+                    </button>
 
-        return `
-          <article
-            class="cma-comment-item"
-            style="margin-left:${Math.min(depth * 22, 66)}px"
-            data-comment-id="${escapeHTML(comment.id)}"
-          >
+                    <div style="font-size:14px;
+                      margin-top:5px;white-space:pre-wrap;
+                      overflow-wrap:anywhere;">
+                      ${content}
+                    </div>
+                  </div>
 
-            <div class="cma-comment-row">
+                  <div style="display:flex;flex-wrap:wrap;
+                    gap:10px;align-items:center;
+                    padding:5px 4px;font-size:11px;
+                    color:#A8C0CE;">
 
-              ${avatarHTML(
-                author.avatar,
-                author.name,
-                "cma-comment-avatar"
-              )}
+                    <span>${Core.escapeHTML(createdTime)}</span>
 
-              <div class="cma-comment-body">
+                    ${
+                      updatedTime
+                        ? `<span>Edited: ${Core.escapeHTML(updatedTime)}</span>`
+                        : ""
+                    }
 
-                <div class="cma-comment-bubble">
-                  ${authorButton(comment.user_id, author.name)}
-
-                  <div class="cma-comment-text">
-                    ${escapeHTML(comment.content)}
+                    <button type="button"
+                      data-cma-reply="${Core.escapeHTML(comment.id)}"
+                      data-reply-name="${Core.escapeHTML(comment.author_name)}"
+                      style="border:0;background:none;
+                      color:#68DDB9;font-size:12px;padding:0;">
+                      Reply
+                    </button>
                   </div>
                 </div>
-
-                <div class="cma-comment-meta">
-
-                  <time>
-                    ${escapeHTML(createdTime)}
-                  </time>
-
-                  ${updatedTime}
-
-                  <button
-                    type="button"
-                    data-cma-reply="${escapeHTML(comment.id)}"
-                    data-parent-name="${escapeHTML(author.name)}"
-                  >
-                    Reply
-                  </button>
-
-                </div>
-
               </div>
-            </div>
 
-            <div
-              class="cma-comment-replies"
-              id="cmaReplies-${escapeHTML(comment.id)}"
-            >
-              ${replies}
+              ${repliesHTML}
             </div>
+          `;
+        };
 
-          </article>
-        `;
+        list.innerHTML = rootComments
+          .map(comment => renderComment(comment))
+          .join("");
+
+      } catch (error) {
+        console.error("Comments loading error:", error);
+
+        list.innerHTML = `
+          <p style="text-align:center;color:#ff8585;padding:20px;">
+            Comments load করা যায়নি। আবার চেষ্টা করো।
+          </p>`;
+      }
+    },
+
+    async sendComment(postId) {
+      if (!Core.requireLogin()) return;
+
+      const user = Core.getCurrentUser();
+      const input = document.querySelector("#cmaCommentInput");
+
+      if (!user || !input || !postId) return;
+
+      const content = input.value.trim();
+
+      if (!content) {
+        Core.showNotice("আগে Comment লিখো।", "error");
+        return;
       }
 
-      list.innerHTML = rootComments.map(comment => {
-        return renderComment(comment, 0);
-      }).join("");
+      try {
+        const { error } = await db
+          .from("cma_community_comments")
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            parent_id: this.activeReplyId || null,
+            content
+          });
 
-    } catch (error) {
-      console.error("Load comments error:", error);
+        if (error) throw error;
 
-      list.innerHTML = `
-        <p class="cma-comment-error">
-          Comments load করা যায়নি। আবার চেষ্টা করো।
-        </p>
-      `;
-    }
-  };
+        input.value = "";
+        input.placeholder = "Write a comment...";
 
+        this.activeReplyId = null;
+        this.activeReplyName = "";
 
-  Feed.showReplyInput = function (parentId, parentName) {
-    const list = document.getElementById("cmaCommentsList");
+        const status = document.querySelector("#cmaReplyStatus");
+        if (status) status.innerHTML = "";
 
-    if (!list) return;
+        await this.loadComments(postId);
+        await this.loadRandomComment(postId);
 
-    const oldInput = list.querySelector(".cma-reply-input-area");
+        Core.showNotice("Comment posted successfully!");
 
-    if (oldInput) oldInput.remove();
-
-    const parent = document.getElementById(
-      "cmaReplies-" + parentId
-    );
-
-    if (!parent) return;
-
-    parent.insertAdjacentHTML(
-      "beforeend",
-      `
-        <div class="cma-reply-input-area">
-
-          <textarea
-            id="cmaReplyInput"
-            rows="1"
-            placeholder="Reply to ${escapeHTML(parentName)}..."
-          ></textarea>
-
-          <button
-            type="button"
-            data-cma-send-comment
-            data-post-id="${escapeHTML(
-              document.querySelector(
-                "[data-cma-send-comment]"
-              )?.dataset.postId || ""
-            )}"
-            data-parent-id="${escapeHTML(parentId)}"
-          >
-            Reply
-          </button>
-
-        </div>
-      `
-    );
-
-    const input = parent.querySelector("#cmaReplyInput");
-
-    if (input) input.focus();
-  };
-
-
-  Feed.sendComment = async function (postId, parentId) {
-    if (!db || !postId) return;
-
-    const user = getCurrentUser();
-
-    if (!user) {
-      if (Core && Core.requireLogin) Core.requireLogin();
-      return;
-    }
-
-    const inputId = parentId
-      ? "cmaReplyInput"
-      : "cmaCommentInput";
-
-    const input = document.getElementById(inputId);
-
-    if (!input) return;
-
-    const content = input.value.trim();
-
-    if (!content) return;
-
-    try {
-      const { error } = await db
-        .from("cma_community_comments")
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          parent_id: parentId || null,
-          content: content
-        });
-
-      if (error) throw error;
-
-      input.value = "";
-
-      await Feed.loadComments(postId);
-      await Feed.loadRandomComment(postId);
-
-      window.dispatchEvent(
-        new CustomEvent("cma:comment-created", {
-          detail: {
-            postId: postId,
-            parentId: parentId || null
-          }
-        })
-      );
-
-    } catch (error) {
-      console.error("Send comment error:", error);
-
-      if (Core && Core.showNotice) {
-        Core.showNotice("Comment পাঠানো যায়নি।");
-      } else {
-        alert("Comment পাঠানো যায়নি।");
+      } catch (error) {
+        console.error("Comment sending error:", error);
+        Core.showNotice("Comment পাঠানো যায়নি। আবার চেষ্টা করো।", "error");
       }
     }
+
   };
-
-
-  // Remove selected photo
-  document.addEventListener("click", function (event) {
-    const removeButton = event.target.closest(
-      '[data-cma-action="remove-photo"]'
-    );
-
-    if (!removeButton) return;
-
-    const preview = document.getElementById("cmaSelectedPhoto");
-    const picker = document.getElementById("cmaFeedPhotoInput");
-
-    if (preview) preview.innerHTML = "";
-    if (picker) picker.value = "";
-
-    window.dispatchEvent(
-      new CustomEvent("cma:remove-photo")
-    );
-  });
-
-
-  // Refresh comment preview when comments are updated
-  window.addEventListener("cma:comment-created", function (event) {
-    const postId = event.detail?.postId;
-
-    if (postId) {
-      Feed.loadRandomComment(postId);
-    }
-  });
-
 
   window.CMACommunityFeed = Feed;
 
