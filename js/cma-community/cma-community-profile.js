@@ -1,21 +1,35 @@
 
 /* =========================================
    CHANGE MAKER ACADEMY
-   COMMUNITY PROFILE PAGE
-   PROFILE PHOTO + COVER + PERSONAL INFO
+   COMMUNITY PROFILE MODULE
+   PART 1 OF 2
 ========================================= */
 
 (function () {
   "use strict";
 
-  const core = window.CMACommunityCore;
+  const Core = window.CMACommunityCore;
   const db = window.cmaSupabase;
 
   let activeTab = "posts";
 
+  const Icons = {
+    home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"></path><path d="M5 9v12h14V9"></path><path d="M9 21v-7h6v7"></path></svg>`,
+
+    profile: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>`,
+
+    friends: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+
+    creator: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="5" rx="1.5"></rect><rect x="13" y="10" width="8" height="11" rx="1.5"></rect><rect x="3" y="13" width="8" height="8" rx="1.5"></rect></svg>`,
+
+    notification: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>`,
+
+    search: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>`
+  };
+
   function escape(value) {
-    if (core && core.escapeHTML) {
-      return core.escapeHTML(String(value ?? ""));
+    if (Core && Core.escapeHTML) {
+      return Core.escapeHTML(String(value ?? ""));
     }
 
     return String(value ?? "").replace(/[&<>"']/g, function (char) {
@@ -44,8 +58,8 @@
   }
 
   function getUser() {
-    return core && core.getCurrentUser
-      ? core.getCurrentUser()
+    return Core && Core.getCurrentUser
+      ? Core.getCurrentUser()
       : null;
   }
 
@@ -56,11 +70,66 @@
   }
 
   function showNotice(message, type) {
-    if (core && core.showNotice) {
-      core.showNotice(message, type || "info");
+    if (Core && Core.showNotice) {
+      Core.showNotice(message, type || "info");
     } else {
       alert(message);
     }
+  }
+
+  function renderNavigation() {
+    return `
+      <header class="cma-header">
+        <div class="cma-header-title">
+          <span>Change Maker</span>
+          <span class="cma-green">Community</span>
+        </div>
+
+        <button
+          class="cma-icon-button"
+          type="button"
+          data-cma-profile-action="search"
+          aria-label="Search"
+        >
+          ${Icons.search}
+        </button>
+      </header>
+
+      <nav class="cma-navigation" aria-label="Community navigation">
+
+        <button class="cma-nav-item"
+          type="button" data-cma-profile-page="home">
+          <span class="cma-nav-icon">${Icons.home}</span>
+          <span>Home</span>
+        </button>
+
+        <button class="cma-nav-item active"
+          type="button" data-cma-profile-page="profile"
+          aria-current="page">
+          <span class="cma-nav-icon">${Icons.profile}</span>
+          <span>Profile</span>
+        </button>
+
+        <button class="cma-nav-item"
+          type="button" data-cma-profile-page="friends">
+          <span class="cma-nav-icon">${Icons.friends}</span>
+          <span>Friends</span>
+        </button>
+
+        <button class="cma-nav-item"
+          type="button" data-cma-profile-page="creator">
+          <span class="cma-nav-icon">${Icons.creator}</span>
+          <span>Creator Panel</span>
+        </button>
+
+        <button class="cma-nav-item"
+          type="button" data-cma-profile-page="notifications">
+          <span class="cma-nav-icon">${Icons.notification}</span>
+          <span>Notification</span>
+        </button>
+
+      </nav>
+    `;
   }
 
   function injectStyles() {
@@ -78,11 +147,11 @@
       .cma-profile-cover {
         position: relative;
         height: 155px;
-        border-radius: 16px;
-        background: linear-gradient(135deg,#08494B,#052D3B,#08C99A);
         margin-bottom: 55px;
+        border-radius: 16px;
         overflow: visible;
         cursor: pointer;
+        background: linear-gradient(135deg,#08494B,#052D3B,#08C99A);
       }
 
       .cma-profile-cover > img {
@@ -90,12 +159,14 @@
         height: 100%;
         object-fit: cover;
         border-radius: 16px;
+        pointer-events: none;
       }
 
       .cma-profile-avatar {
         position: absolute;
         left: 17px;
         bottom: -43px;
+        z-index: 2;
         width: 86px;
         height: 86px;
         border: 4px solid #073746;
@@ -113,37 +184,12 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        pointer-events: none;
       }
 
-      .cma-profile-photo-edit {
-        position: absolute;
-        right: 3px;
-        bottom: 2px;
-        width: 29px;
-        height: 29px;
-        border: 2px solid #073746;
-        border-radius: 50%;
-        background: #08C99A;
-        color: #052D3B;
-        font-size: 15px;
-        font-weight: 800;
-        cursor: pointer;
-        z-index: 3;
-      }
-
+      .cma-profile-photo-edit,
       .cma-profile-cover-edit {
-        position: absolute;
-        right: 10px;
-        bottom: 10px;
-        padding: 8px 12px;
-        border: 1px solid #68DDB9;
-        border-radius: 20px;
-        background: #052D3Bdd;
-        color: #fff;
-        font-family: inherit;
-        font-size: 11px;
-        font-weight: 700;
-        cursor: pointer;
+        display: none !important;
       }
 
       .cma-profile-heading {
@@ -343,54 +389,22 @@
       }
 
       .cma-profile-file-input {
-        display: none;
+        display: none !important;
+      }
+
+      .cma-profile .cma-composer {
+        margin-bottom: 15px;
+      }
+
+      .cma-profile .cma-composer .cma-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
       }
     `;
 
     document.head.appendChild(style);
-  }
-
-  function renderNavigation() {
-    return `
-      <header class="cma-header">
-        <div class="cma-header-title">
-          <span>Change Maker</span>
-          <span class="cma-green">Community</span>
-        </div>
-
-        <button class="cma-icon-button"
-          id="cmaProfileSearch"
-          type="button"
-          aria-label="Search">⌕</button>
-      </header>
-
-      <nav class="cma-navigation">
-        <button class="cma-nav-item"
-          data-page="home" type="button">
-          <span class="cma-nav-icon">⌂</span>Home
-        </button>
-
-        <button class="cma-nav-item active"
-          data-page="profile" type="button">
-          <span class="cma-nav-icon">◉</span>Profile
-        </button>
-
-        <button class="cma-nav-item"
-          data-page="friends" type="button">
-          <span class="cma-nav-icon">♧</span>Friends
-        </button>
-
-        <button class="cma-nav-item"
-          data-page="creator" type="button">
-          <span class="cma-nav-icon">✦</span>Creator Panel
-        </button>
-
-        <button class="cma-nav-item"
-          data-page="notifications" type="button">
-          <span class="cma-nav-icon">♧</span>Notification
-        </button>
-      </nav>
-    `;
   }
 
   function renderProfileContent(user) {
@@ -412,23 +426,12 @@
       <div class="cma-profile">
 
         <div class="cma-profile-cover" id="cmaCoverArea">
-          ${cover
-            ? `<img src="${cover}" alt="Cover photo">`
-            : ""}
-
-          <button class="cma-profile-cover-edit"
-            type="button" id="cmaChangeCover">
-            ✎ Change Cover
-          </button>
+          ${cover ? `<img src="${cover}" alt="Cover photo">` : ""}
 
           <div class="cma-profile-avatar" id="cmaAvatarArea">
             ${avatar
               ? `<img src="${avatar}" alt="Profile photo">`
               : "👤"}
-
-            <button class="cma-profile-photo-edit"
-              type="button" id="cmaChangeAvatar"
-              aria-label="Change profile picture">✎</button>
           </div>
         </div>
 
@@ -443,17 +446,17 @@
         <div class="cma-profile-heading">
           <div>
             <div class="cma-profile-name">${escape(name)}</div>
-            <div class="cma-profile-id">Community Member</div>
-
+            <div class="cma-profile-id">
+              Member ID: ${escape(user.id || "")}
+            </div>
             <div class="cma-profile-description">
-              ${escape(description ||
-                "Welcome to Change Maker Community.")}
+              ${escape(description || "Welcome to Change Maker Community.")}
             </div>
           </div>
 
           <button class="cma-profile-edit"
             id="cmaEditProfile" type="button">
-            ✎ Edit
+            Edit
           </button>
         </div>
 
@@ -478,32 +481,44 @@
           </div>
         </section>
 
+        <!-- SAME COMPOSER STRUCTURE AS COMMUNITY HOMEPAGE -->
         <section class="cma-composer">
-          <div class="cma-profile-section-title">Create Post</div>
 
           <div class="cma-composer-top">
             <div class="cma-avatar">
               ${avatar
-                ? `<img src="${avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`
-                : "👤"}
+                ? `<img src="${avatar}" alt="">`
+                : ""}
             </div>
 
-            <textarea class="cma-post-input"
-              id="cmaProfilePostText"
-              placeholder="What's on your mind?"></textarea>
+            <textarea
+              class="cma-post-input"
+              id="cmaProfilePostInput"
+              placeholder="What's on your mind?"
+              rows="1"
+              aria-label="Write a post"
+            ></textarea>
           </div>
 
           <div class="cma-composer-bottom">
-            <button class="cma-photo-button"
-              id="cmaProfilePhoto" type="button">
-              ＋ Photo
+            <button
+              type="button"
+              class="cma-photo-button"
+              data-cma-profile-action="photo"
+            >
+              <span aria-hidden="true">▧</span>
+              Photo
             </button>
 
-            <button class="cma-post-button"
-              id="cmaProfilePost" type="button">
+            <button
+              type="button"
+              class="cma-post-button"
+              data-cma-profile-action="post"
+            >
               Post
             </button>
           </div>
+
         </section>
 
         <div class="cma-profile-tabs">
@@ -580,8 +595,8 @@
         </div>
       </div>
     `;
-  }
-
+             }
+   
   async function uploadProfileImage(file, kind, user, root) {
     if (!db || !db.storage || !db.auth || !user) {
       throw new Error("Storage or login is unavailable.");
@@ -603,9 +618,8 @@
 
     showNotice("Uploading image...", "info");
 
-    const extension = allowedTypes[file.type];
     const path = user.id + "/" + kind + "-" +
-      Date.now() + "." + extension;
+      Date.now() + "." + allowedTypes[file.type];
 
     const uploadResult = await db.storage
       .from("community-media")
@@ -645,8 +659,8 @@
       throw updateResult.error;
     }
 
-    if (core && core.loadSession) {
-      await core.loadSession();
+    if (Core && Core.loadSession) {
+      await Core.loadSession();
     }
 
     showNotice(
@@ -660,21 +674,27 @@
   }
 
   function bindEvents(root, user) {
+
     // COMMUNITY NAVIGATION
-    root.querySelectorAll("[data-page]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        const page = button.dataset.page;
+    root.querySelectorAll("[data-cma-profile-page]")
+      .forEach(function (button) {
+        button.addEventListener("click", function () {
+          const page = button.dataset.cmaProfilePage;
 
-        if (page === "profile") return;
+          if (page === "profile") return;
 
-        window.dispatchEvent(new CustomEvent("cma:navigate", {
-          detail: { page: page }
-        }));
+          window.dispatchEvent(
+            new CustomEvent("cma:navigate", {
+              detail: { page: page }
+            })
+          );
+        });
       });
-    });
 
     // SEARCH
-    const searchButton = root.querySelector("#cmaProfileSearch");
+    const searchButton = root.querySelector(
+      '[data-cma-profile-action="search"]'
+    );
 
     if (searchButton) {
       searchButton.addEventListener("click", function () {
@@ -684,78 +704,25 @@
       });
     }
 
-    // PROFILE TABS
-    root.querySelectorAll("[data-tab]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        activeTab = button.dataset.tab;
-
-        root.querySelectorAll("[data-tab]").forEach(function (tab) {
-          tab.classList.toggle("active", tab === button);
-        });
-
-        const messages = {
-          posts: "Your posts will appear here.",
-          photos: "Your photos will appear here.",
-          reacted: "Posts you reacted to will appear here.",
-          friends: "Your friends list will appear here."
-        };
-
-        const content = root.querySelector("#cmaProfileTabContent");
-
-        if (content) {
-          content.innerHTML = `
-            <div class="cma-profile-empty">
-              ${messages[activeTab]}
-            </div>
-          `;
-        }
-      });
-    });
-
-    // PHOTO INPUTS
+    // PROFILE AND COVER PHOTO INPUTS
     const avatarInput = root.querySelector("#cmaAvatarFile");
     const coverInput = root.querySelector("#cmaCoverFile");
 
     const avatarArea = root.querySelector("#cmaAvatarArea");
     const coverArea = root.querySelector("#cmaCoverArea");
 
-    function chooseAvatar() {
-      if (avatarInput) avatarInput.click();
-    }
-
-    function chooseCover() {
-      if (coverInput) coverInput.click();
-    }
-
-    if (avatarArea) {
-      avatarArea.addEventListener("click", function () {
-        chooseAvatar();
-      });
-    }
-
-    const avatarButton = root.querySelector("#cmaChangeAvatar");
-
-    if (avatarButton) {
-      avatarButton.addEventListener("click", function (event) {
+    if (avatarArea && avatarInput) {
+      avatarArea.addEventListener("click", function (event) {
         event.stopPropagation();
-        chooseAvatar();
+        avatarInput.click();
       });
     }
 
-    if (coverArea) {
+    if (coverArea && coverInput) {
       coverArea.addEventListener("click", function (event) {
-        if (event.target.closest("#cmaProfileAvatar")) return;
-        if (event.target.closest("#cmaChangeCover")) return;
-        chooseCover();
-      });
-    }
+        if (event.target.closest("#cmaAvatarArea")) return;
 
-    const coverButton = root.querySelector("#cmaChangeCover");
-
-    if (coverButton) {
-      coverButton.addEventListener("click", function (event) {
-        event.stopPropagation();
-        chooseCover();
+        coverInput.click();
       });
     }
 
@@ -769,6 +736,7 @@
             await uploadProfileImage(file, "avatar", user, root);
           } catch (error) {
             console.error("CMA Avatar Upload Error:", error);
+
             showNotice(
               error.message || "Could not upload profile picture.",
               "error"
@@ -788,8 +756,9 @@
         if (file) {
           try {
             await uploadProfileImage(file, "cover", user, root);
-                    } catch (error) {
+          } catch (error) {
             console.error("CMA Cover Upload Error:", error);
+
             showNotice(
               error.message || "Could not upload cover photo.",
               "error"
@@ -801,7 +770,7 @@
       });
     }
 
-    // EDIT PROFILE
+    // EDIT PERSONAL INFORMATION
     const editButton = root.querySelector("#cmaEditProfile");
     const modal = root.querySelector("#cmaProfileModal");
     const cancelButton = root.querySelector("#cmaProfileCancel");
@@ -882,10 +851,12 @@
             }
           });
 
-          if (result.error) throw result.error;
+          if (result.error) {
+            throw result.error;
+          }
 
-          if (core && core.loadSession) {
-            await core.loadSession();
+          if (Core && Core.loadSession) {
+            await Core.loadSession();
           }
 
           showNotice("Profile information updated.", "success");
@@ -906,43 +877,92 @@
       });
     }
 
-    // PROFILE POST
-    const photoButton = root.querySelector("#cmaProfilePhoto");
+    // PROFILE POST PHOTO
+    const photoButton = root.querySelector(
+      '[data-cma-profile-action="photo"]'
+    );
 
     if (photoButton) {
       photoButton.addEventListener("click", function () {
+        if (Core && !Core.requireLogin()) return;
+
         window.dispatchEvent(
           new CustomEvent("cma:select-photo")
         );
       });
     }
 
-    const postButton = root.querySelector("#cmaProfilePost");
+    // PROFILE POST SUBMIT
+    const postButton = root.querySelector(
+      '[data-cma-profile-action="post"]'
+    );
 
     if (postButton) {
       postButton.addEventListener("click", function () {
-        const textarea = root.querySelector("#cmaProfilePostText");
+        if (Core && !Core.requireLogin()) return;
+
+        const textarea = root.querySelector(
+          "#cmaProfilePostInput"
+        );
+
         const content = textarea
           ? textarea.value.trim()
           : "";
 
         if (!content) {
-          showNotice("Write something before posting.", "error");
+          showNotice("Please write something first.", "error");
           return;
         }
 
-        window.dispatchEvent(new CustomEvent("cma:submit-post", {
-          detail: { content: content }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("cma:submit-post", {
+            detail: {
+              content: content
+            }
+          })
+        );
       });
     }
+
+    // PROFILE TABS
+    root.querySelectorAll("[data-tab]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        activeTab = button.dataset.tab;
+
+        root.querySelectorAll("[data-tab]").forEach(
+          function (tab) {
+            tab.classList.toggle("active", tab === button);
+          }
+        );
+
+        const messages = {
+          posts: "Your posts will appear here.",
+          photos: "Your photos will appear here.",
+          reacted: "Posts you reacted to will appear here.",
+          friends: "Your friends list will appear here."
+        };
+
+        const content = root.querySelector(
+          "#cmaProfileTabContent"
+        );
+
+        if (content) {
+          content.innerHTML = `
+            <div class="cma-profile-empty">
+              ${messages[activeTab] || messages.posts}
+            </div>
+          `;
+        }
+      });
+    });
   }
 
   // PROFILE MODULE
   const Profile = {
+
     async render(root) {
-      if (!root && core && core.getRoot) {
-        root = core.getRoot();
+      if (!root && Core && Core.getRoot) {
+        root = Core.getRoot();
       }
 
       if (!root) {
@@ -950,8 +970,8 @@
         return false;
       }
 
-      if (core && core.loadSession) {
-        await core.loadSession();
+      if (Core && Core.loadSession) {
+        await Core.loadSession();
       }
 
       const user = getUser();
@@ -967,9 +987,12 @@
 
       injectStyles();
 
-      root.innerHTML =
-        renderNavigation() +
-        renderProfileContent(user);
+      root.innerHTML = `
+        <main class="cma-community">
+          ${renderNavigation()}
+          ${renderProfileContent(user)}
+        </main>
+      `;
 
       bindEvents(root, user);
 
@@ -978,9 +1001,11 @@
       );
 
       if (selectedTab) {
-        root.querySelectorAll("[data-tab]").forEach(function (tab) {
-          tab.classList.toggle("active", tab === selectedTab);
-        });
+        root.querySelectorAll("[data-tab]").forEach(
+          function (tab) {
+            tab.classList.toggle("active", tab === selectedTab);
+          }
+        );
       }
 
       return true;
@@ -990,3 +1015,4 @@
   window.CMACommunityProfile = Profile;
 
 })();
+                                    
