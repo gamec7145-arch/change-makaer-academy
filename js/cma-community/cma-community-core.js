@@ -3,6 +3,7 @@
    CHANGE MAKER ACADEMY
    COMMUNITY CORE
    Shared utilities and session management
+   PUBLIC PROFILE SYNC UPDATE
 ========================================= */
 
 (function () {
@@ -41,6 +42,97 @@
     return document.getElementById("pageContent");
   }
 
+  // Get public name and avatar from the member's own account metadata.
+  function getProfileMetadata(user) {
+    const metadata = user?.user_metadata || {};
+
+    const fullName =
+      metadata.full_name ||
+      metadata.name ||
+      metadata.display_name ||
+      "";
+
+    const avatarURL =
+      metadata.avatar_url ||
+      metadata.picture ||
+      metadata.avatar ||
+      "";
+
+    return {
+      full_name: String(fullName).trim(),
+      avatar_url: String(avatarURL).trim()
+    };
+  }
+
+  // Sync only the currently logged-in member's public profile.
+  async function syncPublicProfile(user) {
+    if (!db || !user?.id) return false;
+
+    try {
+      const metadata = getProfileMetadata(user);
+
+      const { data: existing, error: readError } = await db
+        .from("cma_community_profiles")
+        .select("user_id,full_name,avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (readError) throw readError;
+
+      const fullName =
+        metadata.full_name ||
+        existing?.full_name ||
+        "";
+
+      const avatarURL =
+        metadata.avatar_url ||
+        existing?.avatar_url ||
+        "";
+
+      // Do not create an incomplete profile without a real name.
+      if (!fullName) {
+        console.warn(
+          "Profile sync skipped: member name is not available."
+        );
+        return false;
+      }
+
+      const profileData = {
+        user_id: user.id,
+        full_name: fullName,
+        short_description: "",
+        institution: "",
+        avatar_url: avatarURL,
+        updated_at: new Date().toISOString()
+      };
+
+      // Preserve existing information that is not supplied by auth metadata.
+      if (existing) {
+        profileData.short_description =
+          existing.short_description || "";
+
+        profileData.institution =
+          existing.institution || "";
+      }
+
+      const { error: saveError } = await db
+        .from("cma_community_profiles")
+        .upsert(profileData, {
+          onConflict: "user_id"
+        });
+
+      if (saveError) throw saveError;
+
+      console.log("Community public profile synced:", user.id);
+
+      return true;
+
+    } catch (error) {
+      console.error("Public profile sync error:", error);
+      return false;
+    }
+  }
+
   async function loadSession() {
     if (!db) {
       currentUser = null;
@@ -57,6 +149,10 @@
       if (error) throw error;
 
       currentUser = data.user || null;
+
+      if (currentUser) {
+        await syncPublicProfile(currentUser);
+      }
 
       return {
         user: currentUser,
@@ -185,12 +281,20 @@
     formatRelativeTime,
     showNotice,
     requireLogin,
-    safeImageURL
+    safeImageURL,
+    syncPublicProfile
   };
 
   if (db) {
     db.auth.onAuthStateChange(function (_event, session) {
       currentUser = session?.user || null;
+
+      if (currentUser) {
+        // Run after the auth callback completes.
+        Promise.resolve().then(function () {
+          return syncPublicProfile(currentUser);
+        });
+      }
     });
   }
 
