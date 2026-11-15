@@ -40,6 +40,22 @@ const CMA_COMMUNITY_FILES = [
 let cmaCommunityLoadPromise = null;
 const cmaCommunityScriptPromises = {};
 
+function getCommunityModuleName(src) {
+  const names = {
+    "cma-community-core.js": "CMACommunityCore",
+    "cma-community-feed.js": "CMACommunityFeed",
+    "cma-community-profile.js": "CMACommunityProfile",
+    "cma-community-friends.js": "CMACommunityFriends",
+    "cma-community-search.js": "CMACommunitySearch",
+    "cma-community-notifications.js": "CMACommunityNotifications",
+    "cma-community-creator.js": "CMACommunityCreator",
+    "cma-community-messaging.js": "CMACommunityMessaging",
+    "cma-community-main.js": "CMACommunityMain"
+  };
+
+  return names[src.split("/").pop()] || null;
+}
+
 function loadCommunityModules() {
   if (cmaCommunityLoadPromise) {
     return cmaCommunityLoadPromise;
@@ -61,11 +77,20 @@ function loadCommunityFile(src) {
     return cmaCommunityScriptPromises[src];
   }
 
+  const moduleName = getCommunityModuleName(src);
+
+  if (moduleName && window[moduleName]) {
+    return Promise.resolve();
+  }
+
   const existing = Array.from(document.scripts).find(script => {
     if (!script.src) return false;
 
     try {
-      return new URL(script.src, window.location.href).pathname.endsWith(src);
+      return new URL(
+        script.src,
+        window.location.href
+      ).pathname.endsWith(src);
     } catch (error) {
       return script.src.endsWith(src);
     }
@@ -77,6 +102,19 @@ function loadCommunityFile(src) {
 
   const promise = new Promise((resolve, reject) => {
     let script = existing;
+
+    // If an old script tag exists but its module is unavailable,
+    // replace it so the loader does not wait forever for an event
+    // that may already have happened.
+    if (script && !moduleName) {
+      script.remove();
+      script = null;
+    }
+
+    if (script && moduleName && !window[moduleName]) {
+      script.remove();
+      script = null;
+    }
 
     if (!script) {
       script = document.createElement("script");
@@ -94,60 +132,38 @@ function loadCommunityFile(src) {
 
     const onLoad = () => {
       if (finished) return;
-      finished = true;
 
+      finished = true;
       script.dataset.cmaLoaded = "true";
+
       cleanup();
       resolve();
     };
 
     const onError = () => {
       if (finished) return;
-      finished = true;
 
+      finished = true;
       cleanup();
+
       delete cmaCommunityScriptPromises[src];
 
-      reject(new Error("Failed to load Community module: " + src));
+      reject(
+        new Error("Failed to load Community module: " + src)
+      );
     };
 
     script.addEventListener("load", onLoad);
     script.addEventListener("error", onError);
 
-    if (!existing) {
+    if (!existing || !script.isConnected) {
       document.head.appendChild(script);
-    } else if (
-      existing.dataset.cmaLoaded !== "true" &&
-      existing.dataset.cmaCommunityModule !== "true"
-    ) {
-      // Existing scripts from an earlier loader may already have loaded.
-      // Check their corresponding module namespace before waiting.
-      const moduleName = getCommunityModuleName(src);
-
-      if (moduleName && window[moduleName]) {
-        onLoad();
-      }
     }
   });
 
   cmaCommunityScriptPromises[src] = promise;
+
   return promise;
-}
-
-function getCommunityModuleName(src) {
-  const names = {
-    "cma-community-core.js": "CMACommunityCore",
-    "cma-community-feed.js": "CMACommunityFeed",
-    "cma-community-profile.js": "CMACommunityProfile",
-    "cma-community-friends.js": "CMACommunityFriends",
-    "cma-community-search.js": "CMACommunitySearch",
-    "cma-community-notifications.js": "CMACommunityNotifications",
-    "cma-community-creator.js": "CMACommunityCreator",
-    "cma-community-messaging.js": "CMACommunityMessaging"
-  };
-
-  const filename = src.split("/").pop();
-  return names[filename] || null;
 }
 
 
@@ -167,7 +183,9 @@ async function renderCommunitySection(page) {
       if (typeof window.renderCommunityPage === "function") {
         await window.renderCommunityPage();
       } else {
-        throw new Error("Community homepage renderer not found.");
+        throw new Error(
+          "Community homepage renderer not found."
+        );
       }
 
       return;
@@ -264,7 +282,11 @@ function navigateCommunity(page, updateHistory = true) {
     ).get("page");
 
     if (currentPage !== urlPage) {
-      history.pushState({}, "", "?page=" + urlPage);
+      history.pushState(
+        {},
+        "",
+        "?page=" + urlPage
+      );
     }
   }
 
@@ -299,7 +321,6 @@ if (!window.cmaRouterEventsBound) {
   });
 }
 
-// Allow other Community modules to use the same navigation system.
 window.CMANavigateCommunity = navigateCommunity;
 
 
@@ -334,7 +355,10 @@ function updatePageHeaders(page) {
     (page && page.startsWith("teachers-"))
   );
 
-  document.body.classList.toggle("community-active", !!isCommunity);
+  document.body.classList.toggle(
+    "community-active",
+    !!isCommunity
+  );
 
   if (topHeader) {
     topHeader.style.display =
@@ -422,7 +446,6 @@ function renderAdmissionPrograms() {
   pageContent.appendChild(grid);
 }
 
-
 // ==================================================
 // PAGE ROUTER
 // ==================================================
@@ -450,7 +473,9 @@ function openPage(page) {
     if (typeof window.renderAccountPage === "function") {
       window.renderAccountPage();
     } else {
-      console.error("Account system not found. Check account.js loading.");
+      console.error(
+        "Account system not found. Check account.js loading."
+      );
       showNotFound();
     }
   }
@@ -492,24 +517,42 @@ function openPage(page) {
       subjectKey = parts.slice(5).join("-");
     }
 
-    renderSubjectParts(program, group, subjectKey, mode);
+    renderSubjectParts(
+      program,
+      group,
+      subjectKey,
+      mode
+    );
   }
 
   // OFFLINE: SSC / HSC -> GROUP
-  else if (page === "offline-ssc" || page === "offline-hsc") {
-    renderGroups(page.replace("offline-", ""), "offline");
+  else if (
+    page === "offline-ssc" ||
+    page === "offline-hsc"
+  ) {
+    renderGroups(
+      page.replace("offline-", ""),
+      "offline"
+    );
   }
 
   // OFFLINE: GROUP -> SUBJECT
   else if (page.startsWith("offline-group-")) {
     const parts = page.split("-");
-    renderSubjectChoices(parts[2], parts[3], "offline");
+
+    renderSubjectChoices(
+      parts[2],
+      parts[3],
+      "offline"
+    );
   }
 
   // OFFLINE: SUBJECT -> POSTS
   else if (page.startsWith("offline-subject-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -518,7 +561,12 @@ function openPage(page) {
     const group = parts[3];
     const subjectKey = parts.slice(4).join("-");
 
-    renderOfflinePosts(program, group, subjectKey, partIndex);
+    renderOfflinePosts(
+      program,
+      group,
+      subjectKey,
+      partIndex
+    );
   }
 
   // ONLINE EXAMINATION: LEARN MORE -> SSC / HSC
@@ -527,8 +575,14 @@ function openPage(page) {
   }
 
   // ONLINE EXAMINATION: SSC / HSC -> GROUP
-  else if (page === "online-exam-ssc" || page === "online-exam-hsc") {
-    renderGroups(page.replace("online-exam-", ""), "online-exam");
+  else if (
+    page === "online-exam-ssc" ||
+    page === "online-exam-hsc"
+  ) {
+    renderGroups(
+      page.replace("online-exam-", ""),
+      "online-exam"
+    );
   }
 
   // ONLINE EXAMINATION: GROUP -> SUBJECT
@@ -537,7 +591,11 @@ function openPage(page) {
     const route = page.slice(prefix.length);
     const parts = route.split("-");
 
-    renderSubjectChoices(parts[0], parts[1], "online-exam");
+    renderSubjectChoices(
+      parts[0],
+      parts[1],
+      "online-exam"
+    );
   }
 
   // ONLINE EXAMINATION: SUBJECT -> EXAM POSTS
@@ -546,7 +604,9 @@ function openPage(page) {
     const route = page.slice(prefix.length);
 
     const selected = route.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanRoute = route.replace(/-part-\d+$/, "");
     const parts = cleanRoute.split("-");
@@ -555,7 +615,12 @@ function openPage(page) {
     const group = parts[1];
     const subjectKey = parts.slice(2).join("-");
 
-    renderOnlineExamPosts(program, group, subjectKey, partIndex);
+    renderOnlineExamPosts(
+      program,
+      group,
+      subjectKey,
+      partIndex
+    );
   }
 
   // ONLINE: PROGRAM -> GROUP
@@ -564,19 +629,29 @@ function openPage(page) {
     page === "online-hsc" ||
     page === "online-admission"
   ) {
-    renderGroups(page.replace("online-", ""), "online");
+    renderGroups(
+      page.replace("online-", ""),
+      "online"
+    );
   }
 
   // ONLINE: GROUP -> SUBJECT
   else if (page.startsWith("online-group-")) {
     const parts = page.split("-");
-    renderSubjectChoices(parts[2], parts[3], "online");
+
+    renderSubjectChoices(
+      parts[2],
+      parts[3],
+      "online"
+    );
   }
 
   // ONLINE: SUBJECT -> VIDEO POSTS
   else if (page.startsWith("online-lessons-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -585,7 +660,12 @@ function openPage(page) {
     const group = parts[3];
     const subjectKey = parts.slice(4).join("-");
 
-    renderOnlineLessons(program, group, subjectKey, partIndex);
+    renderOnlineLessons(
+      program,
+      group,
+      subjectKey,
+      partIndex
+    );
   }
 
   // EXAM: LEARN MORE -> SSC / HSC
@@ -594,20 +674,33 @@ function openPage(page) {
   }
 
   // EXAM: SSC / HSC -> GROUP
-  else if (page === "exam-ssc" || page === "exam-hsc") {
-    renderGroups(page.replace("exam-", ""), "exam");
+  else if (
+    page === "exam-ssc" ||
+    page === "exam-hsc"
+  ) {
+    renderGroups(
+      page.replace("exam-", ""),
+      "exam"
+    );
   }
 
   // EXAM: GROUP -> SUBJECT
   else if (page.startsWith("exam-group-")) {
     const parts = page.split("-");
-    renderSubjectChoices(parts[2], parts[3], "exam");
+
+    renderSubjectChoices(
+      parts[2],
+      parts[3],
+      "exam"
+    );
   }
 
   // EXAM: SUBJECT -> COURSE POSTS
   else if (page.startsWith("exam-courses-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -616,13 +709,20 @@ function openPage(page) {
     const group = parts[3];
     const subjectKey = parts.slice(4).join("-");
 
-    renderExamCourses(program, group, subjectKey, partIndex);
+    renderExamCourses(
+      program,
+      group,
+      subjectKey,
+      partIndex
+    );
   }
 
   // EXAM: COURSE DETAILS
   else if (page.startsWith("exam-detail-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -633,24 +733,44 @@ function openPage(page) {
     const subjectKey = parts.slice(4, -2).join("-");
     const courseId = parts.slice(-2).join("-");
 
-    renderExamDetails(program, group, subjectKey, courseId, partIndex);
+    renderExamDetails(
+      program,
+      group,
+      subjectKey,
+      courseId,
+      partIndex
+    );
   }
 
   // STUDY MATERIALS: PDF / PRACTICE
-  else if (page === "materials-pdf" || page === "materials-practice") {
-    renderMaterialLevels(page.replace("materials-", ""));
+  else if (
+    page === "materials-pdf" ||
+    page === "materials-practice"
+  ) {
+    renderMaterialLevels(
+      page.replace("materials-", "")
+    );
   }
 
   // MATERIALS: LEVEL
   else if (page.startsWith("materials-level-")) {
     const parts = page.split("-");
-    renderMaterialGroups(parts[2], parts[3]);
+
+    renderMaterialGroups(
+      parts[2],
+      parts[3]
+    );
   }
 
   // MATERIALS: GROUP
   else if (page.startsWith("materials-group-")) {
     const parts = page.split("-");
-    renderMaterialSubjects(parts[2], parts[3], parts[4]);
+
+    renderMaterialSubjects(
+      parts[2],
+      parts[3],
+      parts[4]
+    );
   }
 
   // MATERIALS: PAPER SELECTION
@@ -668,7 +788,9 @@ function openPage(page) {
   // MATERIALS: SUBJECT -> CHAPTERS
   else if (page.startsWith("materials-subject-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -685,7 +807,9 @@ function openPage(page) {
   // MATERIALS: CHAPTER CONTENT
   else if (page.startsWith("materials-content-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -703,7 +827,9 @@ function openPage(page) {
   // PRACTICE: CQ / MCQ CONTENT
   else if (page.startsWith("materials-practice-content-")) {
     const selected = page.match(/-part-(\d+)$/);
-    const partIndex = selected ? Number(selected[1]) : null;
+    const partIndex = selected
+      ? Number(selected[1])
+      : null;
 
     const cleanPage = page.replace(/-part-\d+$/, "");
     const parts = cleanPage.split("-");
@@ -732,7 +858,10 @@ function openPage(page) {
 // ==================================================
 
 function renderRoute() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
   const page = params.get("page");
 
   if (page) {
@@ -770,9 +899,11 @@ document.addEventListener("click", event => {
   if (href.startsWith("?page=")) {
     event.preventDefault();
 
-    history.pushState({}, "", href);
-    renderRoute();
+    if (window.location.search !== href) {
+      history.pushState({}, "", href);
+    }
 
+    renderRoute();
     return;
   }
 
@@ -781,10 +912,11 @@ document.addEventListener("click", event => {
     href.startsWith("#") &&
     innerPage.classList.contains("active")
   ) {
+    const targetId = href.slice(1);
+
     event.preventDefault();
 
     clearContent();
-
     updatePageHeaders(null);
 
     innerPage.classList.remove("active");
@@ -792,7 +924,7 @@ document.addEventListener("click", event => {
 
     history.pushState({}, "", href);
 
-    const target = document.querySelector(href);
+    const target = document.getElementById(targetId);
 
     if (target) {
       target.scrollIntoView({ behavior: "smooth" });
@@ -822,3 +954,4 @@ document.addEventListener("click", event => {
 // ==================================================
 
 renderRoute();
+    
