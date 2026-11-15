@@ -1,7 +1,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY PROFILE MODULE
-   PUBLIC PROFILE SYNC UPDATE
+   UPDATED VERSION - PART 1 OF 2
 ========================================= */
 
 (function () {
@@ -66,46 +66,6 @@
   function getAvatar(user) {
     const metadata = getMetadata(user);
     return safeImage(metadata.avatar_url || metadata.picture || "");
-  }
-
-  // =========================================
-  // SYNC PUBLIC COMMUNITY PROFILE
-  // Only non-sensitive profile fields are stored here.
-  // Mobile number and address remain private.
-  // =========================================
-  async function syncPublicProfile(user) {
-    if (!db || !db.from || !user || !user.id) {
-      return false;
-    }
-
-    const metadata = getMetadata(user);
-
-    const profileData = {
-      user_id: user.id,
-      full_name:
-        metadata.full_name ||
-        metadata.display_name ||
-        "Community Member",
-      short_description: metadata.short_description || "",
-      institution: metadata.institution || "",
-      avatar_url:
-        metadata.avatar_url ||
-        metadata.picture ||
-        ""
-    };
-
-    const { error } = await db
-      .from("cma_community_profiles")
-      .upsert(profileData, {
-        onConflict: "user_id"
-      });
-
-    if (error) {
-      console.error("CMA Public Profile Sync Error:", error);
-      return false;
-    }
-
-    return true;
   }
 
   function showNotice(message, type) {
@@ -302,47 +262,46 @@
 
       .cma-profile-tabs {
         display: flex;
-        gap: 5px;
-        overflow-x: auto;
-        margin: 16px 0 12px;
+        justify-content: space-between;
+        gap: 4px;
         border-bottom: 1px solid #245563;
+        margin: 15px 0;
       }
 
       .cma-profile-tab {
         flex: 1;
-        min-width: max-content;
-        padding: 11px 9px;
+        padding: 11px 2px;
         border: 0;
         border-bottom: 2px solid transparent;
         background: transparent;
         color: #A8C0CE;
-        font: inherit;
+        font-family: inherit;
         font-size: 11px;
+        font-weight: 700;
         cursor: pointer;
       }
 
       .cma-profile-tab.active {
-        color: #68DDB9;
+        color: #08C99A;
         border-bottom-color: #08C99A;
-        font-weight: 800;
       }
 
       .cma-profile-empty {
-        padding: 24px 12px;
+        padding: 28px 12px;
         text-align: center;
         color: #A8C0CE;
         font-size: 12px;
       }
 
       .cma-profile-modal {
-        display: none;
         position: fixed;
         inset: 0;
         z-index: 10000;
+        display: none;
         align-items: center;
         justify-content: center;
-        padding: 18px;
-        background: #0009;
+        padding: 16px;
+        background: #000b;
       }
 
       .cma-profile-modal.show {
@@ -351,45 +310,45 @@
 
       .cma-profile-modal-content {
         width: 100%;
-        max-width: 460px;
-        max-height: 88vh;
+        max-width: 430px;
+        max-height: 85vh;
         overflow-y: auto;
         padding: 18px;
-        border-radius: 18px;
+        border-radius: 17px;
         background: #073746;
         border: 1px solid #245563;
       }
 
       .cma-profile-modal-title {
-        margin-bottom: 16px;
-        color: #fff;
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 800;
+        margin-bottom: 16px;
       }
 
       .cma-profile-field {
         display: block;
+        width: 100%;
         margin-bottom: 13px;
-        color: #A8C0CE;
-        font-size: 11px;
       }
 
       .cma-profile-field span {
         display: block;
+        color: #A8C0CE;
+        font-size: 11px;
         margin-bottom: 6px;
       }
 
       .cma-profile-field input,
       .cma-profile-field textarea {
-        box-sizing: border-box;
         width: 100%;
-        padding: 11px 12px;
+        box-sizing: border-box;
+        padding: 11px;
         border: 1px solid #245563;
         border-radius: 10px;
         outline: none;
-        background: #103E4C;
+        background: #052D3B;
         color: #fff;
-        font: inherit;
+        font-family: inherit;
         font-size: 13px;
       }
 
@@ -398,36 +357,57 @@
         resize: vertical;
       }
 
-      .cma-profile-save,
-      .cma-profile-cancel {
+      .cma-profile-save {
         width: 100%;
         padding: 12px;
         border: 0;
         border-radius: 22px;
-        font: inherit;
-        font-size: 12px;
+        background: #08C99A;
+        color: #052D3B;
+        font-family: inherit;
+        font-size: 13px;
         font-weight: 800;
         cursor: pointer;
       }
 
-      .cma-profile-save {
-        background: #08C99A;
-        color: #052D3B;
+      .cma-profile-save:disabled {
+        opacity: .6;
       }
 
       .cma-profile-cancel {
-        margin-top: 8px;
-        background: #103E4C;
+        width: 100%;
+        padding: 10px;
+        margin-top: 7px;
+        border: 0;
+        background: transparent;
         color: #A8C0CE;
+        font-family: inherit;
+        cursor: pointer;
       }
 
       .cma-profile-file-input {
         display: none !important;
       }
 
+      .cma-profile .cma-composer {
+        margin-bottom: 15px;
+      }
+
+      .cma-profile .cma-composer .cma-avatar {
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .cma-profile .cma-composer .cma-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
       .cma-profile-photo-preview {
         display: none;
-        padding: 8px 0;
+        padding: 0 12px 12px;
       }
 
       .cma-profile-photo-preview.show {
@@ -436,6 +416,7 @@
 
       .cma-profile-photo-preview img {
         display: block;
+        width: auto;
         max-width: 100%;
         max-height: 220px;
         object-fit: contain;
@@ -653,8 +634,13 @@
         </div>
       </div>
     `;
-  }
-     async function uploadProfileImage(file, kind, user, root) {
+       }
+   /* =========================================
+   CHANGE MAKER ACADEMY
+   COMMUNITY PROFILE MODULE
+   UPDATED VERSION - PART 2 OF 2
+========================================= */
+   async function uploadProfileImage(file, kind, user, root) {
     if (!db || !db.storage || !db.auth || !user) {
       throw new Error("Storage or login is unavailable.");
     }
@@ -686,9 +672,7 @@
         contentType: file.type
       });
 
-    if (uploadResult.error) {
-      throw uploadResult.error;
-    }
+    if (uploadResult.error) throw uploadResult.error;
 
     const publicResult = db.storage
       .from("community-media")
@@ -697,13 +681,9 @@
     const imageUrl = publicResult.data &&
       publicResult.data.publicUrl;
 
-    if (!imageUrl) {
-      throw new Error("Could not create image URL.");
-    }
+    if (!imageUrl) throw new Error("Could not create image URL.");
 
-    const metadata = {
-      ...getMetadata(user)
-    };
+    const metadata = { ...getMetadata(user) };
 
     metadata[kind === "avatar" ? "avatar_url" : "cover_url"] =
       imageUrl;
@@ -712,16 +692,9 @@
       data: metadata
     });
 
-    if (updateResult.error) {
-      throw updateResult.error;
-    }
+    if (updateResult.error) throw updateResult.error;
 
-    if (Core && Core.loadSession) {
-      await Core.loadSession();
-    }
-
-    // Sync latest name and avatar to public profile table.
-    await syncPublicProfile(getUser() || user);
+    if (Core && Core.loadSession) await Core.loadSession();
 
     showNotice(
       kind === "avatar"
@@ -735,7 +708,6 @@
 
   async function loadUserPosts(user, root) {
     const content = root.querySelector("#cmaProfileTabContent");
-
     if (!content) return;
 
     content.innerHTML = `
@@ -744,9 +716,7 @@
 
     if (!db || !db.from || !user) {
       content.innerHTML = `
-        <div class="cma-profile-empty">
-          Could not load your posts.
-        </div>
+        <div class="cma-profile-empty">Could not load your posts.</div>
       `;
       return;
     }
@@ -758,9 +728,7 @@
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (result.error) {
-        throw result.error;
-      }
+      if (result.error) throw result.error;
 
       const posts = result.data || [];
 
@@ -802,6 +770,16 @@
           }).join("")}
         </div>
       `;
+
+      if (typeof Feed.bindEvents === "function") {
+        Feed.bindEvents(root);
+      }
+
+      if (typeof Feed.loadRandomComment === "function") {
+        await Promise.all(posts.map(function (post) {
+          return Feed.loadRandomComment(post.id);
+        }));
+      }
 
     } catch (error) {
       console.error("CMA Profile Posts Error:", error);
@@ -880,9 +858,7 @@
             contentType: file.type
           });
 
-        if (uploadResult.error) {
-          throw uploadResult.error;
-        }
+        if (uploadResult.error) throw uploadResult.error;
 
         const publicResult = db.storage
           .from("community-media")
@@ -891,9 +867,7 @@
         imageUrl = publicResult.data &&
           publicResult.data.publicUrl;
 
-        if (!imageUrl) {
-          throw new Error("Could not create photo URL.");
-        }
+        if (!imageUrl) throw new Error("Could not create photo URL.");
       }
 
       const insertResult = await db
@@ -904,9 +878,7 @@
           image_url: imageUrl
         });
 
-      if (insertResult.error) {
-        throw insertResult.error;
-      }
+      if (insertResult.error) throw insertResult.error;
 
       if (textarea) textarea.value = "";
       if (photoInput) photoInput.value = "";
@@ -931,7 +903,6 @@
 
     } catch (error) {
       console.error("CMA Profile Post Error:", error);
-
       showNotice(
         error.message || "Could not publish your post.",
         "error"
@@ -947,12 +918,10 @@
 
   function bindEvents(root, user) {
 
-    // COMMUNITY NAVIGATION
     root.querySelectorAll("[data-cma-profile-page]")
       .forEach(function (button) {
         button.addEventListener("click", function () {
           const page = button.dataset.cmaProfilePage;
-
           if (page === "profile") return;
 
           window.dispatchEvent(
@@ -963,23 +932,18 @@
         });
       });
 
-    // SEARCH
     const searchButton = root.querySelector(
       '[data-cma-profile-action="search"]'
     );
 
     if (searchButton) {
       searchButton.addEventListener("click", function () {
-        window.dispatchEvent(
-          new CustomEvent("cma:open-search")
-        );
+        window.dispatchEvent(new CustomEvent("cma:open-search"));
       });
     }
 
-    // PROFILE AND COVER PHOTO INPUTS
     const avatarInput = root.querySelector("#cmaAvatarFile");
     const coverInput = root.querySelector("#cmaCoverFile");
-
     const avatarArea = root.querySelector("#cmaAvatarArea");
     const coverArea = root.querySelector("#cmaCoverArea");
 
@@ -1037,7 +1001,6 @@
       });
     }
 
-    // EDIT PERSONAL INFORMATION
     const editButton = root.querySelector("#cmaEditProfile");
     const modal = root.querySelector("#cmaProfileModal");
     const cancelButton = root.querySelector("#cmaProfileCancel");
@@ -1057,9 +1020,7 @@
 
     if (modal) {
       modal.addEventListener("click", function (event) {
-        if (event.target === modal) {
-          modal.classList.remove("show");
-        }
+        if (event.target === modal) modal.classList.remove("show");
       });
     }
 
@@ -1118,19 +1079,11 @@
             }
           });
 
-          if (result.error) {
-            throw result.error;
-          }
+          if (result.error) throw result.error;
 
-          if (Core && Core.loadSession) {
-            await Core.loadSession();
-          }
-
-          // Sync only public profile fields.
-          await syncPublicProfile(getUser() || user);
+          if (Core && Core.loadSession) await Core.loadSession();
 
           showNotice("Profile information updated.", "success");
-
           await Profile.render(root);
 
         } catch (error) {
@@ -1147,13 +1100,11 @@
       });
     }
 
-    // PROFILE POST PHOTO INPUT
     const photoButton = root.querySelector(
       '[data-cma-profile-action="photo"]'
     );
 
     const profilePhotoInput = document.createElement("input");
-
     profilePhotoInput.type = "file";
     profilePhotoInput.id = "cmaProfilePostPhoto";
     profilePhotoInput.accept = "image/jpeg,image/png,image/webp";
@@ -1221,7 +1172,6 @@
       });
     }
 
-    // PROFILE POST SUBMIT
     const postButton = root.querySelector(
       '[data-cma-profile-action="post"]'
     );
@@ -1233,7 +1183,6 @@
       });
     }
 
-    // PROFILE TABS
     root.querySelectorAll("[data-tab]").forEach(function (button) {
       button.addEventListener("click", async function () {
         activeTab = button.dataset.tab;
@@ -1244,10 +1193,7 @@
           }
         );
 
-        const content = root.querySelector(
-          "#cmaProfileTabContent"
-        );
-
+        const content = root.querySelector("#cmaProfileTabContent");
         if (!content) return;
 
         if (activeTab === "posts") {
@@ -1270,7 +1216,6 @@
     });
   }
 
-  // PROFILE MODULE
   const Profile = {
 
     async render(root) {
@@ -1298,10 +1243,6 @@
         return false;
       }
 
-      // Backfill/synchronize this member's public profile.
-      // Mobile number and address are never synced.
-      await syncPublicProfile(user);
-
       injectStyles();
 
       root.innerHTML = `
@@ -1309,9 +1250,18 @@
           ${renderNavigation()}
           ${renderProfileContent(user)}
         </main>
+        <div id="cmaPostMenuLayer"></div>
+        <div id="cmaCommentsLayer"></div>
       `;
 
       bindEvents(root, user);
+
+      if (
+        window.CMACommunityFeed &&
+        typeof window.CMACommunityFeed.bindEvents === "function"
+      ) {
+        window.CMACommunityFeed.bindEvents(root);
+      }
 
       const selectedTab = root.querySelector(
         '[data-tab="' + activeTab + '"]'
@@ -1330,11 +1280,10 @@
       }
 
       return true;
-    }
-  };
+    },
 
-  Profile.syncPublicProfile = syncPublicProfile;
-  Profile.loadUserPosts = loadUserPosts;
+    loadUserPosts: loadUserPosts
+  };
 
   window.CMACommunityProfile = Profile;
 
