@@ -1,382 +1,495 @@
 
-/* =========================================
+/* ==========================================
    CHANGE MAKER ACADEMY
-   COMMUNITY MAIN CONTROLLER
-   POST SYSTEM CONNECTION
-========================================= */
+   COMMUNITY MAIN - PART 1
+   Fix: Post Author Name, Avatar & Own Posts
+========================================== */
 
 (function () {
-  "use strict";
+    "use strict";
 
-  const Core = window.CMACommunityCore;
+    const Core = window.CMACommunityCore;
+    const Feed = window.CMACommunityFeed;
 
-  const Main = {
-    initialized: false,
-    postEventsBound: false,
-    selectedImage: null,
-    imageInput: null,
-
-    async init() {
-      if (this.initialized) return true;
-
-      if (!Core) {
-        console.error("Community Core is not loaded.");
-        return false;
-      }
-
-      const session = await Core.loadSession();
-
-      if (session.error) {
-        console.warn("Community session error:", session.error);
-      }
-
-      this.bindPostEvents();
-      this.initialized = true;
-
-      return true;
-    },
-
-    getUserProfile(user) {
-      const metadata = user?.user_metadata || {};
-
-      return {
-        name:
-          metadata.full_name ||
-          metadata.name ||
-          metadata.username ||
-          "Member",
-
-        avatar:
-          metadata.avatar_url ||
-          metadata.picture ||
-          metadata.avatar ||
-          null
-      };
-    },
-
-    bindPostEvents() {
-      if (this.postEventsBound) return;
-      this.postEventsBound = true;
-
-      this.imageInput = document.createElement("input");
-      this.imageInput.type = "file";
-      this.imageInput.accept = "image/jpeg,image/png,image/webp";
-      this.imageInput.hidden = true;
-
-      document.body.appendChild(this.imageInput);
-
-      this.imageInput.addEventListener("change", () => {
-        const file = this.imageInput.files?.[0];
-        if (!file) return;
-
-        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-          Core.showNotice(
-            "শুধু JPG, PNG অথবা WEBP ছবি দেওয়া যাবে।",
-            "error"
-          );
-          this.imageInput.value = "";
-          return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-          Core.showNotice(
-            "ছবির সাইজ 5MB-এর বেশি হতে পারবে না।",
-            "error"
-          );
-          this.imageInput.value = "";
-          return;
-        }
-
-        this.selectedImage = file;
-
-        const Feed = window.CMACommunityFeed;
-        if (Feed?.showSelectedPhoto) {
-          Feed.showSelectedPhoto(file);
-        }
-
-        Core.showNotice("ছবি নির্বাচন করা হয়েছে।", "success");
-      });
-
-      window.addEventListener("cma:select-photo", () => {
-        if (!Core.requireLogin()) return;
-
-        this.imageInput.value = "";
-        this.imageInput.click();
-      });
-
-      window.addEventListener("cma:remove-photo", () => {
-        this.selectedImage = null;
-
-        if (this.imageInput) {
-          this.imageInput.value = "";
-        }
-      });
-
-      window.addEventListener("cma:submit-post", (event) => {
-        this.createPost(event.detail || {});
-      });
-
-      window.addEventListener("cma:delete-post", (event) => {
-        const postId = event.detail?.postId;
-        if (postId) this.deletePost(postId);
-      });
-    },
-
-    async createPost(data) {
-      if (!Core.requireLogin()) return;
-
-      const user = Core.getCurrentUser();
-      const db = Core.db;
-
-      if (!user || !db) {
-        Core.showNotice(
-          "Login অথবা Supabase connection পাওয়া যায়নি।",
-          "error"
-        );
+    if (!Core || !Core.db || !Feed) {
+        console.error("CMA Community modules not loaded.");
         return;
-      }
-
-      const root = Core.getRoot();
-      const input = root?.querySelector(
-        "#cmaPostInput, #cmaProfilePostInput"
-      );
-
-      const content = String(
-        data.content || input?.value || ""
-      ).trim();
-
-      const file = this.selectedImage;
-
-      if (!content && !file) {
-        Core.showNotice(
-          "আগে কিছু লিখো অথবা একটি ছবি নির্বাচন করো।",
-          "error"
-        );
-        return;
-      }
-
-      const postButton = root?.querySelector(
-        '[data-cma-action="post"], [data-cma-profile-action="post"]'
-      );
-
-      if (postButton) postButton.disabled = true;
-
-      try {
-        let imageURL = null;
-
-        if (file) {
-          const extension = file.name.split(".").pop().toLowerCase();
-          const path = `${user.id}/post-${Date.now()}.${extension}`;
-
-          const { data: uploaded, error: uploadError } =
-            await db.storage
-              .from("community-media")
-              .upload(path, file, {
-                cacheControl: "3600",
-                upsert: false,
-                contentType: file.type
-              });
-
-          if (uploadError) throw uploadError;
-
-          const { data: publicData } = db.storage
-            .from("community-media")
-            .getPublicUrl(uploaded.path);
-
-          imageURL = publicData.publicUrl;
-        }
-
-        const { error } = await db
-          .from("cma_community_posts")
-          .insert({
-            user_id: user.id,
-            content: content,
-            image_url: imageURL
-          });
-
-        if (error) throw error;
-
-        if (input) input.value = "";
-
-        this.selectedImage = null;
-
-        if (this.imageInput) {
-          this.imageInput.value = "";
-        }
-
-        const preview = document.getElementById("cmaSelectedPhoto");
-        if (preview) {
-          const oldURL = preview.dataset.objectUrl;
-          if (oldURL) URL.revokeObjectURL(oldURL);
-
-          preview.innerHTML = "";
-          delete preview.dataset.objectUrl;
-        }
-
-        Core.showNotice(
-          "তোমার Post প্রকাশিত হয়েছে!",
-          "success"
-        );
-
-        await this.loadPosts();
-
-        if (window.CMACommunityProfile?.loadUserPosts) {
-          await window.CMACommunityProfile.loadUserPosts();
-        }
-
-      } catch (error) {
-        console.error("Post creation failed:", error);
-
-        Core.showNotice(
-          error.message || "Post প্রকাশ করা যায়নি।",
-          "error"
-        );
-
-      } finally {
-        if (postButton) postButton.disabled = false;
-      }
-    },
-
-    async loadPosts() {
-      const db = Core.db;
-      const root = Core.getRoot();
-      const list = root?.querySelector("#cmaFeedList");
-
-      if (!db || !list) return;
-
-      const { data, error } = await db
-        .from("cma_community_posts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Loading posts failed:", error);
-        Core.showNotice("Post লোড করা যায়নি।", "error");
-        return;
-      }
-
-      const Feed = window.CMACommunityFeed;
-
-      if (!Feed || typeof Feed.createPostCard !== "function") {
-        console.error("Community Feed is unavailable.");
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        list.innerHTML = `
-          <div class="cma-empty-feed">
-            <div class="cma-empty-icon">✦</div>
-            <p>Welcome to Change Maker Community</p>
-            <span>এখনো কোনো Post নেই। প্রথম Postটি করো!</span>
-          </div>
-        `;
-        return;
-      }
-
-      const user = Core.getCurrentUser();
-      const profile = this.getUserProfile(user);
-
-      list.innerHTML = data.map(post => {
-        const isOwnPost = post.user_id === user?.id;
-
-        return Feed.createPostCard({
-          id: post.id,
-          user_id: post.user_id,
-          caption: post.content,
-          image_url: post.image_url,
-          created_at: post.created_at,
-
-          author_name: isOwnPost
-            ? profile.name
-            : "Member",
-
-          avatar_url: isOwnPost
-            ? profile.avatar
-            : null
-        });
-      }).join("");
-
-      // Load reaction counts and random comment previews.
-      for (const post of data) {
-        if (Feed.loadReactionCounts) {
-          await Feed.loadReactionCounts(post.id);
-        }
-
-        if (Feed.loadRandomComment) {
-          await Feed.loadRandomComment(post.id);
-        }
-      }
-    },
-
-    async deletePost(postId) {
-      const user = Core.getCurrentUser();
-      const db = Core.db;
-
-      if (!user || !db || !postId) {
-        Core.showNotice("এই কাজের অনুমতি নেই।", "error");
-        return;
-      }
-
-      try {
-        const { error } = await db
-          .from("cma_community_posts")
-          .delete()
-          .eq("id", postId)
-          .eq("user_id", user.id);
-
-        if (error) throw error;
-
-        Core.showNotice("Post Delete করা হয়েছে!", "success");
-
-        await this.loadPosts();
-
-        if (window.CMACommunityProfile?.loadUserPosts) {
-          await window.CMACommunityProfile.loadUserPosts();
-        }
-
-      } catch (error) {
-        console.error("Delete post failed:", error);
-        Core.showNotice("Post Delete করা যায়নি।", "error");
-      }
-    },
-
-    async render() {
-      const ready = await this.init();
-      if (!ready) return;
-
-      const root = Core.getRoot();
-
-      if (!root) {
-        console.error("Community root was not found.");
-        return;
-      }
-
-      const Feed = window.CMACommunityFeed;
-
-      if (Feed && typeof Feed.renderHome === "function") {
-        await Feed.renderHome(root);
-        await this.loadPosts();
-      }
-    },
-
-    getModules() {
-      return {
-        core: !!window.CMACommunityCore,
-        feed: !!window.CMACommunityFeed,
-        profile: !!window.CMACommunityProfile,
-        friends: !!window.CMACommunityFriends,
-        search: !!window.CMACommunitySearch,
-        notifications: !!window.CMACommunityNotifications,
-        creator: !!window.CMACommunityCreator,
-        messaging: !!window.CMACommunityMessaging
-      };
     }
-  };
 
-  window.CMACommunityMain = Main;
+    const db = Core.db;
+    const BUCKET = Core.BUCKET || "community-media";
 
-  window.renderCommunityPage = function () {
-    return Main.render();
-  };
+    let currentUser = null;
+    let selectedImage = null;
+    let postsCache = [];
+
+    function getRoot() {
+        return Core.getRoot
+            ? Core.getRoot()
+            : document.getElementById("pageContent");
+    }
+
+    function getMetadata(user) {
+        return user && user.user_metadata
+            ? user.user_metadata
+            : {};
+    }
+
+    function getDisplayName(user) {
+        const meta = getMetadata(user);
+
+        return (
+            meta.full_name ||
+            meta.display_name ||
+            user?.email?.split("@")[0] ||
+            "Community Member"
+        );
+    }
+
+    function getAvatar(user) {
+        const meta = getMetadata(user);
+
+        return (
+            meta.avatar_url ||
+            meta.picture ||
+            meta.avatar ||
+            ""
+        );
+    }
+
+    function notify(message, type) {
+        if (Core.showNotice) {
+            Core.showNotice(message, type || "info");
+        } else {
+            console.log(message);
+        }
+    }
+
+    async function loadSession() {
+        const result = await db.auth.getUser();
+
+        if (result.error) {
+            console.error(result.error);
+            return null;
+        }
+
+        currentUser = result.data.user || null;
+
+        if (Core.setCurrentUser) {
+            Core.setCurrentUser(currentUser);
+        }
+
+        return currentUser;
+    }
+
+    async function loadPublicProfiles(userIds) {
+        const profileMap = {};
+
+        const uniqueIds = [...new Set(
+            (userIds || []).filter(Boolean)
+        )];
+
+        if (!uniqueIds.length) return profileMap;
+
+        const { data, error } = await db
+            .from("cma_community_profiles")
+            .select("user_id, full_name, short_description, institution, avatar_url")
+            .in("user_id", uniqueIds);
+
+        if (error) {
+            console.error("Profile loading error:", error);
+            return profileMap;
+        }
+
+        (data || []).forEach(profile => {
+            profileMap[profile.user_id] = profile;
+        });
+
+        return profileMap;
+    }
+
+    function makeAuthor(userId, profileMap) {
+        const profile = profileMap[userId];
+
+        if (profile) {
+            return {
+                author_name:
+                    profile.full_name || "Community Member",
+                author_avatar:
+                    profile.avatar_url || "",
+                user_id: userId
+            };
+        }
+
+        if (currentUser && currentUser.id === userId) {
+            return {
+                author_name: getDisplayName(currentUser),
+                author_avatar: getAvatar(currentUser),
+                user_id: userId
+            };
+        }
+
+        return {
+            author_name: "Community Member",
+            author_avatar: "",
+            user_id: userId
+        };
+    }
+
+    const Main = {
+
+        async init() {
+            await loadSession();
+            this.bindEvents();
+            return this.render();
+        },
+
+        async createPost(content, imageFile) {
+            if (!currentUser) {
+                await loadSession();
+            }
+
+            if (!currentUser) {
+                notify("Please login first.", "error");
+                return false;
+            }
+
+            let imageUrl = "";
+
+            if (imageFile) {
+                const allowed = [
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp"
+                ];
+
+                if (!allowed.includes(imageFile.type)) {
+                    notify("Only JPG, PNG and WEBP images are allowed.", "error");
+                    return false;
+                }
+
+                if (imageFile.size > 5 * 1024 * 1024) {
+                    notify("Image must be under 5MB.", "error");
+                    return false;
+                }
+
+                const extension =
+                    imageFile.name.split(".").pop() || "jpg";
+
+                const filePath =
+                    currentUser.id + "/" +
+                    Date.now() + "." + extension;
+
+                const { error: uploadError } = await db
+                    .storage
+                    .from(BUCKET)
+                    .upload(filePath, imageFile, {
+                        upsert: false,
+                        contentType: imageFile.type
+                    });
+
+                if (uploadError) {
+                    console.error(uploadError);
+                    notify("Image upload failed.", "error");
+                    return false;
+                }
+
+                const { data: publicData } = db
+                    .storage
+                    .from(BUCKET)
+                    .getPublicUrl(filePath);
+
+                imageUrl = publicData?.publicUrl || "";
+            }
+
+            const { error } = await db
+                .from("cma_community_posts")
+                .insert({
+                    user_id: currentUser.id,
+                    content: content || "",
+                    image_url: imageUrl
+                });
+
+            if (error) {
+                console.error(error);
+                notify("Post could not be published.", "error");
+                return false;
+            }
+
+            selectedImage = null;
+            await this.loadPosts();
+
+            if (window.CMACommunityProfile?.loadUserPosts) {
+                await window.CMACommunityProfile.loadUserPosts();
+            }
+
+            notify("Post published successfully.", "success");
+            return true;
+        },
+
+        async loadPosts() {
+            const root = getRoot();
+
+            if (!root) return [];
+
+            const list = root.querySelector(
+                "#cmaPostList, #cmaCommunityFeed, .cma-post-list"
+            );
+
+            if (!list) return [];
+
+            const { data, error } = await db
+                .from("cma_community_posts")
+                .select("*")
+                .order("created_at", {
+                    ascending: false
+                });
+
+            if (error) {
+                console.error("Posts loading error:", error);
+                list.innerHTML =
+                    '<p class="cma-empty-message">Unable to load posts.</p>';
+                return [];
+            }
+
+            const posts = data || [];
+            postsCache = posts;
+
+            const userIds = posts.map(post => post.user_id);
+            const profileMap = await loadPublicProfiles(userIds);
+
+            list.innerHTML = "";
+
+            if (!posts.length) {
+                list.innerHTML =
+                    '<p class="cma-empty-message">No posts yet.</p>';
+                return [];
+            }
+
+            posts.forEach(post => {
+                const author = makeAuthor(
+                    post.user_id,
+                    profileMap
+                );
+
+                const card = Feed.createPostCard({
+                    ...post,
+                    ...author,
+                    caption: post.content || "",
+                    image_url: post.image_url || "",
+                    created_at: post.created_at,
+                    is_owner:
+                        currentUser?.id === post.user_id
+                });
+
+                if (card) {
+                    if (typeof card === "string") {
+                        list.insertAdjacentHTML("beforeend", card);
+                    } else {
+                        list.appendChild(card);
+                    }
+                }
+            });
+
+            // Part 2 continues here.
+
+            // Load reaction counts and comment previews
+            if (Feed.loadReactionCounts) {
+                posts.forEach(post => {
+                    Feed.loadReactionCounts(post.id);
+                });
+            }
+
+            if (Feed.loadRandomComment) {
+                posts.forEach(post => {
+                    Feed.loadRandomComment(post.id);
+                });
+            }
+
+            return posts;
+        },
+
+        async loadUserPosts(user, root) {
+            user = user || currentUser;
+
+            if (!user) {
+                user = await loadSession();
+            }
+
+            root = root || getRoot();
+
+            if (!user || !root) return [];
+
+            const postsContainer = root.querySelector(
+                "#cmaProfilePosts, #cmaUserPosts, .cma-profile-posts"
+            );
+
+            if (!postsContainer) return [];
+
+            const { data, error } = await db
+                .from("cma_community_posts")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("created_at", {
+                    ascending: false
+                });
+
+            if (error) {
+                console.error("User posts loading error:", error);
+                return [];
+            }
+
+            const posts = data || [];
+
+            postsContainer.innerHTML = "";
+
+            if (!posts.length) {
+                postsContainer.innerHTML =
+                    '<p class="cma-empty-message">You have not published any posts yet.</p>';
+                return [];
+            }
+
+            const profileMap = await loadPublicProfiles([user.id]);
+
+            posts.forEach(post => {
+                const author = makeAuthor(user.id, profileMap);
+
+                const card = Feed.createPostCard({
+                    ...post,
+                    ...author,
+                    caption: post.content || "",
+                    image_url: post.image_url || "",
+                    is_owner: true
+                });
+
+                if (card) {
+                    if (typeof card === "string") {
+                        postsContainer.insertAdjacentHTML(
+                            "beforeend",
+                            card
+                        );
+                    } else {
+                        postsContainer.appendChild(card);
+                    }
+                }
+            });
+
+            if (Feed.loadReactionCounts) {
+                posts.forEach(post => {
+                    Feed.loadReactionCounts(post.id);
+                });
+            }
+
+            if (Feed.loadRandomComment) {
+                posts.forEach(post => {
+                    Feed.loadRandomComment(post.id);
+                });
+            }
+
+            return posts;
+        },
+
+        async deletePost(postId) {
+            if (!currentUser) {
+                await loadSession();
+            }
+
+            if (!currentUser || !postId) return false;
+
+            const { error } = await db
+                .from("cma_community_posts")
+                .delete()
+                .eq("id", postId)
+                .eq("user_id", currentUser.id);
+
+            if (error) {
+                console.error("Delete post error:", error);
+                notify("Post could not be deleted.", "error");
+                return false;
+            }
+
+            await this.loadPosts();
+
+            if (window.CMACommunityProfile?.loadUserPosts) {
+                await window.CMACommunityProfile.loadUserPosts();
+            }
+
+            notify("Post deleted.", "success");
+            return true;
+        },
+
+        bindEvents() {
+            if (this.eventsBound) return;
+            this.eventsBound = true;
+
+            document.addEventListener(
+                "cma:submit-post",
+                async event => {
+                    const detail = event.detail || {};
+
+                    const content =
+                        detail.content ||
+                        document.querySelector(
+                            "#cmaPostContent, #cmaPostInput, [name='post_content']"
+                        )?.value ||
+                        "";
+
+                    const image =
+                        detail.image ||
+                        selectedImage;
+
+                    await this.createPost(content, image);
+                }
+            );
+
+            document.addEventListener(
+                "cma:select-photo",
+                event => {
+                    selectedImage =
+                        event.detail?.file || null;
+                }
+            );
+
+            document.addEventListener(
+                "cma:delete-post",
+                async event => {
+                    const postId =
+                        event.detail?.postId ||
+                        event.detail?.id;
+
+                    if (postId) {
+                        await this.deletePost(postId);
+                    }
+                }
+            );
+        },
+
+        async render() {
+            const root = getRoot();
+
+            if (!root) return;
+
+            if (Feed.renderHome) {
+                await Feed.renderHome(root);
+            }
+
+            await this.loadPosts();
+        },
+
+        getModules() {
+            return {
+                core: Core,
+                feed: Feed,
+                main: Main
+            };
+        }
+    };
+
+    window.CMACommunityMain = Main;
+
+    window.renderCommunityPage = function () {
+        return Main.init();
+    };
 
 })();
+               
