@@ -1,7 +1,8 @@
+
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FEED MODULE
-   FUNCTIONAL POST SYSTEM
+   Nested Comments & Replies
 ========================================= */
 
 (function () {
@@ -9,7 +10,7 @@
 
   const Core = window.CMACommunityCore;
 
-  if (!Core) {
+  if (!Core || !Core.db) {
     console.error("Community Core is not loaded.");
     return;
   }
@@ -28,9 +29,10 @@
   const Feed = {
     activePostId: null,
     activeReplyId: null,
+    activeReplyName: "",
 
     async renderHome(root) {
-      if (!root) root = Core.getRoot();
+      root = root || Core.getRoot();
       if (!root) return;
 
       root.innerHTML = `
@@ -42,67 +44,41 @@
               <span class="cma-green">Community</span>
             </div>
             <button class="cma-icon-button"
-              type="button"
-              data-cma-action="search"
-              aria-label="Search">
-              ${Icons.search}
-            </button>
+              type="button" data-cma-action="search"
+              aria-label="Search">${Icons.search}</button>
           </header>
 
-          <nav class="cma-navigation" aria-label="Community navigation">
+          <nav class="cma-navigation">
             <button class="cma-nav-item active" type="button" data-cma-page="home">
-              <span class="cma-nav-icon">${Icons.home}</span>
-              <span>Home</span>
+              <span class="cma-nav-icon">${Icons.home}</span><span>Home</span>
             </button>
-
             <button class="cma-nav-item" type="button" data-cma-page="profile">
-              <span class="cma-nav-icon">${Icons.profile}</span>
-              <span>Profile</span>
+              <span class="cma-nav-icon">${Icons.profile}</span><span>Profile</span>
             </button>
-
             <button class="cma-nav-item" type="button" data-cma-page="friends">
-              <span class="cma-nav-icon">${Icons.friends}</span>
-              <span>Friends</span>
+              <span class="cma-nav-icon">${Icons.friends}</span><span>Friends</span>
             </button>
-
             <button class="cma-nav-item" type="button" data-cma-page="creator">
-              <span class="cma-nav-icon">${Icons.creator}</span>
-              <span>Creator Panel</span>
+              <span class="cma-nav-icon">${Icons.creator}</span><span>Creator Panel</span>
             </button>
-
             <button class="cma-nav-item" type="button" data-cma-page="notifications">
-              <span class="cma-nav-icon">${Icons.notification}</span>
-              <span>Notification</span>
+              <span class="cma-nav-icon">${Icons.notification}</span><span>Notification</span>
             </button>
           </nav>
 
           <section class="cma-composer">
             <div class="cma-composer-top">
               <div class="cma-avatar"></div>
-              <textarea
-                class="cma-post-input"
-                id="cmaPostInput"
-                placeholder="What's on your mind?"
-                rows="1"
-                aria-label="Write a post"
-              ></textarea>
+              <textarea class="cma-post-input" id="cmaPostInput"
+                placeholder="What's on your mind?" rows="1"
+                aria-label="Write a post"></textarea>
             </div>
-
             <div class="cma-composer-bottom">
-              <button type="button"
-                class="cma-photo-button"
-                data-cma-action="photo">
-                <span aria-hidden="true">▧</span>
-                Photo
-              </button>
-
-              <button type="button"
-                class="cma-post-button"
-                data-cma-action="post">
-                Post
-              </button>
+              <button type="button" class="cma-photo-button"
+                data-cma-action="photo">▧ Photo</button>
+              <button type="button" class="cma-post-button"
+                data-cma-action="post">Post</button>
             </div>
-
             <div id="cmaSelectedPhoto" class="cma-selected-photo"></div>
           </section>
 
@@ -115,7 +91,6 @@
           </section>
 
         </main>
-
         <div id="cmaPostMenuLayer"></div>
         <div id="cmaCommentsLayer"></div>
       `;
@@ -127,9 +102,9 @@
       if (root.dataset.cmaFeedBound === "true") return;
       root.dataset.cmaFeedBound = "true";
 
-      root.addEventListener("click", async (event) => {
+      root.addEventListener("click", async event => {
         const button = event.target.closest(
-          "[data-cma-action], [data-cma-page], [data-cma-post-menu], [data-reaction], [data-cma-comments], [data-cma-send-comment], [data-cma-reply]"
+          "[data-cma-action], [data-cma-page], [data-cma-post-menu], [data-reaction], [data-cma-comments], [data-cma-send-comment], [data-cma-reply], [data-cma-cancel-reply]"
         );
 
         if (!button) return;
@@ -197,15 +172,45 @@
 
         if (button.dataset.cmaReply) {
           this.activeReplyId = button.dataset.cmaReply;
+          this.activeReplyName = button.dataset.replyName || "Member";
+
           const input = document.querySelector("#cmaCommentInput");
+
           if (input) {
-            input.placeholder = "Write a reply...";
+            input.placeholder = "Replying to " + this.activeReplyName + "...";
             input.focus();
           }
+
+          const status = document.querySelector("#cmaReplyStatus");
+
+          if (status) {
+            status.innerHTML = `
+              Replying to <strong>${Core.escapeHTML(this.activeReplyName)}</strong>
+              <button type="button" data-cma-cancel-reply
+                style="border:0;background:none;color:#68DDB9;margin-left:8px;">
+                Cancel
+              </button>
+            `;
+          }
+
+          return;
+        }
+
+        if (button.hasAttribute("data-cma-cancel-reply")) {
+          this.activeReplyId = null;
+          this.activeReplyName = "";
+
+          const input = document.querySelector("#cmaCommentInput");
+          if (input) input.placeholder = "Write a comment...";
+
+          const status = document.querySelector("#cmaReplyStatus");
+          if (status) status.innerHTML = "";
+
+          return;
         }
       });
 
-      root.addEventListener("click", (event) => {
+      root.addEventListener("click", event => {
         const remove = event.target.closest("[data-cma-remove-photo]");
         if (!remove) return;
 
@@ -220,8 +225,9 @@
       const preview = document.getElementById("cmaSelectedPhoto");
       if (!preview || !file) return;
 
-      const oldURL = preview.dataset.objectUrl;
-      if (oldURL) URL.revokeObjectURL(oldURL);
+      if (preview.dataset.objectUrl) {
+        URL.revokeObjectURL(preview.dataset.objectUrl);
+      }
 
       const url = URL.createObjectURL(file);
       preview.dataset.objectUrl = url;
@@ -230,21 +236,17 @@
         <img src="${url}" alt="Selected photo preview"
           style="max-width:100%;max-height:220px;border-radius:12px;margin-top:10px;">
         <button type="button" data-cma-remove-photo
-          style="display:block;margin-top:6px;">
-          Remove photo
-        </button>
+          style="display:block;margin-top:6px;">Remove photo</button>
       `;
     },
-     
+
     createPostCard(post) {
       const item = post || {};
       const user = Core.getCurrentUser();
 
       const author = Core.escapeHTML(item.author_name || "Member");
       const caption = Core.escapeHTML(item.caption || "");
-      const time = Core.escapeHTML(
-        Core.formatRelativeTime(item.created_at)
-      );
+      const time = Core.escapeHTML(Core.formatRelativeTime(item.created_at));
 
       const imageURL = Core.safeImageURL(item.image_url);
       const avatarURL = Core.safeImageURL(item.avatar_url);
@@ -253,41 +255,30 @@
 
       return `
         <article class="cma-post-card" data-post-id="${postId}">
-
           <div class="cma-post-header">
             ${
               avatarURL
                 ? `<img class="cma-avatar" src="${avatarURL}" alt="Profile picture">`
                 : `<div class="cma-avatar"></div>`
             }
-
             <div class="cma-post-author">
               <strong>${author}</strong>
               <span>${time}</span>
             </div>
-
             ${
               isOwner
-                ? `<button class="cma-icon-button"
-                     type="button"
-                     aria-label="Post options"
-                     data-cma-post-menu="${postId}">⋯</button>`
+                ? `<button class="cma-icon-button" type="button"
+                    aria-label="Post options"
+                    data-cma-post-menu="${postId}">⋯</button>`
                 : ""
             }
           </div>
 
-          ${
-            caption
-              ? `<div class="cma-post-caption">${caption}</div>`
-              : ""
-          }
-
+          ${caption ? `<div class="cma-post-caption">${caption}</div>` : ""}
           ${
             imageURL
-              ? `<img class="cma-post-image"
-                   src="${imageURL}"
-                   alt="Post image"
-                   loading="lazy">`
+              ? `<img class="cma-post-image" src="${imageURL}"
+                   alt="Post image" loading="lazy">`
               : ""
           }
 
@@ -303,20 +294,15 @@
             Comments will appear here.
           </div>
 
-          <button class="cma-view-comments"
-            type="button"
-            data-cma-comments="${postId}">
-            Write a comment
-          </button>
-
+          <button class="cma-view-comments" type="button"
+            data-cma-comments="${postId}">Write a comment</button>
         </article>
       `;
     },
 
     async toggleReaction(postId, reactionType) {
-      if (!Core.requireLogin()) return;
-      if (!postId || !db) return;
-       
+      if (!Core.requireLogin() || !postId) return;
+
       const user = Core.getCurrentUser();
       if (!user) return;
 
@@ -361,7 +347,7 @@
     },
 
     async loadReactionCounts(postId) {
-      if (!db || !postId) return;
+      if (!postId) return;
 
       try {
         const { data, error } = await db
@@ -377,12 +363,7 @@
 
         if (!card) return;
 
-        const counts = {
-          like: 0,
-          love: 0,
-          haha: 0,
-          wow: 0
-        };
+        const counts = { like: 0, love: 0, haha: 0, wow: 0 };
 
         (data || []).forEach(item => {
           if (counts[item.reaction_type] !== undefined) {
@@ -390,20 +371,17 @@
           }
         });
 
-        const buttons = card.querySelectorAll("[data-reaction]");
-
-        buttons.forEach(button => {
-          const type = button.dataset.reaction;
-          button.dataset.count = counts[type] || 0;
+        card.querySelectorAll("[data-reaction]").forEach(button => {
+          button.dataset.count = counts[button.dataset.reaction] || 0;
         });
 
       } catch (error) {
-        console.error("Reaction count error:", error);
+        console.error("Reaction loading error:", error);
       }
     },
 
     async loadRandomComment(postId) {
-      if (!db || !postId) return;
+      if (!postId) return;
 
       try {
         const { data, error } = await db
@@ -420,17 +398,16 @@
 
         if (!preview) return;
 
-        if (!data || !data.length) {
+        if (!data?.length) {
           preview.textContent = "Be the first to comment.";
           return;
         }
 
         const random = data[Math.floor(Math.random() * data.length)];
-
         preview.textContent = random.content;
 
       } catch (error) {
-        console.error("Random comment error:", error);
+        console.error("Comment preview error:", error);
       }
     },
 
@@ -442,35 +419,25 @@
         `[data-post-id="${CSS.escape(postId)}"]`
       );
 
-      if (!card) return;
-
       const menuLayer = document.getElementById("cmaPostMenuLayer");
-      if (!menuLayer) return;
+      if (!card || !menuLayer) return;
 
       menuLayer.innerHTML = `
-        <div class="cma-post-menu-backdrop"
-          data-cma-close-menu></div>
-
+        <div class="cma-post-menu-backdrop" data-cma-close-menu></div>
         <div class="cma-post-menu-panel"
           style="position:fixed;z-index:9999;right:16px;top:120px;
           background:#103E4C;padding:12px;border-radius:14px;
           min-width:170px;box-shadow:0 8px 30px #0006;">
-
           <button type="button" data-cma-edit="${Core.escapeHTML(postId)}"
             style="display:block;width:100%;padding:12px;text-align:left;
-            background:transparent;color:white;border:0;">
-            ✏️ Edit Post
-          </button>
-
+            background:transparent;color:white;border:0;">✏️ Edit Post</button>
           <button type="button" data-cma-delete="${Core.escapeHTML(postId)}"
             style="display:block;width:100%;padding:12px;text-align:left;
-            background:transparent;color:#ff8585;border:0;">
-            🗑 Delete Post
-          </button>
+            background:transparent;color:#ff8585;border:0;">🗑 Delete Post</button>
         </div>
       `;
 
-      menuLayer.onclick = async (event) => {
+      menuLayer.onclick = async event => {
         if (event.target.closest("[data-cma-close-menu]")) {
           menuLayer.innerHTML = "";
           return;
@@ -483,9 +450,10 @@
           menuLayer.innerHTML = "";
 
           const caption = card.querySelector(".cma-post-caption");
-          const currentText = caption?.textContent || "";
-
-          const newText = window.prompt("Edit your post:", currentText);
+          const newText = window.prompt(
+            "Edit your post:",
+            caption?.textContent || ""
+          );
 
           if (newText === null) return;
 
@@ -503,25 +471,15 @@
 
           Core.showNotice("Post Updated Successfully!");
 
-          if (window.CMACommunityMain?.loadPosts) {
-            await window.CMACommunityMain.loadPosts();
-          }
-
-          if (window.CMACommunityProfile?.loadUserPosts) {
-            await window.CMACommunityProfile.loadUserPosts();
-          }
-
+          await window.CMACommunityMain?.loadPosts?.();
+          await window.CMACommunityProfile?.loadUserPosts?.();
           return;
         }
 
         if (remove) {
           menuLayer.innerHTML = "";
 
-          const confirmed = window.confirm(
-            "তুমি কি নিজের এই Post Delete করতে চাও?"
-          );
-
-          if (!confirmed) return;
+          if (!window.confirm("তুমি কি নিজের এই Post Delete করতে চাও?")) return;
 
           window.dispatchEvent(new CustomEvent("cma:delete-post", {
             detail: { postId }
@@ -535,14 +493,14 @@
 
       this.activePostId = postId;
       this.activeReplyId = null;
+      this.activeReplyName = "";
 
       const layer = document.getElementById("cmaCommentsLayer");
       if (!layer) return;
 
       layer.innerHTML = `
         <div data-cma-close-comments
-          style="position:fixed;inset:0;background:#0008;z-index:9998;">
-        </div>
+          style="position:fixed;inset:0;background:#0008;z-index:9998;"></div>
 
         <section id="cmaCommentsSheet"
           style="position:fixed;bottom:0;left:0;right:0;
@@ -559,15 +517,16 @@
             padding-bottom:12px;">
             <strong>Comments</strong>
             <button type="button" data-cma-close-comments
-              style="background:none;border:0;color:white;font-size:24px;">
-              ×
-            </button>
+              style="background:none;border:0;color:white;font-size:24px;">×</button>
           </div>
 
           <div id="cmaCommentsList"
             style="flex:1;overflow-y:auto;padding:12px 0;">
             Loading comments...
           </div>
+
+          <div id="cmaReplyStatus"
+            style="font-size:12px;color:#68DDB9;padding:4px 2px;"></div>
 
           <div style="display:flex;gap:8px;padding-top:12px;
             border-top:1px solid #245563;">
@@ -578,27 +537,43 @@
 
             <button type="button" data-cma-send-comment="${Core.escapeHTML(postId)}"
               style="border:0;border-radius:20px;padding:0 16px;
-              background:#08C99A;color:#052D3B;">
-              Send
-            </button>
+              background:#08C99A;color:#052D3B;">Send</button>
           </div>
         </section>
       `;
 
-      layer.onclick = (event) => {
+      layer.onclick = event => {
         if (event.target.closest("[data-cma-close-comments]")) {
           layer.innerHTML = "";
           this.activePostId = null;
           this.activeReplyId = null;
+          this.activeReplyName = "";
         }
       };
 
       await this.loadComments(postId);
     },
 
+    formatCommentTime(value) {
+      if (!value) return "";
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+
+      return date.toLocaleString("en-BD", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    },
+
     async loadComments(postId) {
       const list = document.getElementById("cmaCommentsList");
       if (!list || !db) return;
+
+      list.textContent = "Loading comments...";
 
       try {
         const { data, error } = await db
@@ -609,54 +584,158 @@
 
         if (error) throw error;
 
-        if (!data || !data.length) {
+        if (!data?.length) {
           list.innerHTML = `
             <p style="text-align:center;color:#A8C0CE;padding:30px 0;">
               No comments yet. Be the first to comment!
-            </p>
-          `;
+            </p>`;
           return;
         }
 
-        const comments = data.filter(item => !item.parent_id);
-        const replies = data.filter(item => item.parent_id);
+        const userIds = [
+          ...new Set(data.map(item => item.user_id).filter(Boolean))
+        ];
 
-        list.innerHTML = comments.map(comment => {
-          const commentReplies = replies.filter(
-            reply => reply.parent_id === comment.id
-          );
+        let profiles = {};
+
+        if (userIds.length) {
+          const { data: profileRows, error: profileError } = await db
+            .from("cma_community_profiles")
+            .select("user_id,full_name,avatar_url")
+            .in("user_id", userIds);
+
+          if (profileError) {
+            console.error("Comment profiles error:", profileError);
+          } else {
+            (profileRows || []).forEach(pr => {
+              profiles[pr.user_id] = pr;
+            });
+          }
+        }
+
+        const currentUser = Core.getCurrentUser();
+        const nodes = new Map();
+
+        data.forEach(item => {
+          const profile = profiles[item.user_id] || {};
+
+          let authorName = profile.full_name || "Community Member";
+
+          if (currentUser && item.user_id === currentUser.id) {
+            const metadata = currentUser.user_metadata || {};
+
+            authorName =
+              profile.full_name ||
+              metadata.full_name ||
+              metadata.name ||
+              currentUser.email ||
+              "Community Member";
+          }
+
+          nodes.set(item.id, {
+            ...item,
+            author_name: authorName,
+            avatar_url: profile.avatar_url || "",
+            children: []
+          });
+        });
+
+        const rootComments = [];
+
+        nodes.forEach(node => {
+          if (node.parent_id && nodes.has(node.parent_id)) {
+            nodes.get(node.parent_id).children.push(node);
+          } else {
+            rootComments.push(node);
+          }
+        });
+
+        const renderComment = (comment, level = 0) => {
+          const author = Core.escapeHTML(comment.author_name);
+          const content = Core.escapeHTML(comment.content || "");
+          const avatar = Core.safeImageURL(comment.avatar_url);
+          const createdTime = this.formatCommentTime(comment.created_at);
+
+          const updatedTime =
+            comment.updated_at &&
+            new Date(comment.updated_at).getTime() >
+              new Date(comment.created_at).getTime() + 1000
+              ? this.formatCommentTime(comment.updated_at)
+              : "";
+
+          const avatarHTML = avatar
+            ? `<img src="${avatar}" alt="Profile picture"
+                style="width:32px;height:32px;border-radius:50%;
+                object-fit:cover;flex-shrink:0;">`
+            : `<div style="width:32px;height:32px;border-radius:50%;
+                background:#245563;flex-shrink:0;"></div>`;
+
+          const repliesHTML = comment.children
+            .map(reply => renderComment(reply, level + 1))
+            .join("");
 
           return `
-            <div style="padding:10px 0;border-bottom:1px solid #245563;">
-              <div style="background:#103E4C;border-radius:14px;padding:12px;">
-                <strong>Member</strong>
-                <p style="margin:6px 0;white-space:pre-wrap;">
-                  ${Core.escapeHTML(comment.content)}
-                </p>
+            <div style="margin-bottom:14px;
+              margin-left:${Math.min(level * 22, 88)}px;">
+
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                ${avatarHTML}
+
+                <div style="flex:1;min-width:0;">
+                  <div style="background:#103E4C;
+                    border-radius:14px;padding:10px 12px;">
+
+                    <strong style="font-size:13px;">
+                      ${author}
+                    </strong>
+
+                    <div style="font-size:14px;
+                      margin-top:5px;white-space:pre-wrap;
+                      overflow-wrap:anywhere;">
+                      ${content}
+                    </div>
+                  </div>
+
+                  <div style="display:flex;flex-wrap:wrap;
+                    gap:10px;align-items:center;
+                    padding:5px 4px;font-size:11px;
+                    color:#A8C0CE;">
+
+                    <span>${Core.escapeHTML(createdTime)}</span>
+
+                    ${
+                      updatedTime
+                        ? `<span>Edited: ${Core.escapeHTML(updatedTime)}</span>`
+                        : ""
+                    }
+
+                    <button type="button"
+                      data-cma-reply="${Core.escapeHTML(comment.id)}"
+                      data-reply-name="${Core.escapeHTML(comment.author_name)}"
+                      style="border:0;background:none;
+                      color:#68DDB9;font-size:12px;padding:0;">
+                      Reply
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <button type="button"
-                data-cma-reply="${Core.escapeHTML(comment.id)}"
-                style="background:none;border:0;color:#68DDB9;padding:8px;">
-                Reply
-              </button>
-
-              ${commentReplies.map(reply => `
-                <div style="margin:6px 0 6px 25px;background:#08494B;
-                  border-radius:12px;padding:10px;">
-                  <strong>Member</strong>
-                  <p style="margin:5px 0;white-space:pre-wrap;">
-                    ${Core.escapeHTML(reply.content)}
-                  </p>
-                </div>
-              `).join("")}
+              ${repliesHTML}
             </div>
           `;
-        }).join("");
+        };
+
+        list.innerHTML = rootComments
+          .map(comment => renderComment(comment))
+          .join("");
 
       } catch (error) {
-        console.error("Load comments error:", error);
-        list.textContent = "Comments load করা যায়নি।";
+        console.error("Comments loading error:", error);
+
+        list.innerHTML = `
+          <p style="text-align:center;color:#ff8585;padding:20px;">
+            Comments load করা যায়নি। আবার চেষ্টা করো।
+          </p>`;
       }
     },
 
@@ -664,10 +743,16 @@
       if (!Core.requireLogin()) return;
 
       const user = Core.getCurrentUser();
-      const input = document.getElementById("cmaCommentInput");
-      const content = input?.value.trim();
+      const input = document.querySelector("#cmaCommentInput");
 
-      if (!user || !content || !postId) return;
+      if (!user || !input || !postId) return;
+
+      const content = input.value.trim();
+
+      if (!content) {
+        Core.showNotice("আগে Comment লিখো।", "error");
+        return;
+      }
 
       try {
         const { error } = await db
@@ -675,31 +760,29 @@
           .insert({
             post_id: postId,
             user_id: user.id,
-            parent_id: this.activeReplyId,
+            parent_id: this.activeReplyId || null,
             content
           });
 
         if (error) throw error;
 
         input.value = "";
-        this.activeReplyId = null;
         input.placeholder = "Write a comment...";
 
+        this.activeReplyId = null;
+        this.activeReplyName = "";
+
+        const status = document.querySelector("#cmaReplyStatus");
+        if (status) status.innerHTML = "";
+
         await this.loadComments(postId);
+        await this.loadRandomComment(postId);
 
-        const preview = document.querySelector(
-          `[data-cma-random-comment="${CSS.escape(postId)}"]`
-        );
-
-        if (preview) {
-          preview.textContent = content;
-        }
-
-        Core.showNotice("Comment added!");
+        Core.showNotice("Comment posted successfully!");
 
       } catch (error) {
-        console.error("Send comment error:", error);
-        Core.showNotice("Comment পাঠানো যায়নি।", "error");
+        console.error("Comment sending error:", error);
+        Core.showNotice("Comment পাঠানো যায়নি। আবার চেষ্টা করো।", "error");
       }
     }
 
