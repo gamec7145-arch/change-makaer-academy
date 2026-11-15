@@ -1,9 +1,8 @@
-
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY CORE
    Shared utilities and session management
-   PUBLIC PROFILE SYNC UPDATE
+   SAFE PUBLIC PROFILE SYNC UPDATE
 ========================================= */
 
 (function () {
@@ -42,7 +41,7 @@
     return document.getElementById("pageContent");
   }
 
-  // Get public name and avatar from the member's own account metadata.
+  // Read public name and avatar from the member's own account metadata.
   function getProfileMetadata(user) {
     const metadata = user?.user_metadata || {};
 
@@ -71,14 +70,18 @@
     try {
       const metadata = getProfileMetadata(user);
 
+      // IMPORTANT: Read existing profile fields before updating.
       const { data: existing, error: readError } = await db
         .from("cma_community_profiles")
-        .select("user_id,full_name,avatar_url")
+        .select(
+          "user_id,full_name,short_description,institution,avatar_url"
+        )
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (readError) throw readError;
 
+      // Keep existing values if account metadata is empty.
       const fullName =
         metadata.full_name ||
         existing?.full_name ||
@@ -100,20 +103,17 @@
       const profileData = {
         user_id: user.id,
         full_name: fullName,
-        short_description: "",
-        institution: "",
+
+        // Preserve existing profile information.
+        short_description:
+          existing?.short_description || "",
+
+        institution:
+          existing?.institution || "",
+
         avatar_url: avatarURL,
         updated_at: new Date().toISOString()
       };
-
-      // Preserve existing information that is not supplied by auth metadata.
-      if (existing) {
-        profileData.short_description =
-          existing.short_description || "";
-
-        profileData.institution =
-          existing.institution || "";
-      }
 
       const { error: saveError } = await db
         .from("cma_community_profiles")
@@ -176,8 +176,7 @@
   function setCurrentUser(user) {
     currentUser = user || null;
   }
-
-  function formatRelativeTime(value) {
+    function formatRelativeTime(value) {
     if (!value) return "";
 
     const date = new Date(value);
@@ -289,13 +288,15 @@
     db.auth.onAuthStateChange(function (_event, session) {
       currentUser = session?.user || null;
 
-      if (currentUser) {
-        // Run after the auth callback completes.
+      // Capture this session's user before starting async sync.
+      const userToSync = currentUser;
+
+      if (userToSync) {
         Promise.resolve().then(function () {
-          return syncPublicProfile(currentUser);
+          return syncPublicProfile(userToSync);
         });
       }
     });
   }
 
-})();
+})(); 
