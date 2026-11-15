@@ -1537,8 +1537,10 @@
     if (preview) preview.classList.remove("show");
   }
 
+  
   async function publishProfilePost(root) {
     const user = getUser();
+
     if (!user) {
       showNotice("Please login to publish a post.", "error");
       return;
@@ -1569,7 +1571,11 @@
     }
 
     try {
-      await Main.createPost(content, selectedProfilePhoto);
+      const result = await Main.createPost(content, selectedProfilePhoto);
+
+      if (result === false) {
+        throw new Error("Post upload failed. Please try again.");
+      }
 
       if (input) input.value = "";
 
@@ -1577,12 +1583,16 @@
 
       await refreshPosts();
 
+      showNotice("Post published successfully.", "success");
+
     } catch (error) {
       console.error("Profile post failed:", error);
+
       showNotice(
-        error.message || "Could not publish post.",
+        error.message || "Could not publish post. Your content is still available.",
         "error"
       );
+
     } finally {
       if (button) {
         button.disabled = false;
@@ -1590,6 +1600,7 @@
       }
     }
   }
+   
 
   function bindEvents(root, profileUser, isOwnProfile) {
     if (root.dataset.cmaProfileEvents !== "true") {
