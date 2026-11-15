@@ -1,7 +1,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY PROFILE MODULE
-   UPDATED VERSION - PART 1 OF 2
+   PUBLIC PROFILE SYNC UPDATE
 ========================================= */
 
 (function () {
@@ -66,6 +66,46 @@
   function getAvatar(user) {
     const metadata = getMetadata(user);
     return safeImage(metadata.avatar_url || metadata.picture || "");
+  }
+
+  // =========================================
+  // SYNC PUBLIC COMMUNITY PROFILE
+  // Only non-sensitive profile fields are stored here.
+  // Mobile number and address remain private.
+  // =========================================
+  async function syncPublicProfile(user) {
+    if (!db || !db.from || !user || !user.id) {
+      return false;
+    }
+
+    const metadata = getMetadata(user);
+
+    const profileData = {
+      user_id: user.id,
+      full_name:
+        metadata.full_name ||
+        metadata.display_name ||
+        "Community Member",
+      short_description: metadata.short_description || "",
+      institution: metadata.institution || "",
+      avatar_url:
+        metadata.avatar_url ||
+        metadata.picture ||
+        ""
+    };
+
+    const { error } = await db
+      .from("cma_community_profiles")
+      .upsert(profileData, {
+        onConflict: "user_id"
+      });
+
+    if (error) {
+      console.error("CMA Public Profile Sync Error:", error);
+      return false;
+    }
+
+    return true;
   }
 
   function showNotice(message, type) {
@@ -262,46 +302,47 @@
 
       .cma-profile-tabs {
         display: flex;
-        justify-content: space-between;
-        gap: 4px;
+        gap: 5px;
+        overflow-x: auto;
+        margin: 16px 0 12px;
         border-bottom: 1px solid #245563;
-        margin: 15px 0;
       }
 
       .cma-profile-tab {
         flex: 1;
-        padding: 11px 2px;
+        min-width: max-content;
+        padding: 11px 9px;
         border: 0;
         border-bottom: 2px solid transparent;
         background: transparent;
         color: #A8C0CE;
-        font-family: inherit;
+        font: inherit;
         font-size: 11px;
-        font-weight: 700;
         cursor: pointer;
       }
 
       .cma-profile-tab.active {
-        color: #08C99A;
+        color: #68DDB9;
         border-bottom-color: #08C99A;
+        font-weight: 800;
       }
 
       .cma-profile-empty {
-        padding: 28px 12px;
+        padding: 24px 12px;
         text-align: center;
         color: #A8C0CE;
         font-size: 12px;
       }
 
       .cma-profile-modal {
+        display: none;
         position: fixed;
         inset: 0;
         z-index: 10000;
-        display: none;
         align-items: center;
         justify-content: center;
-        padding: 16px;
-        background: #000b;
+        padding: 18px;
+        background: #0009;
       }
 
       .cma-profile-modal.show {
@@ -310,45 +351,45 @@
 
       .cma-profile-modal-content {
         width: 100%;
-        max-width: 430px;
-        max-height: 85vh;
+        max-width: 460px;
+        max-height: 88vh;
         overflow-y: auto;
         padding: 18px;
-        border-radius: 17px;
+        border-radius: 18px;
         background: #073746;
         border: 1px solid #245563;
       }
 
       .cma-profile-modal-title {
-        font-size: 17px;
-        font-weight: 800;
         margin-bottom: 16px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 800;
       }
 
       .cma-profile-field {
         display: block;
-        width: 100%;
         margin-bottom: 13px;
+        color: #A8C0CE;
+        font-size: 11px;
       }
 
       .cma-profile-field span {
         display: block;
-        color: #A8C0CE;
-        font-size: 11px;
         margin-bottom: 6px;
       }
 
       .cma-profile-field input,
       .cma-profile-field textarea {
-        width: 100%;
         box-sizing: border-box;
-        padding: 11px;
+        width: 100%;
+        padding: 11px 12px;
         border: 1px solid #245563;
         border-radius: 10px;
         outline: none;
-        background: #052D3B;
+        background: #103E4C;
         color: #fff;
-        font-family: inherit;
+        font: inherit;
         font-size: 13px;
       }
 
@@ -357,57 +398,36 @@
         resize: vertical;
       }
 
-      .cma-profile-save {
+      .cma-profile-save,
+      .cma-profile-cancel {
         width: 100%;
         padding: 12px;
         border: 0;
         border-radius: 22px;
-        background: #08C99A;
-        color: #052D3B;
-        font-family: inherit;
-        font-size: 13px;
+        font: inherit;
+        font-size: 12px;
         font-weight: 800;
         cursor: pointer;
       }
 
-      .cma-profile-save:disabled {
-        opacity: .6;
+      .cma-profile-save {
+        background: #08C99A;
+        color: #052D3B;
       }
 
       .cma-profile-cancel {
-        width: 100%;
-        padding: 10px;
-        margin-top: 7px;
-        border: 0;
-        background: transparent;
+        margin-top: 8px;
+        background: #103E4C;
         color: #A8C0CE;
-        font-family: inherit;
-        cursor: pointer;
       }
 
       .cma-profile-file-input {
         display: none !important;
       }
 
-      .cma-profile .cma-composer {
-        margin-bottom: 15px;
-      }
-
-      .cma-profile .cma-composer .cma-avatar {
-        flex-shrink: 0;
-        overflow: hidden;
-      }
-
-      .cma-profile .cma-composer .cma-avatar img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
       .cma-profile-photo-preview {
         display: none;
-        padding: 0 12px 12px;
+        padding: 8px 0;
       }
 
       .cma-profile-photo-preview.show {
@@ -416,7 +436,6 @@
 
       .cma-profile-photo-preview img {
         display: block;
-        width: auto;
         max-width: 100%;
         max-height: 220px;
         object-fit: contain;
@@ -635,13 +654,7 @@
       </div>
     `;
   }
-   /* =========================================
-   CHANGE MAKER ACADEMY
-   COMMUNITY PROFILE MODULE
-   UPDATED VERSION - PART 2 OF 2
-========================================= */
-
-  async function uploadProfileImage(file, kind, user, root) {
+     async function uploadProfileImage(file, kind, user, root) {
     if (!db || !db.storage || !db.auth || !user) {
       throw new Error("Storage or login is unavailable.");
     }
@@ -706,6 +719,9 @@
     if (Core && Core.loadSession) {
       await Core.loadSession();
     }
+
+    // Sync latest name and avatar to public profile table.
+    await syncPublicProfile(getUser() || user);
 
     showNotice(
       kind === "avatar"
@@ -1110,6 +1126,9 @@
             await Core.loadSession();
           }
 
+          // Sync only public profile fields.
+          await syncPublicProfile(getUser() || user);
+
           showNotice("Profile information updated.", "success");
 
           await Profile.render(root);
@@ -1279,6 +1298,10 @@
         return false;
       }
 
+      // Backfill/synchronize this member's public profile.
+      // Mobile number and address are never synced.
+      await syncPublicProfile(user);
+
       injectStyles();
 
       root.innerHTML = `
@@ -1309,6 +1332,9 @@
       return true;
     }
   };
+
+  Profile.syncPublicProfile = syncPublicProfile;
+  Profile.loadUserPosts = loadUserPosts;
 
   window.CMACommunityProfile = Profile;
 
