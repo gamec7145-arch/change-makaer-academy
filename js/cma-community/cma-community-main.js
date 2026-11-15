@@ -2,6 +2,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY MAIN CONTROLLER
+   POST SYSTEM CONNECTION
 ========================================= */
 
 (function () {
@@ -19,7 +20,7 @@
       if (this.initialized) return true;
 
       if (!Core) {
-        console.error("CMA Community Core is not loaded.");
+        console.error("Community Core is not loaded.");
         return false;
       }
 
@@ -35,11 +36,28 @@
       return true;
     },
 
+    getUserProfile(user) {
+      const metadata = user?.user_metadata || {};
+
+      return {
+        name:
+          metadata.full_name ||
+          metadata.name ||
+          metadata.username ||
+          "Member",
+
+        avatar:
+          metadata.avatar_url ||
+          metadata.picture ||
+          metadata.avatar ||
+          null
+      };
+    },
+
     bindPostEvents() {
       if (this.postEventsBound) return;
       this.postEventsBound = true;
 
-      // Hidden photo input
       this.imageInput = document.createElement("input");
       this.imageInput.type = "file";
       this.imageInput.accept = "image/jpeg,image/png,image/webp";
@@ -52,29 +70,55 @@
         if (!file) return;
 
         if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-          Core.showNotice("শুধু JPG, PNG অথবা WEBP ছবি দেওয়া যাবে।", "error");
+          Core.showNotice(
+            "শুধু JPG, PNG অথবা WEBP ছবি দেওয়া যাবে।",
+            "error"
+          );
           this.imageInput.value = "";
           return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-          Core.showNotice("ছবির সাইজ 5MB-এর বেশি হতে পারবে না।", "error");
+          Core.showNotice(
+            "ছবির সাইজ 5MB-এর বেশি হতে পারবে না।",
+            "error"
+          );
           this.imageInput.value = "";
           return;
         }
 
         this.selectedImage = file;
+
+        const Feed = window.CMACommunityFeed;
+        if (Feed?.showSelectedPhoto) {
+          Feed.showSelectedPhoto(file);
+        }
+
         Core.showNotice("ছবি নির্বাচন করা হয়েছে।", "success");
       });
 
       window.addEventListener("cma:select-photo", () => {
         if (!Core.requireLogin()) return;
+
         this.imageInput.value = "";
         this.imageInput.click();
       });
 
+      window.addEventListener("cma:remove-photo", () => {
+        this.selectedImage = null;
+
+        if (this.imageInput) {
+          this.imageInput.value = "";
+        }
+      });
+
       window.addEventListener("cma:submit-post", (event) => {
         this.createPost(event.detail || {});
+      });
+
+      window.addEventListener("cma:delete-post", (event) => {
+        const postId = event.detail?.postId;
+        if (postId) this.deletePost(postId);
       });
     },
 
@@ -85,17 +129,29 @@
       const db = Core.db;
 
       if (!user || !db) {
-        Core.showNotice("Login অথবা Supabase connection পাওয়া যায়নি।", "error");
+        Core.showNotice(
+          "Login অথবা Supabase connection পাওয়া যায়নি।",
+          "error"
+        );
         return;
       }
 
       const root = Core.getRoot();
-      const input = root?.querySelector("#cmaPostInput, #cmaProfilePostInput");
-      const content = String(data.content || input?.value || "").trim();
+      const input = root?.querySelector(
+        "#cmaPostInput, #cmaProfilePostInput"
+      );
+
+      const content = String(
+        data.content || input?.value || ""
+      ).trim();
+
       const file = this.selectedImage;
 
       if (!content && !file) {
-        Core.showNotice("আগে কিছু লিখো অথবা একটি ছবি নির্বাচন করো।", "error");
+        Core.showNotice(
+          "আগে কিছু লিখো অথবা একটি ছবি নির্বাচন করো।",
+          "error"
+        );
         return;
       }
 
@@ -112,13 +168,14 @@
           const extension = file.name.split(".").pop().toLowerCase();
           const path = `${user.id}/post-${Date.now()}.${extension}`;
 
-          const { data: uploaded, error: uploadError } = await db.storage
-            .from("community-media")
-            .upload(path, file, {
-              cacheControl: "3600",
-              upsert: false,
-              contentType: file.type
-            });
+          const { data: uploaded, error: uploadError } =
+            await db.storage
+              .from("community-media")
+              .upload(path, file, {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: file.type
+              });
 
           if (uploadError) throw uploadError;
 
@@ -140,19 +197,41 @@
         if (error) throw error;
 
         if (input) input.value = "";
-        this.selectedImage = null;
-        if (this.imageInput) this.imageInput.value = "";
 
-        Core.showNotice("তোমার Post প্রকাশিত হয়েছে!", "success");
+        this.selectedImage = null;
+
+        if (this.imageInput) {
+          this.imageInput.value = "";
+        }
+
+        const preview = document.getElementById("cmaSelectedPhoto");
+        if (preview) {
+          const oldURL = preview.dataset.objectUrl;
+          if (oldURL) URL.revokeObjectURL(oldURL);
+
+          preview.innerHTML = "";
+          delete preview.dataset.objectUrl;
+        }
+
+        Core.showNotice(
+          "তোমার Post প্রকাশিত হয়েছে!",
+          "success"
+        );
 
         await this.loadPosts();
 
+        if (window.CMACommunityProfile?.loadUserPosts) {
+          await window.CMACommunityProfile.loadUserPosts();
+        }
+
       } catch (error) {
         console.error("Post creation failed:", error);
+
         Core.showNotice(
           error.message || "Post প্রকাশ করা যায়নি।",
           "error"
         );
+
       } finally {
         if (postButton) postButton.disabled = false;
       }
@@ -178,7 +257,10 @@
 
       const Feed = window.CMACommunityFeed;
 
-      if (!Feed || typeof Feed.createPostCard !== "function") return;
+      if (!Feed || typeof Feed.createPostCard !== "function") {
+        console.error("Community Feed is unavailable.");
+        return;
+      }
 
       if (!data || data.length === 0) {
         list.innerHTML = `
@@ -191,17 +273,71 @@
         return;
       }
 
+      const user = Core.getCurrentUser();
+      const profile = this.getUserProfile(user);
+
       list.innerHTML = data.map(post => {
+        const isOwnPost = post.user_id === user?.id;
+
         return Feed.createPostCard({
           id: post.id,
+          user_id: post.user_id,
           caption: post.content,
           image_url: post.image_url,
           created_at: post.created_at,
-          author_name: post.user_id === Core.getCurrentUser()?.id
-            ? "You"
-            : "Member"
+
+          author_name: isOwnPost
+            ? profile.name
+            : "Member",
+
+          avatar_url: isOwnPost
+            ? profile.avatar
+            : null
         });
       }).join("");
+
+      // Load reaction counts and random comment previews.
+      for (const post of data) {
+        if (Feed.loadReactionCounts) {
+          await Feed.loadReactionCounts(post.id);
+        }
+
+        if (Feed.loadRandomComment) {
+          await Feed.loadRandomComment(post.id);
+        }
+      }
+    },
+
+    async deletePost(postId) {
+      const user = Core.getCurrentUser();
+      const db = Core.db;
+
+      if (!user || !db || !postId) {
+        Core.showNotice("এই কাজের অনুমতি নেই।", "error");
+        return;
+      }
+
+      try {
+        const { error } = await db
+          .from("cma_community_posts")
+          .delete()
+          .eq("id", postId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        Core.showNotice("Post Delete করা হয়েছে!", "success");
+
+        await this.loadPosts();
+
+        if (window.CMACommunityProfile?.loadUserPosts) {
+          await window.CMACommunityProfile.loadUserPosts();
+        }
+
+      } catch (error) {
+        console.error("Delete post failed:", error);
+        Core.showNotice("Post Delete করা যায়নি।", "error");
+      }
     },
 
     async render() {
@@ -209,6 +345,7 @@
       if (!ready) return;
 
       const root = Core.getRoot();
+
       if (!root) {
         console.error("Community root was not found.");
         return;
