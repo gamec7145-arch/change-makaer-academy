@@ -317,13 +317,6 @@
       if (!Core.requireLogin()) return;
       if (!postId || !db) return;
        
-       async toggleReaction(postId, reactionType) {
-  if (!Core.requireLogin()) return;
-
-  console.log("REACTION CLICKED:", postId, reactionType, Core.getCurrentUser());
-
-  if (!postId || !db) return;
-
       const user = Core.getCurrentUser();
       if (!user) return;
 
