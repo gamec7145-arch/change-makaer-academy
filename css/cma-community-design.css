@@ -1,7 +1,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FINAL DESIGN SYSTEM
-   (New design + original sizes)
+   (Solid colors from screenshot + original sizes)
 ========================================= */
 
 /* 1. FULL SCREEN LAYOUT */
@@ -10,7 +10,7 @@ body.community-active {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background: #073746;
+  background: #073646;
 }
 
 body.community-active #innerPage {
@@ -20,7 +20,7 @@ body.community-active #innerPage {
   min-height: 100dvh;
   margin: 0 !important;
   padding: 0 !important;
-  background: #073746;
+  background: #073646;
 }
 
 body.community-active #innerPage > .container,
@@ -34,16 +34,16 @@ body.community-active #pageContent {
 /* 2. COLOR SYSTEM */
 
 .cma-community {
-  --cma-bg: #073746;
+  --cma-bg: #073646;
   --cma-deep: #052D3B;
   --cma-panel: #08494B;
-  --cma-card: #103E4C;
-  --cma-border: #1D6470;
+  --cma-card: #11414D;
+  --cma-border: #275B66;
+  --cma-avatar: #0B7567;
   --cma-green: #08C99A;
-  --cma-green-2: #12B88F;
-  --cma-mint: #68DDB9;
+  --cma-mint: #82DBC9;
   --cma-white: #FFFFFF;
-  --cma-muted: #B4CFD6;
+  --cma-muted: #AECED9;
 
   width: 100%;
   max-width: 100%;
@@ -103,14 +103,14 @@ body.community-active #pageContent {
   justify-content: center;
   border: 1px solid var(--cma-border);
   border-radius: 12px;
-  background: #0B3F4D;
+  background: var(--cma-card);
   color: var(--cma-white);
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .cma-icon-button:active {
-  background: #ffffff18;
+  background: var(--cma-panel);
 }
 
 .cma-icon-button svg {
@@ -213,18 +213,23 @@ body.community-active #pageContent {
   background: #FF5A5F;
 }
 
-/* 5. POST COMPOSER (glass card) */
+/* 5. POST COMPOSER (solid card) */
 
 .cma-composer {
   width: 100%;
   min-width: 0;
-  padding: 14px;
+  padding: 18px 16px;
   margin: 0 auto 15px;
-  background: rgba(8, 73, 75, 0.55);
+  background: var(--cma-card);
   border: 1px solid var(--cma-border);
   border-radius: 17px;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+}
+
+.cma-composer-title {
+  margin: 0 0 14px;
+  color: var(--cma-white);
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .cma-composer-top {
@@ -244,9 +249,10 @@ body.community-active #pageContent {
   border-radius: 50%;
   border: 0;
   box-shadow: none;
-  background: var(--cma-card);
+  background: var(--cma-avatar);
   color: var(--cma-white);
   font-size: 19px;
+  font-weight: 800;
   overflow: hidden;
 }
 
@@ -261,17 +267,17 @@ body.community-active #pageContent {
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 42px;
-  padding: 11px 14px;
+  min-height: 90px;
+  padding: 14px 16px;
   resize: vertical;
   border: 1px solid var(--cma-border);
   outline: none;
-  border-radius: 22px;
-  background: #08394A;
+  border-radius: 16px;
+  background: var(--cma-panel);
   color: var(--cma-white);
   font-family: inherit;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .cma-post-input::placeholder {
@@ -283,11 +289,12 @@ body.community-active #pageContent {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .cma-photo-button,
 .cma-post-button {
+  min-height: 44px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -298,11 +305,11 @@ body.community-active #pageContent {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 16px;
-  border: 1.5px solid var(--cma-green);
-  border-radius: 22px;
+  padding: 0 18px;
+  border: 1px solid var(--cma-border);
+  border-radius: 14px;
   background: transparent;
-  color: var(--cma-green);
+  color: var(--cma-mint);
 }
 
 .cma-photo-button svg {
@@ -316,17 +323,12 @@ body.community-active #pageContent {
 }
 
 .cma-post-button {
-  padding: 9px 20px;
+  padding: 0 24px;
   border: 0;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #1FE0AE, var(--cma-green-2));
+  border-radius: 14px;
+  background: var(--cma-green);
   color: var(--cma-deep);
-  box-shadow: 0 6px 18px -4px rgba(31, 217, 168, 0.6);
-  transition: opacity 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.cma-post-button:hover {
-  box-shadow: 0 8px 22px -2px rgba(31, 217, 168, 0.8);
+  transition: opacity 0.2s ease, transform 0.15s ease;
 }
 
 .cma-post-button:active {
@@ -348,7 +350,7 @@ body.community-active #pageContent {
 .cma-section-title {
   margin: 2px 0 12px;
   color: var(--cma-white);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
 }
 
@@ -385,7 +387,7 @@ body.community-active #pageContent {
   font-size: 12px;
 }
 
-/* 7. SHARED POST CARD (glass card) */
+/* 7. SHARED POST CARD (solid card) */
 
 .cma-post-card {
   display: block;
@@ -395,11 +397,9 @@ body.community-active #pageContent {
   margin: 0;
   border: 1px solid var(--cma-border);
   border-radius: 17px;
-  background: rgba(16, 62, 76, 0.6);
-  color: var(--cma-white, #FFFFFF);
+  background: var(--cma-card);
+  color: var(--cma-white);
   overflow: hidden;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 }
 
 .cma-post-header {
@@ -427,14 +427,14 @@ body.community-active #pageContent {
   font-size: 10px;
 }
 
-/* Optional badge (e.g. DEMO POST) */
+/* Badge (DEMO POST) */
 .cma-post-badge {
   display: inline-block;
   margin-left: 6px;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 7px;
-  background: #0B4A50;
-  color: var(--cma-green);
+  background: #105157;
+  color: var(--cma-mint);
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.8px;
@@ -498,7 +498,7 @@ body.community-active #pageContent {
   justify-content: center;
   border: 1px solid var(--cma-border);
   border-radius: 50%;
-  background: #0A4152;
+  background: var(--cma-panel);
   color: var(--cma-white);
   font-size: 17px;
   cursor: pointer;
@@ -548,7 +548,7 @@ body.community-active #pageContent {
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--cma-green, #08C99A);
+  color: var(--cma-green);
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -572,8 +572,8 @@ button.cma-comment-input {
   border-radius: 28px;
   outline: none;
 
-  background: #08394A;
-  color: var(--cma-muted, #B4CFD6);
+  background: var(--cma-panel);
+  color: var(--cma-muted);
 
   font-family: inherit;
   font-size: 13px;
@@ -585,14 +585,14 @@ button.cma-comment-input {
 }
 
 button.cma-comment-input:active {
-  background: #052D3B;
-  border-color: var(--cma-mint, #68DDB9);
+  background: var(--cma-deep);
+  border-color: var(--cma-mint);
 }
 
 .cma-comment-placeholder {
   flex: 1;
   min-width: 0;
-  color: var(--cma-muted, #B4CFD6);
+  color: var(--cma-muted);
   font-size: 13px;
   text-align: left;
 }
@@ -604,7 +604,7 @@ button.cma-comment-input:active {
   justify-content: center;
   width: 27px;
   height: 27px;
-  color: var(--cma-mint, #68DDB9);
+  color: var(--cma-mint);
   font-size: 21px;
   line-height: 1;
 }
@@ -654,8 +654,8 @@ button.cma-comment-input:active {
   overflow-x: hidden;
   overflow-y: hidden;
 
-  background: var(--cma-card, #103E4C);
-  color: var(--cma-white, #FFFFFF);
+  background: var(--cma-card);
+  color: var(--cma-white);
 
   font-family: inherit;
   font-size: 13px;
@@ -663,7 +663,7 @@ button.cma-comment-input:active {
 }
 
 #cmaCommentsSheet #cmaCommentInput::placeholder {
-  color: var(--cma-muted, #B4CFD6);
+  color: var(--cma-muted);
 }
 
 .cma-comment-compose button {
@@ -674,8 +674,8 @@ button.cma-comment-input:active {
 
   border: none;
   border-radius: 15px;
-  background: var(--cma-green, #08C99A);
-  color: var(--cma-deep, #052D3B);
+  background: var(--cma-green);
+  color: var(--cma-deep);
 
   font-family: inherit;
   font-size: 13px;
@@ -712,10 +712,10 @@ button.cma-comment-input:active {
   width: 100%;
   max-width: 100%;
   margin: 0 0 15px;
-  padding: 14px;
+  padding: 18px 16px;
   border: 1px solid var(--cma-border);
   border-radius: 17px;
-  background: rgba(8, 73, 75, 0.55);
+  background: var(--cma-card);
   box-sizing: border-box;
 }
 
@@ -756,8 +756,8 @@ button.cma-comment-input:active {
   z-index: 9999;
   padding: 13px 16px;
   border-radius: 12px;
-  background: var(--cma-card, #103E4C);
-  color: var(--cma-white, #FFFFFF);
+  background: var(--cma-card);
+  color: var(--cma-white);
   font-size: 13px;
   opacity: 0;
   transform: translateY(10px);
@@ -818,10 +818,13 @@ button.cma-comment-input:active {
     height: 21px;
   }
 
-  .cma-post-card,
+  .cma-post-card {
+    padding: 12px;
+  }
+
   .cma-composer,
   .cma-profile-composer {
-    padding: 12px;
+    padding: 16px 14px;
   }
 
   .cma-reactions {
@@ -859,10 +862,13 @@ button.cma-comment-input:active {
     padding: 7px 0 0;
   }
 
-  .cma-post-card,
+  .cma-post-card {
+    padding: 10px;
+  }
+
   .cma-composer,
   .cma-profile-composer {
-    padding: 10px;
+    padding: 14px 12px;
   }
 
   button.cma-comment-input {
@@ -962,11 +968,11 @@ button.cma-comment-input:active {
   height: 86px;
   min-width: 86px;
 
-  border: 4px solid #073746;
+  border: 4px solid #073646;
   border-radius: 50%;
   box-shadow: none;
 
-  background: #103E4C;
+  background: var(--cma-card, #11414D);
 
   display: flex;
   align-items: center;
@@ -994,32 +1000,4 @@ button.cma-comment-input:active {
 .cma-profile-cover,
 .cma-profile-avatar {
   box-sizing: border-box;
-}
-/* POST BOX: ektu beshi height */
-
-.cma-composer,
-.cma-profile-composer {
-  padding: 18px 16px;
-}
-
-.cma-composer-top {
-  gap: 12px;
-}
-
-.cma-post-input {
-  min-height: 90px;
-  padding: 14px 16px;
-  line-height: 1.6;
-}
-
-.cma-composer-bottom {
-  margin-top: 16px;
-}
-
-.cma-photo-button {
-  padding: 11px 18px;
-}
-
-.cma-post-button {
-  padding: 12px 24px;
 }
