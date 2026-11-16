@@ -846,7 +846,7 @@ button.cma-comment-input:active {
 
 .cma-profile-cover {
     position: relative;
-    width: 75%;
+    width: 100%;
     aspect-ratio: 4 / 3;
     height: 200px;
     margin-bottom: 0;
