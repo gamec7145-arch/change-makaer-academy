@@ -847,10 +847,9 @@ button.cma-comment-input:active {
 .cma-profile-cover {
     position: relative;
     width: 100%;
-    aspect-ratio: 4 / 3;
     height: 200px;
     margin-bottom: 0;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: visible;
     isolation: isolate;
     background: linear-gradient(
