@@ -663,105 +663,43 @@
             return posts;
         },
 
-        async deletePost(postId) {
+                async deletePost(postId) {
             const user = await ensureUser();
 
-            if (!user || !postId) return false;
-
-            const { error } = await db
-                .from("cma_community_posts")
-                .delete()
-                .eq("id", postId)
-                .eq("user_id", user.id);
-
-            if (error) {
-                console.error("Delete post error:", error);
-
-                notify("Post could not be deleted.", "error");
-
+            if (!user || !postId) {
+                notify("Post could not be identified. Please try again.", "error");
                 return false;
             }
 
-            await this.loadPosts();
+            try {
+                const { data, error } = await db
+                    .from("cma_community_posts")
+                    .delete()
+                    .eq("id", postId)
+                    .eq("user_id", user.id)
+                    .select("id");
 
-            if (window.CMACommunityProfile?.refreshPosts) {
-                await window.CMACommunityProfile.refreshPosts();
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    notify("Post was not deleted. Check ownership or permissions.", "error");
+                    return false;
+                }
+
+                await this.loadPosts();
+
+                if (window.CMACommunityProfile?.refreshPosts) {
+                    await window.CMACommunityProfile.refreshPosts();
+                }
+
+                notify("Post deleted.", "success");
+                return true;
+
+            } catch (error) {
+                console.error("Delete post error:", error);
+                notify("Post could not be deleted.", "error");
+                return false;
             }
-
-            notify("Post deleted.", "success");
-
-            return true;
-        },
-
-        bindEvents() {
-            if (this.eventsBound) return;
-
-            this.eventsBound = true;
-
-            createPhotoInput();
-
-            document.addEventListener(
-                "cma:submit-post",
-                async event => {
-                    const detail = event.detail || {};
-
-                    const content =
-                        detail.content ??
-                        document.querySelector(
-                            "#cmaPostContent, #cmaPostInput, [name='post_content']"
-                        )?.value ??
-                        "";
-
-                    const image =
-                        detail.image || selectedImage;
-
-                    await this.createPost(content, image);
-                }
-            );
-
-            document.addEventListener(
-                "cma:select-photo",
-                async event => {
-                    if (event.detail?.file) {
-                        selectedImage = event.detail.file;
-
-                        if (Feed.showSelectedPhoto) {
-                            Feed.showSelectedPhoto(selectedImage);
-                        }
-
-                        return;
-                    }
-
-                    const user = await ensureUser();
-
-                    if (!user) {
-                        notify("Please login first.", "error");
-                        return;
-                    }
-
-                    createPhotoInput().click();
-                }
-            );
-
-            document.addEventListener(
-                "cma:remove-photo",
-                () => {
-                    clearSelectedPhoto();
-                }
-            );
-
-            document.addEventListener(
-                "cma:delete-post",
-                async event => {
-                    const postId =
-                        event.detail?.postId ||
-                        event.detail?.id;
-
-                    if (postId) {
-                        await this.deletePost(postId);
-                    }
-                }
-            );
         },
 
         async render() {
