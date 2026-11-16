@@ -84,10 +84,10 @@
                     class="cma-photo-button"
                     data-cma-action="photo"
                     style="display:inline-flex;align-items:center;
-                    justify-content:center;gap:8px;
-                    padding:9px 15px;border:1px solid #68DDB9;
-                    border-radius:10px;background:transparent;
-                    color:#FFFFFF;font-size:14px;font-weight:600;">
+                    justify-content:center;gap:6px;
+                    padding:5px 10px;border:1px solid #68DDB9;
+                    border-radius:8px;background:transparent;
+                    color:#FFFFFF;font-size:11px;font-weight:600;">
 
                     <svg viewBox="0 0 24 24"
                         width="19" height="19"
