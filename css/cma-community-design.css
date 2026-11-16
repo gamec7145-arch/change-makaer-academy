@@ -1,7 +1,7 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FINAL DESIGN SYSTEM
-   (Part 1 + Part 2 merged, updated design)
+   (New design + original sizes)
 ========================================= */
 
 /* 1. FULL SCREEN LAYOUT */
@@ -69,7 +69,7 @@ body.community-active #pageContent {
 
 .cma-header {
   width: 100%;
-  min-height: 50px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -81,7 +81,7 @@ body.community-active #pageContent {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.5px;
   white-space: nowrap;
@@ -94,15 +94,15 @@ body.community-active #pageContent {
 }
 
 .cma-icon-button {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--cma-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: #0B3F4D;
   color: var(--cma-white);
   cursor: pointer;
@@ -115,11 +115,11 @@ body.community-active #pageContent {
 
 .cma-icon-button svg {
   display: block;
-  width: 21px;
-  height: 21px;
+  width: 23px;
+  height: 23px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -132,8 +132,8 @@ body.community-active #pageContent {
   align-items: center;
   justify-content: space-between;
   gap: 0;
-  padding: 0;
-  margin-bottom: 16px;
+  padding: 9px 0 0;
+  margin-bottom: 15px;
   border-bottom: 1px solid var(--cma-border);
 }
 
@@ -141,20 +141,20 @@ body.community-active #pageContent {
   position: relative;
   flex: 1 1 20%;
   min-width: 0;
-  min-height: 62px;
-  padding: 8px 1px 10px;
+  min-height: 54px;
+  padding: 5px 1px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   border: none;
   border-bottom: 3px solid transparent;
   border-radius: 0;
   background: transparent;
   color: var(--cma-muted);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
   text-align: center;
@@ -176,11 +176,11 @@ body.community-active #pageContent {
 
 .cma-nav-icon svg {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 23px;
+  height: 23px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -205,7 +205,7 @@ body.community-active #pageContent {
 .cma-nav-item.cma-has-dot::after {
   content: "";
   position: absolute;
-  top: 9px;
+  top: 7px;
   left: calc(50% + 6px);
   width: 8px;
   height: 8px;
@@ -218,11 +218,11 @@ body.community-active #pageContent {
 .cma-composer {
   width: 100%;
   min-width: 0;
-  padding: 16px;
-  margin: 0 auto 16px;
+  padding: 14px;
+  margin: 0 auto 15px;
   background: rgba(8, 73, 75, 0.55);
   border: 1px solid var(--cma-border);
-  border-radius: 22px;
+  border-radius: 17px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
@@ -230,14 +230,14 @@ body.community-active #pageContent {
 .cma-composer-top {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Profile picture: plain, no ring, no glow */
 .cma-avatar {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,16 +261,16 @@ body.community-active #pageContent {
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 84px;
-  padding: 12px 14px;
+  min-height: 42px;
+  padding: 11px 14px;
   resize: vertical;
   border: 1px solid var(--cma-border);
   outline: none;
-  border-radius: 16px;
+  border-radius: 22px;
   background: #08394A;
   color: var(--cma-white);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -283,14 +283,13 @@ body.community-active #pageContent {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .cma-photo-button,
 .cma-post-button {
-  min-height: 44px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -298,17 +297,17 @@ body.community-active #pageContent {
 .cma-photo-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 16px;
+  gap: 7px;
+  padding: 8px 16px;
   border: 1.5px solid var(--cma-green);
-  border-radius: 14px;
+  border-radius: 22px;
   background: transparent;
   color: var(--cma-green);
 }
 
 .cma-photo-button svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -317,9 +316,9 @@ body.community-active #pageContent {
 }
 
 .cma-post-button {
-  padding: 0 28px;
+  padding: 9px 20px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 22px;
   background: linear-gradient(135deg, #1FE0AE, var(--cma-green-2));
   color: var(--cma-deep);
   box-shadow: 0 6px 18px -4px rgba(31, 217, 168, 0.6);
@@ -347,9 +346,9 @@ body.community-active #pageContent {
 /* 6. FEED */
 
 .cma-section-title {
-  margin: 4px 0 14px;
+  margin: 2px 0 12px;
   color: var(--cma-white);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
 }
 
@@ -392,10 +391,10 @@ body.community-active #pageContent {
   display: block;
   width: 100%;
   min-width: 0;
-  padding: 16px;
+  padding: 14px;
   margin: 0;
   border: 1px solid var(--cma-border);
-  border-radius: 22px;
+  border-radius: 17px;
   background: rgba(16, 62, 76, 0.6);
   color: var(--cma-white, #FFFFFF);
   overflow: hidden;
@@ -406,7 +405,7 @@ body.community-active #pageContent {
 .cma-post-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .cma-post-author {
@@ -419,24 +418,24 @@ body.community-active #pageContent {
 
 .cma-post-author strong {
   color: var(--cma-white);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .cma-post-author span {
   color: var(--cma-muted);
-  font-size: 12px;
+  font-size: 10px;
 }
 
 /* Optional badge (e.g. DEMO POST) */
 .cma-post-badge {
   display: inline-block;
-  margin-left: 8px;
-  padding: 3px 8px;
-  border-radius: 8px;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 7px;
   background: #0B4A50;
   color: var(--cma-green);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -444,9 +443,9 @@ body.community-active #pageContent {
 
 /* Post menu button (three dots) */
 .cma-post-menu {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -457,15 +456,15 @@ body.community-active #pageContent {
 }
 
 .cma-post-menu svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
 }
 
 .cma-post-caption {
-  margin: 14px 0;
+  margin: 12px 0;
   color: var(--cma-white);
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -476,7 +475,7 @@ body.community-active #pageContent {
   width: 100%;
   max-height: 420px;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 12px;
   margin-bottom: 12px;
 }
 
@@ -485,23 +484,23 @@ body.community-active #pageContent {
 .cma-reactions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 12px 0;
+  gap: 10px;
+  margin: 11px 0;
 }
 
 .cma-reactions button {
-  width: 48px;
-  height: 40px;
-  min-width: 48px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--cma-border);
-  border-radius: 20px;
+  border-radius: 50%;
   background: #0A4152;
   color: var(--cma-white);
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.15s ease;
 }
@@ -520,12 +519,12 @@ body.community-active #pageContent {
 
 .cma-comment-preview {
   min-width: 0;
-  padding: 10px 12px;
+  padding: 10px 11px;
   margin-top: 10px;
-  border-radius: 12px;
+  border-radius: 11px;
   background: var(--cma-panel);
   color: var(--cma-white);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -551,7 +550,7 @@ body.community-active #pageContent {
   background: transparent;
   color: var(--cma-green, #08C99A);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -570,14 +569,14 @@ button.cma-comment-input {
   margin-top: 12px;
 
   border: 1px solid var(--cma-border);
-  border-radius: 16px;
+  border-radius: 28px;
   outline: none;
 
   background: #08394A;
   color: var(--cma-muted, #B4CFD6);
 
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   text-align: left;
 
@@ -594,7 +593,7 @@ button.cma-comment-input:active {
   flex: 1;
   min-width: 0;
   color: var(--cma-muted, #B4CFD6);
-  font-size: 14px;
+  font-size: 13px;
   text-align: left;
 }
 
@@ -712,10 +711,10 @@ button.cma-comment-input:active {
 .cma-composer.cma-profile-composer {
   width: 100%;
   max-width: 100%;
-  margin: 0 0 16px;
-  padding: 16px;
+  margin: 0 0 15px;
+  padding: 14px;
   border: 1px solid var(--cma-border);
-  border-radius: 22px;
+  border-radius: 17px;
   background: rgba(8, 73, 75, 0.55);
   box-sizing: border-box;
 }
@@ -802,16 +801,16 @@ button.cma-comment-input:active {
 
 @media (max-width: 380px) {
   .cma-community {
-    padding: 12px;
+    padding: 11px;
   }
 
   .cma-header-title {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .cma-nav-item {
-    font-size: 10px;
-    min-height: 58px;
+    font-size: 9px;
+    min-height: 50px;
   }
 
   .cma-nav-icon svg {
@@ -822,11 +821,11 @@ button.cma-comment-input:active {
   .cma-post-card,
   .cma-composer,
   .cma-profile-composer {
-    padding: 14px;
+    padding: 12px;
   }
 
   .cma-reactions {
-    gap: 6px;
+    gap: 8px;
   }
 
   button.cma-comment-input {
@@ -839,16 +838,16 @@ button.cma-comment-input:active {
 
 @media (max-width: 340px) {
   .cma-community {
-    padding: 10px;
+    padding: 9px;
   }
 
   .cma-header-title {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .cma-nav-item {
-    font-size: 9px;
-    gap: 3px;
+    font-size: 8px;
+    gap: 4px;
   }
 
   .cma-nav-icon svg {
@@ -856,19 +855,18 @@ button.cma-comment-input:active {
     height: 20px;
   }
 
+  .cma-navigation {
+    padding: 7px 0 0;
+  }
+
   .cma-post-card,
   .cma-composer,
   .cma-profile-composer {
-    padding: 12px;
-  }
-
-  .cma-reactions button {
-    width: 44px;
-    min-width: 44px;
+    padding: 10px;
   }
 
   button.cma-comment-input {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 
@@ -895,6 +893,11 @@ button.cma-comment-input:active {
 
   .cma-nav-item {
     font-size: 12px;
+  }
+
+  .cma-nav-icon svg {
+    width: 23px;
+    height: 23px;
   }
 
   .cma-profile-composer,
@@ -941,7 +944,7 @@ button.cma-comment-input:active {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  border-radius: 20px;
+  border-radius: 16px;
   pointer-events: none;
 }
 
@@ -991,4 +994,4 @@ button.cma-comment-input:active {
 .cma-profile-cover,
 .cma-profile-avatar {
   box-sizing: border-box;
-   }
+}
