@@ -1767,6 +1767,21 @@ function bindEvents(root) {
         return;
       }
 
+const avatarAction = event.target.closest(
+  '[data-cma-profile-action="change-avatar"]'
+);
+
+if (avatarAction) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  root.querySelector(
+    "#cmaProfileAvatarInput"
+  )?.click();
+
+  return;
+}
+       
       const profileAction = event.target.closest(
         "[data-cma-profile-action]"
       );
