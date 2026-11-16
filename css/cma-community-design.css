@@ -828,3 +828,23 @@ button.cma-comment-input:active {
     margin-right: auto;
   }
    }
+
+/* CMA Profile Cover Image Size Fix */
+.cma-profile-cover {
+    position: relative;
+    width: 100%;
+    height: 155px;
+}
+
+.cma-profile-cover > img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 16px;
+    pointer-events: none;
+}
+
