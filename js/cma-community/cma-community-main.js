@@ -1,14 +1,7 @@
-
 /* ==========================================
    CHANGE MAKER ACADEMY
    COMMUNITY MAIN
-   Updated:
-   - Home Feed loading
-   - Current user profile sync
-   - Author name and avatar sync
-   - Photo picker and upload
-   - Profile post loading
-   - Post create/delete refresh
+   Stable loading + post management
 ========================================== */
 
 (function () {
@@ -18,7 +11,11 @@
     const Feed = window.CMACommunityFeed;
 
     if (!Core || !Core.db || !Feed) {
-        console.error("CMA Community modules not loaded.");
+        console.error("CMA Community modules not loaded.", {
+            core: !!Core,
+            database: !!Core?.db,
+            feed: !!Feed
+        });
         return;
     }
 
@@ -30,6 +27,7 @@
     let postsCache = [];
     let photoInput = null;
     let submittingPost = false;
+    let eventsBound = false;
 
     function getRoot() {
         return Core.getRoot
@@ -72,10 +70,21 @@
     }
 
     async function loadSession() {
-        const result = await db.auth.getUser();
+        try {
+            const { data, error } = await db.auth.getUser();
 
-        if (result.error) {
-            console.error("Session error:", result.error);
+            if (error) throw error;
+
+            currentUser = data?.user || null;
+
+            if (Core.setCurrentUser) {
+                Core.setCurrentUser(currentUser);
+            }
+
+            return currentUser;
+
+        } catch (error) {
+            console.error("Community session error:", error);
             currentUser = null;
 
             if (Core.setCurrentUser) {
@@ -84,14 +93,6 @@
 
             return null;
         }
-
-        currentUser = result.data.user || null;
-
-        if (Core.setCurrentUser) {
-            Core.setCurrentUser(currentUser);
-        }
-
-        return currentUser;
     }
 
     async function ensureUser() {
@@ -102,11 +103,6 @@
         return currentUser;
     }
 
-    /*
-      IMPORTANT:
-      Each member syncs their own public-safe profile.
-      We never read another user's Auth Metadata.
-    */
     async function syncCurrentUserProfile(user) {
         user = user || currentUser;
 
@@ -122,32 +118,25 @@
                 .maybeSingle();
 
             if (readError) {
-                console.error(
-                    "Existing profile lookup error:",
-                    readError
-                );
+                console.error("Existing profile lookup error:", readError);
             }
 
             const meta = getMetadata(user);
 
-            const fullName =
-                meta.full_name ||
-                meta.display_name ||
-                existing?.full_name ||
-                user.email?.split("@")[0] ||
-                "Community Member";
-
-            const avatar =
-                meta.avatar_url ||
-                meta.picture ||
-                meta.avatar ||
-                existing?.avatar_url ||
-                "";
-
             const profileData = {
                 user_id: user.id,
-                full_name: fullName,
-                avatar_url: avatar,
+                full_name:
+                    meta.full_name ||
+                    meta.display_name ||
+                    existing?.full_name ||
+                    user.email?.split("@")[0] ||
+                    "Community Member",
+                avatar_url:
+                    meta.avatar_url ||
+                    meta.picture ||
+                    meta.avatar ||
+                    existing?.avatar_url ||
+                    "",
                 short_description:
                     existing?.short_description || "",
                 institution:
@@ -166,21 +155,14 @@
                 .single();
 
             if (error) {
-                console.error(
-                    "Profile sync error:",
-                    error
-                );
+                console.error("Profile sync error:", error);
                 return existing || null;
             }
 
             return data;
 
         } catch (error) {
-            console.error(
-                "Profile sync exception:",
-                error
-            );
-
+            console.error("Profile sync exception:", error);
             return null;
         }
     }
@@ -194,7 +176,6 @@
 
         if (!uniqueIds.length) return profileMap;
 
-        // Sync only the currently logged-in user's own profile.
         if (
             currentUser?.id &&
             uniqueIds.includes(currentUser.id)
@@ -202,25 +183,23 @@
             await syncCurrentUserProfile(currentUser);
         }
 
-        const { data, error } = await db
-            .from("cma_community_profiles")
-            .select(
-                "user_id, full_name, short_description, institution, avatar_url"
-            )
-            .in("user_id", uniqueIds);
+        try {
+            const { data, error } = await db
+                .from("cma_community_profiles")
+                .select(
+                    "user_id, full_name, short_description, institution, avatar_url"
+                )
+                .in("user_id", uniqueIds);
 
-        if (error) {
-            console.error(
-                "Public profile loading error:",
-                error
-            );
+            if (error) throw error;
 
-            return profileMap;
+            (data || []).forEach(profile => {
+                profileMap[profile.user_id] = profile;
+            });
+
+        } catch (error) {
+            console.error("Public profile loading error:", error);
         }
-
-        (data || []).forEach(profile => {
-            profileMap[profile.user_id] = profile;
-        });
 
         return profileMap;
     }
@@ -230,17 +209,12 @@
 
         if (profile) {
             return {
-                author_name:
-                    profile.full_name || "Community Member",
-
-                avatar_url:
-                    profile.avatar_url || "",
-
+                author_name: profile.full_name || "Community Member",
+                avatar_url: profile.avatar_url || "",
                 user_id: userId
             };
         }
 
-        // Fallback only for the logged-in user's own account.
         if (currentUser?.id === userId) {
             return {
                 author_name: getDisplayName(currentUser),
@@ -279,9 +253,7 @@
             photoInput.value = "";
         }
 
-        const preview = document.getElementById(
-            "cmaSelectedPhoto"
-        );
+        const preview = document.getElementById("cmaSelectedPhoto");
 
         if (preview) {
             preview.innerHTML = "";
@@ -292,7 +264,6 @@
         if (photoInput) return photoInput;
 
         photoInput = document.createElement("input");
-
         photoInput.type = "file";
         photoInput.accept = "image/jpeg,image/png,image/webp";
         photoInput.style.display = "none";
@@ -310,11 +281,7 @@
             ];
 
             if (!allowed.includes(file.type)) {
-                notify(
-                    "Only JPG, PNG and WEBP images are allowed.",
-                    "error"
-                );
-
+                notify("Only JPG, PNG and WEBP images are allowed.", "error");
                 photoInput.value = "";
                 return;
             }
@@ -342,15 +309,22 @@
     const Main = {
 
         async init() {
-            await loadSession();
+            try {
+                await loadSession();
 
-            if (currentUser) {
-                await syncCurrentUserProfile(currentUser);
+                if (currentUser) {
+                    await syncCurrentUserProfile(currentUser);
+                }
+
+                this.bindEvents();
+
+                return await this.render();
+
+            } catch (error) {
+                console.error("Community initialization error:", error);
+                notify("Community could not be loaded. Please refresh the page.", "error");
+                throw error;
             }
-
-            this.bindEvents();
-
-            return this.render();
         },
 
         async createPost(content, imageFile) {
@@ -371,11 +345,7 @@
                 content = String(content || "").trim();
 
                 if (!content && !imageFile) {
-                    notify(
-                        "Write something or select a photo first.",
-                        "error"
-                    );
-
+                    notify("Write something or select a photo first.", "error");
                     return false;
                 }
 
@@ -389,20 +359,12 @@
                     ];
 
                     if (!allowed.includes(imageFile.type)) {
-                        notify(
-                            "Only JPG, PNG and WEBP images are allowed.",
-                            "error"
-                        );
-
+                        notify("Only JPG, PNG and WEBP images are allowed.", "error");
                         return false;
                     }
 
                     if (imageFile.size > 5 * 1024 * 1024) {
-                        notify(
-                            "Image must be under 5MB.",
-                            "error"
-                        );
-
+                        notify("Image must be under 5MB.", "error");
                         return false;
                     }
 
@@ -412,11 +374,10 @@
                         "image/webp": "webp"
                     };
 
-                    const extension = extensions[imageFile.type];
-
                     const filePath =
                         user.id + "/" +
-                        Date.now() + "." + extension;
+                        Date.now() + "." +
+                        extensions[imageFile.type];
 
                     const { error: uploadError } = await db
                         .storage
@@ -426,11 +387,7 @@
                             contentType: imageFile.type
                         });
 
-                    if (uploadError) {
-                        console.error(uploadError);
-                        notify("Image upload failed.", "error");
-                        return false;
-                    }
+                    if (uploadError) throw uploadError;
 
                     const { data: publicData } = db
                         .storage
@@ -440,12 +397,7 @@
                     imageUrl = publicData?.publicUrl || "";
 
                     if (!imageUrl) {
-                        notify(
-                            "Could not get the uploaded image URL.",
-                            "error"
-                        );
-
-                        return false;
+                        throw new Error("Uploaded image URL is unavailable.");
                     }
                 }
 
@@ -457,23 +409,11 @@
                         image_url: imageUrl
                     });
 
-                if (error) {
-                    console.error("Post insert error:", error);
-
-                    notify(
-                        "Post could not be published.",
-                        "error"
-                    );
-
-                    return false;
-                }
+                if (error) throw error;
 
                 clearSelectedPhoto();
 
-                const input = document.getElementById(
-                    "cmaPostInput"
-                );
-
+                const input = document.getElementById("cmaPostInput");
                 if (input) input.value = "";
 
                 await this.loadPosts();
@@ -483,17 +423,11 @@
                 }
 
                 notify("Post published successfully.", "success");
-
                 return true;
 
             } catch (error) {
                 console.error("Create post error:", error);
-
-                notify(
-                    "Something went wrong while posting.",
-                    "error"
-                );
-
+                notify("Post could not be published. Please try again.", "error");
                 return false;
 
             } finally {
@@ -507,76 +441,70 @@
 
             if (!list) return [];
 
-            const { data, error } = await db
-                .from("cma_community_posts")
-                .select("*")
-                .order("created_at", {
-                    ascending: false
+            try {
+                const { data, error } = await db
+                    .from("cma_community_posts")
+                    .select("*")
+                    .order("created_at", {
+                        ascending: false
+                    });
+
+                if (error) throw error;
+
+                const posts = data || [];
+                postsCache = posts;
+
+                const profileMap = await loadPublicProfiles(
+                    posts.map(post => post.user_id)
+                );
+
+                list.innerHTML = "";
+
+                if (!posts.length) {
+                    list.innerHTML =
+                        '<p class="cma-empty-message">No posts yet.</p>';
+                    return [];
+                }
+
+                posts.forEach(post => {
+                    const author = makeAuthor(post.user_id, profileMap);
+
+                    const card = Feed.createPostCard({
+                        ...post,
+                        ...author,
+                        caption: post.content || "",
+                        image_url: post.image_url || "",
+                        created_at: post.created_at,
+                        is_owner: currentUser?.id === post.user_id
+                    });
+
+                    if (card) {
+                        if (typeof card === "string") {
+                            list.insertAdjacentHTML("beforeend", card);
+                        } else {
+                            list.appendChild(card);
+                        }
+                    }
                 });
 
-            if (error) {
+                if (Feed.loadRandomComment) {
+                    posts.forEach(post => {
+                        Feed.loadRandomComment(post.id);
+                    });
+                }
+
+                return posts;
+
+            } catch (error) {
                 console.error("Posts loading error:", error);
 
                 list.innerHTML =
                     '<p class="cma-empty-message">Unable to load posts.</p>';
 
-                return [];
+                throw error;
             }
-
-            const posts = data || [];
-
-            postsCache = posts;
-
-            const userIds = posts.map(post => post.user_id);
-
-            const profileMap = await loadPublicProfiles(userIds);
-
-            list.innerHTML = "";
-
-            if (!posts.length) {
-                list.innerHTML =
-                    '<p class="cma-empty-message">No posts yet.</p>';
-
-                return [];
-            }
-
-            posts.forEach(post => {
-                const author = makeAuthor(
-                    post.user_id,
-                    profileMap
-                );
-
-                const card = Feed.createPostCard({
-                    ...post,
-                    ...author,
-                    caption: post.content || "",
-                    image_url: post.image_url || "",
-                    created_at: post.created_at,
-                    is_owner: currentUser?.id === post.user_id
-                });
-
-                if (card) {
-                    if (typeof card === "string") {
-                        list.insertAdjacentHTML(
-                            "beforeend",
-                            card
-                        );
-                    } else {
-                        list.appendChild(card);
-                    }
-                }
-            });
-
-            if (Feed.loadRandomComment) {
-                posts.forEach(post => {
-                    Feed.loadRandomComment(post.id);
-                });
-            }
-
-            return posts;
         },
-
-        async loadUserPosts(user, root) {
+                async loadUserPosts(user, root) {
             user = user || currentUser;
 
             if (!user) {
@@ -587,7 +515,6 @@
 
             if (!user || !root) return [];
 
-            // Only sync the logged-in user's own profile.
             if (currentUser?.id === user.id) {
                 await syncCurrentUserProfile(user);
             }
@@ -596,15 +523,65 @@
 
             if (!postsContainer) return [];
 
-            const { data, error } = await db
-                .from("cma_community_posts")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("created_at", {
-                    ascending: false
+            try {
+                const { data, error } = await db
+                    .from("cma_community_posts")
+                    .select("*")
+                    .eq("user_id", user.id)
+                    .order("created_at", {
+                        ascending: false
+                    });
+
+                if (error) throw error;
+
+                const posts = data || [];
+                postsContainer.innerHTML = "";
+
+                if (!posts.length) {
+                    postsContainer.innerHTML =
+                        '<p class="cma-empty-message">No posts yet.</p>';
+                    return [];
+                }
+
+                const profileMap = await loadPublicProfiles([user.id]);
+
+                posts.forEach(post => {
+                    const author = makeAuthor(user.id, profileMap);
+
+                    const card = Feed.createPostCard({
+                        ...post,
+                        ...author,
+                        caption: post.content || "",
+                        image_url: post.image_url || "",
+                        created_at: post.created_at,
+                        is_owner: currentUser?.id === post.user_id
+                    });
+
+                    if (card) {
+                        if (typeof card === "string") {
+                            postsContainer.insertAdjacentHTML(
+                                "beforeend",
+                                card
+                            );
+                        } else {
+                            postsContainer.appendChild(card);
+                        }
+                    }
                 });
 
-            if (error) {
+                if (Feed.loadRandomComment) {
+                    posts.forEach(post => {
+                        Feed.loadRandomComment(post.id);
+                    });
+                }
+
+                if (Feed.bindEvents) {
+                    Feed.bindEvents(root);
+                }
+
+                return posts;
+
+            } catch (error) {
                 console.error("User posts loading error:", error);
 
                 postsContainer.innerHTML =
@@ -612,62 +589,61 @@
 
                 return [];
             }
-
-            const posts = data || [];
-
-            postsContainer.innerHTML = "";
-
-            if (!posts.length) {
-                postsContainer.innerHTML =
-                    '<p class="cma-empty-message">You have not published any posts yet.</p>';
-
-                return [];
-            }
-
-            const profileMap = await loadPublicProfiles([user.id]);
-
-            posts.forEach(post => {
-                const author = makeAuthor(user.id, profileMap);
-
-                const card = Feed.createPostCard({
-                    ...post,
-                    ...author,
-                    caption: post.content || "",
-                    image_url: post.image_url || "",
-                    created_at: post.created_at,
-                    is_owner: currentUser?.id === post.user_id
-                });
-
-                if (card) {
-                    if (typeof card === "string") {
-                        postsContainer.insertAdjacentHTML(
-                            "beforeend",
-                            card
-                        );
-                    } else {
-                        postsContainer.appendChild(card);
-                    }
-                }
-            });
-
-            if (Feed.loadRandomComment) {
-                posts.forEach(post => {
-                    Feed.loadRandomComment(post.id);
-                });
-            }
-
-            if (Feed.bindEvents) {
-                Feed.bindEvents(root);
-            }
-
-            return posts;
         },
 
-                async deletePost(postId) {
+        async updatePost(postId, content) {
             const user = await ensureUser();
 
             if (!user || !postId) {
-                notify("Post could not be identified. Please try again.", "error");
+                notify("Post could not be identified.", "error");
+                return false;
+            }
+
+            content = String(content || "").trim();
+
+            if (!content) {
+                notify("Post cannot be empty.", "error");
+                return false;
+            }
+
+            try {
+                const { data, error } = await db
+                    .from("cma_community_posts")
+                    .update({
+                        content: content
+                    })
+                    .eq("id", postId)
+                    .eq("user_id", user.id)
+                    .select("id");
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    notify("Post was not updated. Check ownership or permissions.", "error");
+                    return false;
+                }
+
+                await this.loadPosts();
+
+                if (window.CMACommunityProfile?.refreshPosts) {
+                    await window.CMACommunityProfile.refreshPosts();
+                }
+
+                notify("Post updated successfully.", "success");
+                return true;
+
+            } catch (error) {
+                console.error("Update post error:", error);
+                notify("Post could not be updated.", "error");
+                return false;
+            }
+        },
+
+        async deletePost(postId) {
+            const user = await ensureUser();
+
+            if (!user || !postId) {
+                notify("Post could not be identified.", "error");
                 return false;
             }
 
@@ -686,18 +662,28 @@
                     return false;
                 }
 
+                postsCache = postsCache.filter(
+                    post => post.id !== postId
+                );
+
+                document.querySelectorAll("[data-post-id]").forEach(card => {
+                    if (card.dataset.postId === postId) {
+                        card.remove();
+                    }
+                });
+
                 await this.loadPosts();
 
                 if (window.CMACommunityProfile?.refreshPosts) {
                     await window.CMACommunityProfile.refreshPosts();
                 }
 
-                notify("Post deleted.", "success");
+                notify("Post deleted successfully.", "success");
                 return true;
 
             } catch (error) {
                 console.error("Delete post error:", error);
-                notify("Post could not be deleted.", "error");
+                notify("Post could not be deleted. Check Supabase permissions.", "error");
                 return false;
             }
         },
@@ -705,13 +691,109 @@
         async render() {
             const root = getRoot();
 
-            if (!root) return;
-
-            if (Feed.renderHome) {
-                await Feed.renderHome(root);
+            if (!root) {
+                console.error("Community root element was not found.");
+                return false;
             }
 
-            await this.loadPosts();
+            try {
+                if (Feed.renderHome) {
+                    await Feed.renderHome(root);
+                }
+
+                await this.loadPosts();
+                return true;
+
+            } catch (error) {
+                console.error("Community render error:", error);
+
+                root.innerHTML =
+                    '<div class="cma-empty-message">Community could not be loaded. Please refresh the page.</div>';
+
+                return false;
+            }
+        },
+
+        bindEvents() {
+            if (eventsBound) return;
+
+            eventsBound = true;
+
+            createPhotoInput();
+
+            document.addEventListener(
+                "cma:submit-post",
+                async event => {
+                    const detail = event.detail || {};
+
+                    const content =
+                        detail.content ??
+                        document.querySelector(
+                            "#cmaPostContent, #cmaPostInput, [name='post_content']"
+                        )?.value ??
+                        "";
+
+                    const image = detail.image || selectedImage;
+
+                    await this.createPost(content, image);
+                }
+            );
+
+            document.addEventListener(
+                "cma:select-photo",
+                async event => {
+                    if (event.detail?.file) {
+                        selectedImage = event.detail.file;
+
+                        if (Feed.showSelectedPhoto) {
+                            Feed.showSelectedPhoto(selectedImage);
+                        }
+
+                        return;
+                    }
+
+                    const user = await ensureUser();
+
+                    if (!user) {
+                        notify("Please login first.", "error");
+                        return;
+                    }
+
+                    createPhotoInput().click();
+                }
+            );
+
+            document.addEventListener(
+                "cma:remove-photo",
+                () => {
+                    clearSelectedPhoto();
+                }
+            );
+
+            document.addEventListener(
+                "cma:delete-post",
+                async event => {
+                    const postId =
+                        event.detail?.postId ||
+                        event.detail?.id;
+
+                    if (postId) {
+                        await this.deletePost(postId);
+                    }
+                }
+            );
+
+            document.addEventListener(
+                "cma:update-post",
+                async event => {
+                    const postId = event.detail?.postId;
+                    const content = event.detail?.content;
+
+                    if (postId) {
+                        await this.updatePost(postId, content);
+                    }
+                }
+            );
         },
 
         getModules() {
