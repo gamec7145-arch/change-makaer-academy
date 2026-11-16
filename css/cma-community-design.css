@@ -995,3 +995,31 @@ button.cma-comment-input:active {
 .cma-profile-avatar {
   box-sizing: border-box;
 }
+/* POST BOX: ektu beshi height */
+
+.cma-composer,
+.cma-profile-composer {
+  padding: 18px 16px;
+}
+
+.cma-composer-top {
+  gap: 12px;
+}
+
+.cma-post-input {
+  min-height: 90px;
+  padding: 14px 16px;
+  line-height: 1.6;
+}
+
+.cma-composer-bottom {
+  margin-top: 16px;
+}
+
+.cma-photo-button {
+  padding: 11px 18px;
+}
+
+.cma-post-button {
+  padding: 12px 24px;
+}
