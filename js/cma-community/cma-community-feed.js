@@ -161,7 +161,7 @@
                         </div>
 
                         <button
-                            class="cma-icon-button"
+                            class="cma-post-menu"
                             type="button"
                             data-cma-action="search"
                             aria-label="Search">
@@ -204,7 +204,7 @@
                     </nav>
 
                     ${this.renderComposer()}
-
+                    <h2 class="cma-section-title">Community Feed</h2>
                     <section class="cma-feed-list" id="cmaFeedList">
                         <div class="cma-empty-feed">
                             <div class="cma-empty-icon">✦</div>
