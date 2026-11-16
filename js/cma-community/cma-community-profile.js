@@ -532,54 +532,14 @@
   }
 
   function renderProfileComposer(user) {
-    const metadata = getMetadata(user);
-    const avatar = safeImage(
-      metadata.avatar_url || metadata.picture || ""
-    );
+    const Feed = window.CMACommunityFeed;
 
-    /*
-      Uses the same composer selectors as Homepage Feed:
-      #cmaPostInput, #cmaSelectedPhoto,
-      .cma-composer-photo, .cma-composer-submit.
-    */
+    if (!Feed || typeof Feed.renderComposer !== "function") {
+        console.error("Community Feed Composer is not available.");
+        return "";
+    }
 
-    return `
-      <section class="cma-composer cma-profile-composer">
-        <div class="cma-composer-top">
-          <div class="cma-avatar">
-            ${
-              avatar
-                ? `<img src="${avatar}" alt="Your profile photo">`
-                : `<span>${escape((metadata.full_name || "U").charAt(0).toUpperCase())}</span>`
-            }
-          </div>
-
-          <textarea
-            id="cmaPostInput"
-            class="cma-composer-input"
-            placeholder="What's on your mind?"
-            rows="2"
-            maxlength="5000"></textarea>
-        </div>
-
-        <div id="cmaSelectedPhoto"></div>
-
-        <div class="cma-composer-bottom">
-          <button type="button"
-            class="cma-composer-photo"
-            data-cma-profile-composer-photo>
-            <span aria-hidden="true">📷</span>
-            Photo
-          </button>
-
-          <button type="button"
-            class="cma-composer-submit"
-            data-cma-profile-composer-submit>
-            Post
-          </button>
-        </div>
-      </section>
-    `;
+    return Feed.renderComposer();
   }
 
   function renderFriendActionsPlaceholder(isOwnProfile) {
