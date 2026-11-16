@@ -1660,14 +1660,26 @@ async function uploadProfileImage(root, user, file, imageType) {
         }
 
         const { data: savedProfile, error: saveError } = await db
-            .from("cma_community_profiles")
-            .update({
-                [column]: imageUrl,
-                updated_at: new Date().toISOString()
-            })
-            .eq("user_id", user.id)
-            .select("user_id, avatar_url, cover_url")
-            .single();
+    .from("cma_community_profiles")
+    .update({
+        [column]: imageUrl,
+        updated_at: new Date().toISOString()
+    })
+    .eq("user_id", user.id)
+    .select("user_id, avatar_url, cover_url")
+    .single();
+
+if (saveError) throw saveError;
+
+if (!savedProfile) {
+    throw new Error("Profile update could not be confirmed.");
+}
+
+if (savedProfile[column] !== imageUrl) {
+    throw new Error(
+        "Image uploaded, but the new URL was not saved in the database."
+    );
+}
 
         if (saveError) throw saveError;
 
