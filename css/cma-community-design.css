@@ -49,7 +49,7 @@ body.community-active #pageContent {
   max-width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0;
+  margin: 10;
   padding: 14px
   position: relative;
   background: var(--cma-bg);
