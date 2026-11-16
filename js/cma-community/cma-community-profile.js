@@ -1793,11 +1793,14 @@ function bindEvents(root) {
             );
           }
 
-        } else if (action === "change-avatar") {
-          root.querySelector(
-            "#cmaProfileAvatarInput"
-          )?.click();
+        
+} else if (action === "change-avatar") {
+  event.stopPropagation();
 
+  root.querySelector(
+    "#cmaProfileAvatarInput"
+  )?.click();
+           
         } else if (action === "change-cover") {
           root.querySelector(
             "#cmaProfileCoverInput"
