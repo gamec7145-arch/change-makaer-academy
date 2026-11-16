@@ -1598,116 +1598,102 @@
    PART 4 OF 4
 ========================================= */
 
-  async function uploadProfileImage(root, user, file, imageType) {
-    if (!file || !user) return;
+  
+async function uploadProfileImage(root, user, file, imageType) {
+    const db = window.cmaSupabase;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
+    if (!db || !user || !user.id || !file) {
+        alert("Upload information is missing.");
+        return;
+    }
+
+    if (!["avatar", "cover"].includes(imageType)) {
+        alert("Invalid image type.");
+        return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
     if (!allowedTypes.includes(file.type)) {
-      showNotice(
-        "Choose a JPG, PNG or WEBP image.",
-        "error"
-      );
-      return;
+        alert("Only JPG, PNG and WEBP images are allowed.");
+        return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showNotice(
-        "Image size must be 5MB or less.",
-        "error"
-      );
-      return;
+        alert("Image size must be 5MB or less.");
+        return;
     }
 
-    const isAvatar = imageType === "avatar";
-    const column = isAvatar ? "avatar_url" : "cover_url";
-
-    showNotice(
-      isAvatar
-        ? "Uploading profile photo..."
-        : "Uploading cover photo...",
-      "info"
-    );
-
-    try {
-      const extension = file.type === "image/png"
+    const extension = file.type === "image/png"
         ? "png"
         : file.type === "image/webp"
-          ? "webp"
-          : "jpg";
+            ? "webp"
+            : "jpg";
 
-      const filePath =
+    const column = imageType === "avatar"
+        ? "avatar_url"
+        : "cover_url";
+
+    const filePath =
         `profiles/${user.id}/${imageType}-${Date.now()}.${extension}`;
 
-      const { error: uploadError } = await db.storage
-        .from("community-media")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type
-        });
+    try {
+        const { data: uploadData, error: uploadError } =
+            await db.storage
+                .from("community-media")
+                .upload(filePath, file, {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType: file.type
+                });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data: publicData } = db.storage
-        .from("community-media")
-        .getPublicUrl(filePath);
+        const { data: publicData } = db.storage
+            .from("community-media")
+            .getPublicUrl(uploadData.path);
 
-      const imageUrl = publicData?.publicUrl;
+        const imageUrl = publicData?.publicUrl;
 
-      if (!imageUrl) {
-        throw new Error("Could not get uploaded image URL.");
-      }
+        if (!imageUrl) {
+            throw new Error("Could not create image URL.");
+        }
 
-      const { error: profileError } = await db
-        .from("cma_community_profiles")
-        .upsert({
-          user_id: user.id,
-          [column]: imageUrl,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: "user_id"
-        });
+        const { data: savedProfile, error: saveError } = await db
+            .from("cma_community_profiles")
+            .update({
+                [column]: imageUrl,
+                updated_at: new Date().toISOString()
+            })
+            .eq("user_id", user.id)
+            .select("user_id, avatar_url, cover_url")
+            .single();
 
-      if (profileError) throw profileError;
+        if (saveError) throw saveError;
 
-      const metadataUpdate = isAvatar
-        ? { avatar_url: imageUrl }
-        : { cover_url: imageUrl };
+        if (!savedProfile) {
+            throw new Error("Profile update could not be confirmed.");
+        }
 
-      const { error: authError } = await db.auth.updateUser({
-        data: metadataUpdate
-      });
+        alert(
+            imageType === "avatar"
+                ? "Profile picture updated successfully!"
+                : "Cover photo updated successfully!"
+        );
 
-      if (authError) throw authError;
-
-      showNotice(
-        isAvatar
-          ? "Profile photo updated."
-          : "Cover photo updated.",
-        "success"
-      );
-
-      await Profile.render(root, user.id);
+        await window.CMACommunityProfile.render(root, user.id);
 
     } catch (error) {
-      console.error(
-        `${imageType} upload failed:`,
-        error
-      );
+        console.error("Profile image upload error:", error);
 
-      showNotice(
-        error.message || "Could not upload image.",
-        "error"
-      );
+        alert(
+            "Image upload failed: " +
+            (error.message || "Unknown error")
+        );
     }
-  }
-
-  function bindEvents(root) {
+}
+   
+function bindEvents(root) {
     if (root.dataset.cmaProfileEvents === "true") {
       return;
     }
