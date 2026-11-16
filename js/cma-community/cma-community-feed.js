@@ -1,8 +1,9 @@
+
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FEED MODULE
    Standard Post Card + Composer + Events
-   PART 1 OF 2
+   PART 1 OF 3
 ========================================= */
 
 (function () {
@@ -43,10 +44,6 @@
             }));
         },
 
-        /*
-         * Shared composer.
-         * Used by Homepage and Profile.
-         */
         renderComposer() {
             return `
                 <section class="cma-composer">
@@ -206,7 +203,6 @@
                 if (action === "photo") {
                     if (!Core.requireLogin()) return;
 
-                    // Main.js listens on document.
                     document.dispatchEvent(
                         new CustomEvent("cma:select-photo")
                     );
@@ -233,7 +229,6 @@
                         return;
                     }
 
-                    // Main.js listens on document.
                     document.dispatchEvent(
                         new CustomEvent("cma:submit-post", {
                             detail: { content }
@@ -441,24 +436,27 @@
                     </div>
 
                     <button
-                        class="cma-view-comments cma-comment-input-trigger"
+                        class="cma-comment-input"
                         type="button"
                         data-cma-comments="${postId}"
                         aria-label="Write a comment">
-                        <span>Write a comment</span>
+                        <span class="cma-comment-placeholder">
+                            Write a comment...
+                        </span>
+                        <span class="cma-comment-send-icon"
+                            aria-hidden="true">➤</span>
                     </button>
 
                 </article>
             `;
 
-            // Restore the current user's reaction after rendering.
             if (item.id) {
                 this.loadMyReaction(item.id);
             }
 
             return cardHTML;
         },
-
+                                  
         async toggleReaction(postId, reactionType) {
             if (!Core.requireLogin() || !postId) return;
 
@@ -466,7 +464,6 @@
             if (!user) return;
 
             const allowed = ["like", "love", "haha", "wow"];
-
             if (!allowed.includes(reactionType)) return;
 
             try {
@@ -487,7 +484,6 @@
                         .eq("user_id", user.id);
 
                     if (error) throw error;
-
                     this.updateReactionUI(postId, null);
 
                 } else if (existing) {
@@ -498,7 +494,6 @@
                         .eq("user_id", user.id);
 
                     if (error) throw error;
-
                     this.updateReactionUI(postId, reactionType);
 
                 } else {
@@ -511,13 +506,11 @@
                         });
 
                     if (error) throw error;
-
                     this.updateReactionUI(postId, reactionType);
                 }
 
             } catch (error) {
                 console.error("Reaction error:", error);
-
                 Core.showNotice(
                     "Reaction দেওয়া যায়নি। আবার চেষ্টা করো।",
                     "error"
@@ -611,10 +604,11 @@
                 let profiles = {};
 
                 if (userIds.length) {
-                    const { data: profileRows, error: profileError } = await db
-                        .from("cma_community_profiles")
-                        .select("user_id,full_name")
-                        .in("user_id", userIds);
+                    const { data: profileRows, error: profileError } =
+                        await db
+                            .from("cma_community_profiles")
+                            .select("user_id,full_name")
+                            .in("user_id", userIds);
 
                     if (!profileError) {
                         (profileRows || []).forEach(profile => {
@@ -628,7 +622,9 @@
                         profiles[comment.user_id]?.full_name || "Member"
                     );
 
-                    const content = Core.escapeHTML(comment.content || "");
+                    const content = Core.escapeHTML(
+                        comment.content || ""
+                    );
 
                     return `
                         <div class="cma-comment-preview-item"
@@ -643,7 +639,8 @@
                 console.error("Comment preview error:", error);
             }
         },
-               openPostMenu(postId) {
+
+        openPostMenu(postId) {
             const user = Core.getCurrentUser();
             if (!user || !postId) return;
 
@@ -737,7 +734,6 @@
                         return;
                     }
 
-                    // Main.js listens on document.
                     document.dispatchEvent(
                         new CustomEvent("cma:delete-post", {
                             detail: { postId }
@@ -755,7 +751,6 @@
             this.activeReplyName = "";
 
             const layer = document.getElementById("cmaCommentsLayer");
-
             if (!layer) return;
 
             layer.innerHTML = `
@@ -801,30 +796,32 @@
                         style="font-size:12px;color:#68DDB9;padding:4px 2px;">
                     </div>
 
-                    <div style="display:flex;gap:8px;
-                        padding-top:12px;border-top:1px solid #245563;">
-
-                        <input id="cmaCommentInput"
-                            type="text"
+                    <div class="cma-comment-compose">
+                        <textarea
+                            id="cmaCommentInput"
+                            rows="1"
                             placeholder="Write a comment..."
-                            style="flex:1;min-width:0;border:0;
-                            outline:0;border-radius:20px;
-                            padding:12px;background:#103E4C;
-                            color:white;">
+                            aria-label="Write a comment"></textarea>
 
                         <button type="button"
-                            data-cma-send-comment="${Core.escapeHTML(postId)}"
-                            style="border:0;border-radius:20px;
-                            padding:0 16px;background:#08C99A;
-                            color:#052D3B;">
+                            data-cma-send-comment="${Core.escapeHTML(postId)}">
                             Send
                         </button>
                     </div>
                 </section>
             `;
 
+            const input = layer.querySelector("#cmaCommentInput");
+            if (input) this.autoResizeTextarea(input);
+
             if (!this.boundCommentLayers.has(layer)) {
                 this.boundCommentLayers.add(layer);
+
+                layer.addEventListener("input", event => {
+                    if (event.target.id === "cmaCommentInput") {
+                        this.autoResizeTextarea(event.target);
+                    }
+                });
 
                 layer.addEventListener("click", async event => {
                     const profileButton = event.target.closest(
@@ -928,6 +925,7 @@
                 layer.addEventListener("keydown", async event => {
                     if (
                         event.key === "Enter" &&
+                        !event.shiftKey &&
                         event.target.id === "cmaCommentInput"
                     ) {
                         event.preventDefault();
@@ -946,6 +944,22 @@
             }
 
             await this.loadComments(postId);
+        },
+                   
+        autoResizeTextarea(textarea) {
+            if (!textarea) return;
+
+            textarea.style.height = "auto";
+
+            const maxHeight = 120;
+            const nextHeight = Math.min(
+                textarea.scrollHeight,
+                maxHeight
+            );
+
+            textarea.style.height = nextHeight + "px";
+            textarea.style.overflowY =
+                textarea.scrollHeight > maxHeight ? "auto" : "hidden";
         },
 
         formatCommentTime(value) {
@@ -1121,7 +1135,7 @@
                                         <div style="font-size:14px;
                                             margin-top:5px;white-space:pre-wrap;
                                             overflow-wrap:anywhere;">
-                                            ${content}
+${content}
                                         </div>
                                     </div>
 
@@ -1183,7 +1197,7 @@
 
             const content = input.value.trim();
 
-                        if (!content) {
+            if (!content) {
                 Core.showNotice("আগে Comment লিখো।", "error");
                 return;
             }
@@ -1202,6 +1216,7 @@
 
                 input.value = "";
                 input.placeholder = "Write a comment...";
+                this.autoResizeTextarea(input);
 
                 this.activeReplyId = null;
                 this.activeReplyName = "";
@@ -1231,3 +1246,4 @@
     window.CMACommunityFeed = Feed;
 
 })();
+                       
