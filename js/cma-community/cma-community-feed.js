@@ -90,7 +90,7 @@
                     color:#FFFFFF;font-size:11px;font-weight:600;">
 
                     <svg viewBox="0 0 24 24"
-                        width="19" height="19"
+                        width="15" height="15"
                         fill="none" stroke="#68DDB9"
                         stroke-width="1.8"
                         stroke-linecap="round"
