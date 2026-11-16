@@ -50,7 +50,7 @@ body.community-active #pageContent {
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0;
-  padding: 14px 30px;
+  padding: 14px 100px;
   position: relative;
   background: var(--cma-bg);
   color: var(--cma-white);
