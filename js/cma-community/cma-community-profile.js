@@ -1635,8 +1635,8 @@ async function uploadProfileImage(root, user, file, imageType) {
         : "cover_url";
 
     const filePath =
-        `profiles/${user.id}/${imageType}-${Date.now()}.${extension}`;
-
+    `${user.id}/${imageType}-${Date.now()}.${extension}`;
+   
     try {
         const { data: uploadData, error: uploadError } =
             await db.storage
