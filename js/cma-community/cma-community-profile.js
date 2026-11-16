@@ -602,33 +602,39 @@
     return `
       <main class="cma-profile">
 
-        <section class="cma-profile-cover"
-          ${
-            isOwnProfile
-              ? `data-cma-profile-action="change-cover"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Change cover photo"`
-              : ""
-          }>
-          ${cover ? `<img src="${cover}" alt="Profile cover">` : ""}
+        
+<div class="cma-profile-hero">
 
-          <div class="cma-profile-avatar"
-            ${
-              isOwnProfile
-                ? `data-cma-profile-action="change-avatar"
-                   role="button"
-                   tabindex="0"
-                   aria-label="Change profile photo"`
-                : ""
-            }>
-            ${
-              avatar
-                ? `<img src="${avatar}" alt="${escape(fullName)}">`
-                : `<span>${escape(fullName.charAt(0).toUpperCase())}</span>`
-            }
-          </div>
-        </section>
+  <section class="cma-profile-cover"
+    ${
+      isOwnProfile
+        ? `data-cma-profile-action="change-cover"
+           role="button"
+           tabindex="0"
+           aria-label="Change cover photo"`
+        : ""
+    }>
+    ${cover ? `<img src="${cover}" alt="Profile cover">` : ""}
+  </section>
+
+  <div class="cma-profile-avatar"
+    ${
+      isOwnProfile
+        ? `data-cma-profile-action="change-avatar"
+           role="button"
+           tabindex="0"
+           aria-label="Change profile photo"`
+        : ""
+    }>
+    ${
+      avatar
+        ? `<img src="${avatar}" alt="${escape(fullName)}">`
+        : `<span>${escape(fullName.charAt(0).toUpperCase())}</span>`
+    }
+  </div>
+
+</div>
+
 
         <input type="file"
           id="cmaProfileAvatarInput"
