@@ -2,9 +2,9 @@
 /* =========================================
    CHANGE MAKER ACADEMY
    COMMUNITY FINAL DESIGN SYSTEM
-   FULL SCREEN + RESPONSIVE
+   RESPONSIVE + FEED CONSISTENCY
+   PART 1 OF 2
 ========================================= */
-
 
 /* 1. FULL SCREEN LAYOUT */
 
@@ -25,20 +25,13 @@ body.community-active #innerPage {
   background: #073746;
 }
 
-body.community-active #innerPage > .container {
-  width: 100% !important;
-  max-width: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
+body.community-active #innerPage > .container,
 body.community-active #pageContent {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
   padding: 0 !important;
 }
-
 
 /* 2. COLOR SYSTEM */
 
@@ -72,7 +65,6 @@ body.community-active #pageContent {
 .cma-community *::after {
   box-sizing: border-box;
 }
-
 
 /* 3. HEADER */
 
@@ -133,7 +125,6 @@ body.community-active #pageContent {
   stroke-linejoin: round;
 }
 
-
 /* 4. TOP NAVIGATION */
 
 .cma-navigation {
@@ -171,8 +162,6 @@ body.community-active #pageContent {
   transition: color 0.2s ease;
 }
 
-/* REAL SVG ICONS */
-
 .cma-nav-icon {
   width: 25px;
   height: 25px;
@@ -196,15 +185,11 @@ body.community-active #pageContent {
   stroke-linejoin: round;
 }
 
-/* Remove all old Emoji icons */
-
 .cma-nav-icon::before,
 .cma-nav-icon::after {
   content: none !important;
   display: none !important;
 }
-
-/* Active navigation */
 
 .cma-nav-item.active {
   color: var(--cma-green);
@@ -214,14 +199,13 @@ body.community-active #pageContent {
   opacity: 0.7;
 }
 
-
 /* 5. POST COMPOSER */
 
 .cma-composer {
   width: 100%;
   min-width: 0;
   padding: 14px;
-  margin-bottom: 15px;
+  margin: 0 auto 15px;
   background: var(--cma-panel);
   border-radius: 17px;
 }
@@ -254,6 +238,7 @@ body.community-active #pageContent {
 }
 
 .cma-post-input {
+  display: block;
   width: 100%;
   min-width: 0;
   min-height: 42px;
@@ -266,6 +251,7 @@ body.community-active #pageContent {
   color: var(--cma-white);
   font-family: inherit;
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .cma-post-input::placeholder {
@@ -306,10 +292,21 @@ body.community-active #pageContent {
   opacity: 0.75;
 }
 
+.cma-selected-photo img {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-top: 10px;
+}
 
 /* 6. FEED */
 
-.cma-feed-list {
+.cma-feed-list,
+.cma-profile-posts,
+#cmaProfilePosts,
+#cmaUserPosts {
   width: 100%;
   min-width: 0;
   display: flex;
@@ -339,15 +336,19 @@ body.community-active #pageContent {
   font-size: 12px;
 }
 
-
-/* 7. POST CARD */
+/* 7. SHARED POST CARD
+   Homepage and Profile use same appearance */
 
 .cma-post-card {
+  display: block;
   width: 100%;
   min-width: 0;
   padding: 14px;
+  margin: 0;
+  border: 0;
   border-radius: 17px;
-  background: var(--cma-card);
+  background: var(--cma-card, #103E4C);
+  color: var(--cma-white, #FFFFFF);
   overflow: hidden;
 }
 
@@ -381,6 +382,7 @@ body.community-active #pageContent {
   color: var(--cma-white);
   font-size: 13px;
   line-height: 1.65;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
@@ -393,8 +395,7 @@ body.community-active #pageContent {
   margin-bottom: 12px;
 }
 
-
-/* 8. GLASS REACTIONS */
+/* 8. REACTIONS */
 
 .cma-reactions {
   display: flex;
@@ -422,22 +423,44 @@ body.community-active #pageContent {
   transition: background 0.2s ease;
 }
 
-.cma-reactions button.active {
+.cma-reactions button.active,
+.cma-reactions button[aria-pressed="true"] {
   background: #08C99A35;
   border-color: var(--cma-green);
 }
 
-
-/* 9. COMMENTS */
+/* 9. COMMENT PREVIEW */
 
 .cma-comment-preview {
-  padding: 11px;
+  min-width: 0;
+  padding: 10px 11px;
   margin-top: 10px;
   border-radius: 11px;
   background: var(--cma-panel);
   color: var(--cma-white);
   font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
+
+.cma-comment-preview-item {
+  min-width: 0;
+  padding: 5px 0;
+  overflow-wrap: anywhere;
+}
+
+.cma-comment-preview-item strong {
+  margin-right: 5px;
+  color: var(--cma-white);
+}
+
+/* =========================================
+   CHANGE MAKER ACADEMY
+   COMMUNITY FINAL DESIGN SYSTEM
+   PART 2 OF 2
+========================================= */
+
+/* 10. COMMENT ACTION */
 
 .cma-view-comments {
   display: inline-block;
@@ -445,51 +468,163 @@ body.community-active #pageContent {
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--cma-green);
+  color: var(--cma-green, #08C99A);
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
 }
 
+/* 11. COMMENT INPUT BAR
+   Supports input and textarea */
+
 .cma-comment-input {
   display: flex;
   align-items: center;
   gap: 9px;
-  min-width: 0;
-  padding: 4px 13px;
-  margin-top: 10px;
-  border-radius: 22px;
-  background: var(--cma-panel);
-}
-
-.cma-comment-input input {
   width: 100%;
   min-width: 0;
-  padding: 10px 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--cma-white);
-  font-family: inherit;
-  font-size: 12px;
+  padding: 5px 13px;
+  margin-top: 10px;
+  border-radius: 20px;
+  background: var(--cma-panel, #08494B);
 }
 
-.cma-comment-input input::placeholder {
-  color: var(--cma-muted);
+.cma-comment-input input,
+.cma-comment-input textarea {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  max-height: 130px;
+  padding: 9px 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+  background: transparent;
+  color: var(--cma-white, #FFFFFF);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.cma-comment-input input::placeholder,
+.cma-comment-input textarea::placeholder {
+  color: var(--cma-muted, #A8C0CE);
 }
 
 .cma-comment-input button {
   flex-shrink: 0;
+  min-width: 30px;
+  min-height: 34px;
+  padding: 0 4px;
   border: none;
   background: transparent;
-  color: var(--cma-green);
+  color: var(--cma-green, #08C99A);
   font-size: 18px;
   cursor: pointer;
 }
 
+/* 12. COMMENT SHEET INPUT */
 
-/* 10. COMMUNITY NOTICE */
+#cmaCommentsSheet {
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+#cmaCommentsSheet #cmaCommentsList {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+#cmaCommentsSheet #cmaCommentInput {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 120px;
+  padding: 10px 13px;
+  border: 0;
+  outline: none;
+  border-radius: 18px;
+  resize: none;
+  overflow-y: auto;
+  background: var(--cma-card, #103E4C);
+  color: var(--cma-white, #FFFFFF);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#cmaCommentsSheet #cmaCommentInput::placeholder {
+  color: var(--cma-muted, #A8C0CE);
+}
+
+/* 13. COMMENT AND REPLY CONTENT */
+
+.cma-comment-preview,
+.cma-comment-preview-item,
+#cmaCommentsList {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+#cmaCommentsList button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#cmaCommentsList img {
+  flex-shrink: 0;
+}
+
+/* 14. PROFILE COMPOSER CONSISTENCY */
+
+.cma-profile-composer,
+.cma-composer.cma-profile-composer {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 15px;
+  padding: 14px;
+  border: 0;
+  border-radius: 17px;
+  background: var(--cma-panel, #08494B);
+  box-sizing: border-box;
+}
+
+.cma-profile-composer .cma-composer-top,
+.cma-profile-composer .cma-composer-bottom {
+  width: 100%;
+}
+
+.cma-profile-composer .cma-post-input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Avoid unexpected profile feed width differences */
+
+#cmaProfileTabContent,
+.cma-profile-posts,
+#cmaProfilePosts,
+#cmaUserPosts {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#cmaProfilePosts .cma-post-card,
+#cmaUserPosts .cma-post-card,
+.cma-profile-posts .cma-post-card {
+  width: 100%;
+}
+
+/* 15. COMMUNITY NOTICE */
 
 .cma-community-notice {
   position: fixed;
@@ -517,8 +652,7 @@ body.community-active #pageContent {
   color: #ffb8b8;
 }
 
-
-/* 11. GENERAL ELEMENTS */
+/* 16. GENERAL ELEMENTS */
 
 .cma-community button {
   -webkit-tap-highlight-color: transparent;
@@ -541,8 +675,7 @@ body.community-active #pageContent {
   outline-offset: 2px;
 }
 
-
-/* 12. MOBILE RESPONSIVE */
+/* 17. MOBILE RESPONSIVE */
 
 @media (max-width: 380px) {
   .cma-community {
@@ -564,13 +697,17 @@ body.community-active #pageContent {
   }
 
   .cma-post-card,
-  .cma-composer {
+  .cma-composer,
+  .cma-profile-composer {
     padding: 12px;
+  }
+
+  .cma-reactions {
+    gap: 8px;
   }
 }
 
-
-/* 13. EXTRA SMALL SCREEN */
+/* 18. EXTRA SMALL SCREEN */
 
 @media (max-width: 340px) {
   .cma-community {
@@ -594,10 +731,15 @@ body.community-active #pageContent {
   .cma-navigation {
     padding: 7px 0;
   }
+
+  .cma-post-card,
+  .cma-composer,
+  .cma-profile-composer {
+    padding: 10px;
+  }
 }
 
-
-/* 14. TABLET AND DESKTOP */
+/* 19. TABLET AND DESKTOP */
 
 @media (min-width: 700px) {
   .cma-community {
@@ -625,4 +767,14 @@ body.community-active #pageContent {
     width: 23px;
     height: 23px;
   }
+
+  .cma-profile-composer,
+  .cma-profile-posts,
+  #cmaProfilePosts,
+  #cmaUserPosts {
+    max-width: 850px;
+    margin-left: auto;
+    margin-right: auto;
+  }
    }
+     
