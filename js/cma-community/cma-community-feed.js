@@ -233,6 +233,7 @@
             `;
 
             this.bindEvents(root);
+           this.loadComposerAvatar(root);
         },
 
         bindEvents(root) {
