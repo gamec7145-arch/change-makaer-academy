@@ -161,6 +161,7 @@
       .cma-profile-cover {
         position: relative;
         height: 155px;
+        isolation: isolate;
         margin-bottom: 55px;
         border-radius: 16px;
         overflow: visible;
@@ -180,7 +181,7 @@
         position: absolute;
         left: 17px;
         bottom: -43px;
-        z-index: 2;
+        z-index: 10;
         width: 86px;
         height: 86px;
         border: 4px solid #073746;
