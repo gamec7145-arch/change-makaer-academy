@@ -44,82 +44,68 @@
             }));
         },
 
-        renderComposer() {
-    return `
-        <section class="cma-composer">
+                renderComposer() {
+            return `
+                <section class="cma-composer">
 
-            <div class="cma-composer-top"
-                style="display:flex;align-items:center;gap:12px;">
+                    <h2 class="cma-composer-title">Create a Post</h2>
 
-                <div id="cmaComposerAvatar"
-                    style="width:46px;height:46px;min-width:46px;
-                    border-radius:50%;overflow:hidden;
-                    background:#245563;display:flex;
-                    align-items:center;justify-content:center;">
+                    <div class="cma-composer-top">
 
-                    <svg viewBox="0 0 24 24"
-                        width="25" height="25"
-                        fill="none" stroke="#FFFFFF"
-                        stroke-width="1.7">
-                        <circle cx="12" cy="8" r="4"/>
-                        <path d="M4 21a8 8 0 0 1 16 0"/>
-                    </svg>
+                        <div id="cmaComposerAvatar" class="cma-composer-avatar">
+                            <svg viewBox="0 0 24 24"
+                                width="22" height="22"
+                                fill="none" stroke="#FFFFFF"
+                                stroke-width="1.7">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21a8 8 0 0 1 16 0"/>
+                            </svg>
+                        </div>
 
-                </div>
+                        <textarea
+                            class="cma-post-input"
+                            id="cmaPostInput"
+                            placeholder="What's on your mind?"
+                            rows="3"
+                            aria-label="Write a post"></textarea>
+                    </div>
 
-                <textarea
-                    class="cma-post-input"
-                    id="cmaPostInput"
-                    placeholder="What's on your mind?"
-                    rows="1"
-                    aria-label="Write a post"></textarea>
-            </div>
+                    <div class="cma-composer-bottom">
 
-            <div class="cma-composer-bottom"
-                style="display:flex;align-items:center;
-                justify-content:space-between;">
+                        <button
+                            type="button"
+                            class="cma-photo-button"
+                            data-cma-action="photo">
+                            <svg viewBox="0 0 24 24"
+                                width="16" height="16"
+                                fill="none" stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="16" rx="2"/>
+                                <circle cx="8.5" cy="9" r="1.5"/>
+                                <path d="m21 15-5-5L5 20"/>
+                            </svg>
+                            <span>Add Photo</span>
+                        </button>
 
-                <button
-                    type="button"
-                    class="cma-photo-button"
-                    data-cma-action="photo"
-                    style="display:inline-flex;align-items:center;
-                    justify-content:center;gap:7px;
-                    padding:6px 12px;border:1px solid #68DDB9;
-                    border-radius:9px;background:transparent;
-                    color:#FFFFFF;font-size:12px;font-weight:600;">
+                        <button
+                            type="button"
+                            class="cma-post-button"
+                            data-cma-action="post">
+                            Publish
+                        </button>
 
-                    <svg viewBox="0 0 24 24"
-                        width="17" height="17"
-                        fill="none" stroke="#68DDB9"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="16" rx="2"/>
-                        <circle cx="8.5" cy="9" r="1.5"/>
-                        <path d="m21 15-5-5L5 20"/>
-                    </svg>
+                    </div>
 
-                    <span>Photo</span>
-                </button>
+                    <div
+                        id="cmaSelectedPhoto"
+                        class="cma-selected-photo"></div>
 
-                <button
-                    type="button"
-                    class="cma-post-button"
-data-cma-action="post"
-style="padding:6px 13px;border-radius:8px;font-size:12px;">
-Post
-                </button>
-
-            </div>
-
-            <div
-                id="cmaSelectedPhoto"
-                class="cma-selected-photo"></div>
-
-        </section>
-    `;
-},
+                </section>
+            `;
+        },
+   
        async loadComposerAvatar(root) {
     const avatarBox = root?.querySelector("#cmaComposerAvatar");
     const user = Core.getCurrentUser();
