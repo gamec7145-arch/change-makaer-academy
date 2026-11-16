@@ -456,7 +456,7 @@
 
             return cardHTML;
         },
-                                  
+
         async toggleReaction(postId, reactionType) {
             if (!Core.requireLogin() || !postId) return;
 
@@ -945,7 +945,7 @@
 
             await this.loadComments(postId);
         },
-                   
+                       
         autoResizeTextarea(textarea) {
             if (!textarea) return;
 
@@ -1089,12 +1089,12 @@
                     const avatarHTML = avatar
                         ? `
                             <img src="${avatar}" alt="Profile picture"
-                                style="width:32px;height:32px;
+                                style="width:28px;height:28px;
                                 border-radius:50%;object-fit:cover;
                                 display:block;">
                         `
                         : `
-                            <div style="width:32px;height:32px;
+                            <div style="width:28px;height:28px;
                                 border-radius:50%;background:#245563;">
                             </div>
                         `;
@@ -1104,45 +1104,85 @@
                         .join("");
 
                     return `
-                        <div style="margin-bottom:14px;
-                            margin-left:${Math.min(level * 22, 88)}px;">
+                        <div style="
+                            margin-bottom:8px;
+                            margin-left:${Math.min(level * 18, 54)}px;
+                            min-width:0;
+                        ">
 
-                            <div style="display:flex;gap:9px;
-                                align-items:flex-start;">
+                            <div style="
+                                display:flex;
+                                gap:7px;
+                                align-items:flex-start;
+                                min-width:0;
+                            ">
 
                                 <button type="button"
                                     data-cma-open-profile="${authorId}"
                                     aria-label="Open ${author}'s profile"
-                                    style="border:0;background:none;
-                                    padding:0;cursor:pointer;flex-shrink:0;">
+                                    style="
+                                        border:0;
+                                        background:none;
+                                        padding:0;
+                                        cursor:pointer;
+                                        flex-shrink:0;
+                                    ">
                                     ${avatarHTML}
                                 </button>
 
-                                <div style="flex:1;min-width:0;">
+                                <div style="
+                                    flex:1;
+                                    min-width:0;
+                                ">
 
-                                    <div style="background:#103E4C;
-                                        border-radius:14px;padding:10px 12px;">
+                                    <div style="
+                                        display:inline-block;
+                                        width:fit-content;
+                                        max-width:100%;
+                                        box-sizing:border-box;
+                                        background:#103E4C;
+                                        border-radius:12px;
+                                        padding:7px 10px;
+                                        vertical-align:top;
+                                    ">
 
                                         <button type="button"
                                             data-cma-open-profile="${authorId}"
-                                            style="border:0;background:none;
-                                            padding:0;color:inherit;
-                                            font-size:13px;font-weight:700;
-                                            cursor:pointer;text-align:left;">
+                                            style="
+                                                border:0;
+                                                background:none;
+                                                padding:0;
+                                                color:inherit;
+                                                font-size:12px;
+                                                line-height:1.3;
+                                                font-weight:700;
+                                                cursor:pointer;
+                                                text-align:left;
+                                                overflow-wrap:anywhere;
+                                            ">
                                             ${author}
                                         </button>
 
-                                        <div style="font-size:14px;
-                                            margin-top:5px;white-space:pre-wrap;
-                                            overflow-wrap:anywhere;">
-${content}
-                                        </div>
+                                        <div style="
+                                            font-size:13px;
+                                            line-height:1.4;
+                                            margin-top:3px;
+                                            white-space:pre-wrap;
+                                            overflow-wrap:anywhere;
+                                            word-break:break-word;
+                                        ">${content}</div>
                                     </div>
 
-                                    <div style="display:flex;flex-wrap:wrap;
-                                        gap:10px;align-items:center;
-                                        padding:5px 4px;font-size:11px;
-                                        color:#A8C0CE;">
+                                    <div style="
+                                        display:flex;
+                                        flex-wrap:wrap;
+                                        gap:8px;
+                                        align-items:center;
+                                        padding:3px 3px 0;
+                                        font-size:10px;
+                                        line-height:1.4;
+                                        color:#A8C0CE;
+                                    ">
 
                                         <span>${Core.escapeHTML(createdTime)}</span>
 
@@ -1155,9 +1195,15 @@ ${content}
                                         <button type="button"
                                             data-cma-reply="${Core.escapeHTML(comment.id)}"
                                             data-reply-name="${Core.escapeHTML(comment.author_name)}"
-                                            style="border:0;background:none;
-                                            color:#68DDB9;font-size:12px;
-                                            padding:0;">
+                                            style="
+                                                border:0;
+                                                background:none;
+                                                color:#68DDB9;
+                                                font-size:11px;
+                                                line-height:1.4;
+                                                padding:0;
+                                                cursor:pointer;
+                                            ">
                                             Reply
                                         </button>
                                     </div>
