@@ -1658,7 +1658,13 @@ async function uploadProfileImage(root, user, file, imageType) {
         if (!imageUrl) {
             throw new Error("Could not create image URL.");
         }
-
+       
+console.log("AVATAR DEBUG:", {
+    userId: user.id,
+    imageType: imageType,
+    column: column,
+    imageUrl: imageUrl
+});
         const { data: savedProfile, error: saveError } = await db
     .from("cma_community_profiles")
     .update({
