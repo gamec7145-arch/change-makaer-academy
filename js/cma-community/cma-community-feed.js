@@ -45,41 +45,120 @@
         },
 
         renderComposer() {
-            return `
-                <section class="cma-composer">
-                    <div class="cma-composer-top">
-                        <div class="cma-avatar"></div>
+    return `
+        <section class="cma-composer">
 
-                        <textarea
-                            class="cma-post-input"
-                            id="cmaPostInput"
-                            placeholder="What's on your mind?"
-                            rows="1"
-                            aria-label="Write a post"></textarea>
-                    </div>
+            <div class="cma-composer-top"
+                style="display:flex;align-items:center;gap:12px;">
 
-                    <div class="cma-composer-bottom">
-                        <button
-                            type="button"
-                            class="cma-photo-button"
-                            data-cma-action="photo">
-                            ▧ Photo
-                        </button>
+                <div id="cmaComposerAvatar"
+                    style="width:46px;height:46px;min-width:46px;
+                    border-radius:50%;overflow:hidden;
+                    background:#245563;display:flex;
+                    align-items:center;justify-content:center;">
 
-                        <button
-                            type="button"
-                            class="cma-post-button"
-                            data-cma-action="post">
-                            Post
-                        </button>
-                    </div>
+                    <svg viewBox="0 0 24 24"
+                        width="25" height="25"
+                        fill="none" stroke="#FFFFFF"
+                        stroke-width="1.7">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 21a8 8 0 0 1 16 0"/>
+                    </svg>
 
-                    <div
-                        id="cmaSelectedPhoto"
-                        class="cma-selected-photo"></div>
-                </section>
-            `;
-        },
+                </div>
+
+                <textarea
+                    class="cma-post-input"
+                    id="cmaPostInput"
+                    placeholder="What's on your mind?"
+                    rows="1"
+                    aria-label="Write a post"></textarea>
+            </div>
+
+            <div class="cma-composer-bottom"
+                style="display:flex;align-items:center;
+                justify-content:space-between;">
+
+                <button
+                    type="button"
+                    class="cma-photo-button"
+                    data-cma-action="photo"
+                    style="display:inline-flex;align-items:center;
+                    justify-content:center;gap:8px;
+                    padding:9px 15px;border:1px solid #68DDB9;
+                    border-radius:10px;background:transparent;
+                    color:#FFFFFF;font-size:14px;font-weight:600;">
+
+                    <svg viewBox="0 0 24 24"
+                        width="19" height="19"
+                        fill="none" stroke="#68DDB9"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="16" rx="2"/>
+                        <circle cx="8.5" cy="9" r="1.5"/>
+                        <path d="m21 15-5-5L5 20"/>
+                    </svg>
+
+                    <span>Photo</span>
+                </button>
+
+                <button
+                    type="button"
+                    class="cma-post-button"
+                    data-cma-action="post">
+                    Post
+                </button>
+
+            </div>
+
+            <div
+                id="cmaSelectedPhoto"
+                class="cma-selected-photo"></div>
+
+        </section>
+    `;
+},
+       async loadComposerAvatar(root) {
+    const avatarBox = root?.querySelector("#cmaComposerAvatar");
+    const user = Core.getCurrentUser();
+
+    if (!avatarBox || !user) return;
+
+    try {
+        const { data, error } = await db
+            .from("cma_community_profiles")
+            .select("avatar_url")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        const avatarURL = Core.safeImageURL(data?.avatar_url);
+
+        if (!avatarURL) return;
+
+        const image = document.createElement("img");
+
+        image.src = avatarURL;
+        image.alt = "Profile picture";
+        image.style.width = "100%";
+        image.style.height = "100%";
+        image.style.objectFit = "cover";
+        image.style.display = "block";
+
+        image.onerror = () => {
+            image.remove();
+        };
+
+        avatarBox.innerHTML = "";
+        avatarBox.appendChild(image);
+
+    } catch (error) {
+        console.error("Composer avatar loading error:", error);
+    }
+},
+       
 
         async renderHome(root) {
             root = root || Core.getRoot?.();
