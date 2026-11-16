@@ -132,11 +132,11 @@
                     user.email?.split("@")[0] ||
                     "Community Member",
                 avatar_url:
-                    meta.avatar_url ||
-                    meta.picture ||
-                    meta.avatar ||
-                    existing?.avatar_url ||
-                    "",
+    existing?.avatar_url ||
+    meta.avatar_url ||
+    meta.picture ||
+    meta.avatar ||
+    "",
                 short_description:
                     existing?.short_description || "",
                 institution:
