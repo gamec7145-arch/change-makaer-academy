@@ -1827,11 +1827,33 @@ if (avatarAction) {
             "#cmaProfileCoverInput"
           )?.click();
 
-        } else if (action === "message") {
-          showNotice(
-            "Messaging is not available yet.",
-            "info"
-          );
+                } else if (action === "message") {
+          if (!lastRenderedUser?.id) return;
+
+          try {
+            await loadCommunityFile(
+              "js/cma-community/cma-community-messaging.js"
+            );
+
+            const messaging = window.CMACommunityMessaging;
+
+            if (
+              !messaging ||
+              typeof messaging.openDirect !== "function"
+            ) {
+              throw new Error("Messaging module is not ready.");
+            }
+
+            await messaging.openDirect(lastRenderedUser.id);
+
+          } catch (error) {
+            console.error("Could not open chat:", error);
+
+            showNotice(
+              error.message || "Could not open chat.",
+              "error"
+            );
+          }
         }
 
         return;
