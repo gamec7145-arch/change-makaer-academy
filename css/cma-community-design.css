@@ -707,7 +707,7 @@ button.cma-comment-input:active {
   flex-shrink: 0;
 }
 
-/* 15. PROFILE COMPOSER */
+/* 15. PROFILE COMPOSER CONSISTENCY */
 
 .cma-profile-composer,
 .cma-composer.cma-profile-composer {
@@ -920,6 +920,7 @@ button.cma-comment-input:active {
 
 /* =========================================
    PROFILE COVER + AVATAR
+   SEPARATE CLICK AREAS
 ========================================= */
 
 .cma-profile-hero {
@@ -928,6 +929,8 @@ button.cma-comment-input:active {
   margin-bottom: 55px;
   overflow: visible;
 }
+
+/* COVER PHOTO */
 
 .cma-profile-cover {
   position: relative;
@@ -953,6 +956,10 @@ button.cma-comment-input:active {
   pointer-events: none;
 }
 
+/* PROFILE PICTURE
+   The border matches the page background, so it only
+   cuts the avatar out of the cover (no visible ring). */
+
 .cma-profile-avatar {
   position: absolute;
   left: 17px;
@@ -967,7 +974,7 @@ button.cma-comment-input:active {
   border-radius: 50%;
   box-shadow: none;
 
-  background: #11414D;
+  background: var(--cma-card, #11414D);
 
   display: flex;
   align-items: center;
@@ -988,6 +995,8 @@ button.cma-comment-input:active {
   border-radius: 50%;
   pointer-events: none;
 }
+
+/* MOBILE SAFETY */
 
 .cma-profile-hero,
 .cma-profile-cover,
