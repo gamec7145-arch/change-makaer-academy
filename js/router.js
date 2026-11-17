@@ -255,10 +255,12 @@ function cmaInsertTopBar(root, activePage) {
       style="min-height:0;padding-bottom:0;">
 
       <header class="cma-header">
-        <div class="cma-header-title">
+        <a href="?" class="cma-header-title"
+            style="color:inherit;text-decoration:none;"
+            aria-label="Back to main page">
           <span>Change Maker</span>
           <span class="cma-green">Community</span>
-        </div>
+        </a>
 
         <button class="cma-icon-button" type="button"
           data-cma-topbar-search aria-label="Search">
