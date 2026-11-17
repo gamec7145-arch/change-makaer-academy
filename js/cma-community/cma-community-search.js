@@ -336,6 +336,69 @@
         document.head.appendChild(style);
     }
 
+    /* ---------- top bar (header + navigation) ---------- */
+    // router.js normally adds this bar. If it did not, add it here,
+    // so the Search page always shows the same bar as other pages.
+
+    const BAR_ICONS = {
+        home: '<svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg>',
+        profile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+        friends: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        creator: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>',
+        notifications: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>',
+        search: '<svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>'
+    };
+
+    function ensureTopBar(root) {
+        if (!root || root.querySelector("[data-cma-topbar]")) return;
+
+        const items = [
+            ["home", "Home"],
+            ["profile", "Profile"],
+            ["friends", "Friends"],
+            ["creator", "Creator Panel"],
+            ["notifications", "Notification"]
+        ];
+
+        const nav = items.map(function (item) {
+            return (
+                '<button class="cma-nav-item" type="button"' +
+                ' data-bar-page="' + item[0] + '">' +
+                '<span class="cma-nav-icon">' + BAR_ICONS[item[0]] + "</span>" +
+                "<span>" + item[1] + "</span></button>"
+            );
+        }).join("");
+
+        root.insertAdjacentHTML("afterbegin",
+            '<div class="cma-community" data-cma-topbar' +
+            ' style="min-height:0;padding-bottom:0;">' +
+            '<header class="cma-header">' +
+            '<div class="cma-header-title"><span>Change Maker</span>' +
+            '<span class="cma-green">Community</span></div>' +
+            '<button class="cma-icon-button" type="button"' +
+            ' data-bar-search aria-label="Search">' +
+            BAR_ICONS.search + "</button></header>" +
+            '<nav class="cma-navigation">' + nav + "</nav></div>"
+        );
+
+        const bar = root.querySelector("[data-cma-topbar]");
+
+        bar.addEventListener("click", function (event) {
+            const pageButton = event.target.closest("[data-bar-page]");
+
+            if (pageButton) {
+                window.dispatchEvent(new CustomEvent("cma:navigate", {
+                    detail: { page: pageButton.dataset.barPage }
+                }));
+                return;
+            }
+
+            if (event.target.closest("[data-bar-search]")) {
+                window.dispatchEvent(new CustomEvent("cma:open-search"));
+            }
+        });
+    }
+
     /* ---------- module ---------- */
 
     const Search = {
@@ -403,6 +466,11 @@
 
             const input = page.querySelector("#cmaSearchInput");
             if (input) input.focus();
+
+            // Let router.js add its bar first; add ours only if missing
+            setTimeout(function () {
+                ensureTopBar(root);
+            }, 80);
         },
 
         bind(page) {
