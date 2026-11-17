@@ -1519,6 +1519,7 @@
   }
 
   
+
 async function loadMessages(conversationId) {
   const { data, error } = await db
     .from("cma_messages")
@@ -1530,10 +1531,17 @@ async function loadMessages(conversationId) {
       content,
       attachment_url,
       attachment_name,
+      file_url,
+      file_name,
+      duration,
       reply_to,
       created_at,
       edited_at,
-      deleted_at
+      deleted_at,
+      status,
+      delivered_at,
+      seen_at,
+      reaction
     `)
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
@@ -1543,15 +1551,50 @@ async function loadMessages(conversationId) {
     throw error;
   }
 
-  return (data || []).map(message => ({
-    ...message,
-    file_url: message.attachment_url || "",
-    file_name: message.attachment_name || "",
-    duration: 0,
-    status: "sent",
-    reactions: {}
-  }));
-         }
+  const messages = data || [];
+  const messageIds = messages.map(message => message.id);
+
+  const reactionMap = {};
+
+  if (messageIds.length) {
+    const { data: reactionRows, error: reactionError } = await db
+      .from("cma_message_reactions")
+      .select("message_id,user_id,emoji")
+      .in("message_id", messageIds);
+
+    if (reactionError) {
+      console.error("Load reactions error:", reactionError);
+      throw reactionError;
+    }
+
+    (reactionRows || []).forEach(row => {
+      if (!reactionMap[row.message_id]) {
+        reactionMap[row.message_id] = {};
+      }
+
+      reactionMap[row.message_id][row.user_id] = row.emoji;
+    });
+  }
+
+  return messages.map(message => {
+    const reactions = reactionMap[message.id] || {};
+
+    // Keep older single-reaction data visible during migration.
+    if (!Object.keys(reactions).length && message.reaction) {
+      reactions.legacy = message.reaction;
+    }
+
+    return {
+      ...message,
+      file_url: message.file_url || message.attachment_url || "",
+      file_name: message.file_name || message.attachment_name || "",
+      duration: Number(message.duration) || 0,
+      status: message.status || "sent",
+      reactions
+    };
+  });
+}
+    }
    
 
   /* ---------- Message rendering ---------- */
