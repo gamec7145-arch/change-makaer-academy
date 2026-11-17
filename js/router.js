@@ -32,7 +32,6 @@ const CMA_COMMUNITY_FILES = [
   "js/cma-community/cma-community-search.js",
   "js/cma-community/cma-community-notifications.js",
   "js/cma-community/cma-community-creator.js",
-  "js/cma-community/cma-community-messaging.js",
   "js/cma-community/cma-community-main.js"
 ];
 
