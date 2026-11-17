@@ -304,7 +304,15 @@ async function renderCommunitySection(
 
     // অপেক্ষার সময় অন্য page খোলা হলে পুরোনো render বন্ধ
     if (navigationRevision !== cmaNavigationRevision) return;
+    
+if (page === "messaging") {
+  await loadCommunityFile(
+    "js/cma-community/cma-community-messaging.js"
+  );
 
+  if (navigationRevision !== cmaNavigationRevision) return;
+}
+    
     if (page === "home") {
       if (typeof window.renderCommunityPage !== "function") {
         throw new Error("Community homepage renderer not found.");
