@@ -162,13 +162,19 @@
                             <span class="cma-green">Community</span>
                         </a>
 
-                        <button
-                            class="cma-icon-button"
-                            type="button"
-                            data-cma-action="search"
-                            aria-label="Search">
-                            ${Icons.search}
-                        </button>
+                        <div style="display:flex;align-items:center;gap:10px;">
+    <button class="cma-icon-button"
+        type="button" data-cma-page="messaging"
+        aria-label="Messages">
+        ${Icons.message}
+    </button>
+
+    <button class="cma-icon-button"
+        type="button" data-cma-action="search"
+        aria-label="Search">
+        ${Icons.search}
+    </button>
+</div>
                     </header>
 
                     <nav class="cma-navigation">
