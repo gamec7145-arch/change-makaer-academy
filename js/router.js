@@ -550,6 +550,10 @@ function updatePageHeaders(page) {
     "community-active",
     !!isCommunity
   );
+  document.body.classList.toggle(
+  "community-messaging",
+  page === "community-messaging"
+);
 
   if (topHeader) {
     topHeader.style.display =
