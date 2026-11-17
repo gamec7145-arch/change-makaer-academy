@@ -80,7 +80,7 @@
     `;
   }
 
-  function styles() {
+    function styles() {
     if (document.getElementById("cmaMessagingStyles")) return;
 
     const style = document.createElement("style");
@@ -88,53 +88,55 @@
 
     style.textContent = `
       .cma-msg-page {
-        min-height:100vh;
+        min-height:100dvh;
         background:#073746;
         color:#fff;
         font-family:inherit;
-        padding:0 0 25px;
+        padding:0 0 20px;
       }
 
       .cma-msg-header {
-        height:64px;
+        min-height:68px;
         display:flex;
         align-items:center;
-        gap:14px;
+        gap:12px;
         padding:0 16px;
-        border-bottom:1px solid rgba(255,255,255,.10);
+        background:#073746;
+        border-bottom:1px solid rgba(255,255,255,.09);
       }
 
       .cma-msg-back {
-        width:38px;
-        height:38px;
+        width:40px;
+        height:40px;
+        flex-shrink:0;
         border:0;
         border-radius:50%;
         background:transparent;
         color:#fff;
-        font-size:25px;
+        font-size:27px;
         cursor:pointer;
       }
 
       .cma-msg-title {
-        font-size:21px;
-        font-weight:700;
+        font-size:20px;
+        font-weight:750;
         flex:1;
       }
 
       .cma-msg-search {
-        padding:14px 16px;
+        padding:16px;
       }
 
       .cma-msg-search input {
         width:100%;
         box-sizing:border-box;
-        padding:13px 15px;
-        border:1px solid rgba(255,255,255,.13);
-        border-radius:13px;
+        padding:14px 18px;
+        border:1px solid rgba(255,255,255,.08);
+        border-radius:25px;
         outline:none;
-        background:#0b4654;
+        background:#104b59;
         color:#fff;
-        font-size:15px;
+        font-size:14px;
       }
 
       .cma-msg-search input::placeholder {
@@ -142,15 +144,15 @@
       }
 
       .cma-msg-list {
-        padding:0 12px;
+        padding:0 15px;
       }
 
       .cma-msg-item {
         width:100%;
         display:flex;
         align-items:center;
-        gap:12px;
-        padding:13px 5px;
+        gap:13px;
+        padding:14px 4px;
         border:0;
         border-bottom:1px solid rgba(255,255,255,.08);
         background:transparent;
@@ -160,8 +162,8 @@
       }
 
       .cma-msg-avatar {
-        width:51px;
-        height:51px;
+        width:53px;
+        height:53px;
         border-radius:50%;
         object-fit:cover;
         flex-shrink:0;
@@ -172,7 +174,7 @@
         align-items:center;
         justify-content:center;
         background:#087d70;
-        font-size:20px;
+        font-size:21px;
         font-weight:700;
       }
 
@@ -183,8 +185,8 @@
 
       .cma-msg-name {
         font-size:15px;
-        font-weight:650;
-        margin-bottom:5px;
+        font-weight:700;
+        margin-bottom:6px;
       }
 
       .cma-msg-preview {
@@ -218,62 +220,64 @@
       .cma-chat-person {
         display:flex;
         align-items:center;
-        gap:10px;
+        gap:11px;
         flex:1;
         min-width:0;
       }
 
       .cma-chat-person .cma-msg-avatar {
-        width:40px;
-        height:40px;
+        width:43px;
+        height:43px;
       }
 
       .cma-chat-person-name {
         font-size:15px;
-        font-weight:700;
+        font-weight:750;
       }
 
       .cma-chat-status {
         font-size:12px;
         color:#a9c4cb;
-        margin-top:3px;
+        margin-top:4px;
       }
 
       .cma-chat-messages {
         flex:1;
         overflow-y:auto;
-        padding:18px 13px;
+        padding:20px 14px;
         display:flex;
         flex-direction:column;
-        gap:10px;
+        gap:12px;
+        overscroll-behavior:contain;
       }
 
       .cma-chat-bubble {
         max-width:78%;
         width:fit-content;
-        padding:10px 13px;
-        border-radius:15px;
+        padding:11px 15px;
+        border-radius:18px;
         font-size:14px;
-        line-height:1.5;
+        line-height:1.55;
         overflow-wrap:anywhere;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
       }
 
       .cma-chat-mine {
         align-self:flex-end;
         background:#087e70;
-        border-bottom-right-radius:4px;
+        border-bottom-right-radius:5px;
       }
 
       .cma-chat-theirs {
         align-self:flex-start;
         background:#10505d;
-        border-bottom-left-radius:4px;
+        border-bottom-left-radius:5px;
       }
 
       .cma-chat-time {
         display:block;
         text-align:right;
-        margin-top:4px;
+        margin-top:5px;
         font-size:10px;
         color:#c0d9dc;
       }
@@ -281,9 +285,9 @@
       .cma-chat-form {
         display:flex;
         align-items:center;
-        gap:9px;
-        padding:12px;
-        padding-bottom:max(12px, env(safe-area-inset-bottom));
+        gap:10px;
+        padding:13px 14px;
+        padding-bottom:max(13px, env(safe-area-inset-bottom));
         background:#092f3c;
         border-top:1px solid rgba(255,255,255,.08);
       }
@@ -291,13 +295,17 @@
       .cma-chat-input {
         flex:1;
         min-width:0;
-        padding:12px 15px;
-        border:0;
+        padding:14px 18px;
+        border:1px solid rgba(255,255,255,.06);
         outline:none;
-        border-radius:24px;
+        border-radius:25px;
         background:#174b57;
         color:#fff;
         font-size:14px;
+      }
+
+      .cma-chat-input:focus {
+        border-color:#08a889;
       }
 
       .cma-chat-input::placeholder {
@@ -305,8 +313,9 @@
       }
 
       .cma-chat-send {
-        width:43px;
-        height:43px;
+        width:45px;
+        height:45px;
+        flex-shrink:0;
         border:0;
         border-radius:50%;
         background:#08a889;
@@ -318,8 +327,21 @@
       .cma-chat-send:disabled {
         opacity:.5;
       }
+
+      @media(max-width:480px) {
+        .cma-chat-bubble {
+          max-width:84%;
+        }
+
+        .cma-msg-list {
+          padding:0 12px;
+        }
+      }
     `;
 
+    document.head.appendChild(style);
+       }
+      
     document.head.appendChild(style);
   }
 
