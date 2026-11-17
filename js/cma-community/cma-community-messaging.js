@@ -1518,17 +1518,41 @@
     await renderChat(root());
   }
 
-  async function loadMessages(conversationId) {
-    const { data, error } = await db
-      .from("cma_messages")
-      .select("id,conversation_id,sender_id,message_type,content,file_url,file_name,duration,status,delivered_at,seen_at,reactions,created_at,edited_at,deleted_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
+  
+async function loadMessages(conversationId) {
+  const { data, error } = await db
+    .from("cma_messages")
+    .select(`
+      id,
+      conversation_id,
+      sender_id,
+      message_type,
+      content,
+      attachment_url,
+      attachment_name,
+      reply_to,
+      created_at,
+      edited_at,
+      deleted_at
+    `)
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
 
-    if (error) throw error;
-
-    return data || [];
+  if (error) {
+    console.error("Load messages error:", error);
+    throw error;
   }
+
+  return (data || []).map(message => ({
+    ...message,
+    file_url: message.attachment_url || "",
+    file_name: message.attachment_name || "",
+    duration: 0,
+    status: "sent",
+    reactions: {}
+  }));
+         }
+   
 
   /* ---------- Message rendering ---------- */
 
