@@ -342,9 +342,6 @@
     document.head.appendChild(style);
        }
       
-    document.head.appendChild(style);
-  }
-
   async function getUser() {
     if (currentUser) return currentUser;
 
