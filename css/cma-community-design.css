@@ -3,6 +3,21 @@
    COMMUNITY FINAL DESIGN SYSTEM
 ========================================= */
 
+/* COLORS: available everywhere (Home + Profile) */
+
+:root {
+  --cma-bg: #073646;
+  --cma-deep: #052D3B;
+  --cma-panel: #08494B;
+  --cma-card: #11414D;
+  --cma-border: #275B66;
+  --cma-avatar: #0B7567;
+  --cma-green: #08C99A;
+  --cma-mint: #82DBC9;
+  --cma-white: #FFFFFF;
+  --cma-muted: #AECED9;
+}
+
 /* 1. FULL SCREEN LAYOUT */
 
 body.community-active {
@@ -30,20 +45,9 @@ body.community-active #pageContent {
   padding: 0 !important;
 }
 
-/* 2. COLOR SYSTEM */
+/* 2. COMMUNITY WRAPPER */
 
 .cma-community {
-  --cma-bg: #073646;
-  --cma-deep: #052D3B;
-  --cma-panel: #08494B;
-  --cma-card: #11414D;
-  --cma-border: #275B66;
-  --cma-avatar: #0B7567;
-  --cma-green: #08C99A;
-  --cma-mint: #82DBC9;
-  --cma-white: #FFFFFF;
-  --cma-muted: #AECED9;
-
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
@@ -707,7 +711,7 @@ button.cma-comment-input:active {
   flex-shrink: 0;
 }
 
-/* 15. PROFILE COMPOSER CONSISTENCY */
+/* 15. PROFILE COMPOSER */
 
 .cma-profile-composer,
 .cma-composer.cma-profile-composer {
@@ -920,7 +924,6 @@ button.cma-comment-input:active {
 
 /* =========================================
    PROFILE COVER + AVATAR
-   SEPARATE CLICK AREAS
 ========================================= */
 
 .cma-profile-hero {
@@ -929,8 +932,6 @@ button.cma-comment-input:active {
   margin-bottom: 55px;
   overflow: visible;
 }
-
-/* COVER PHOTO */
 
 .cma-profile-cover {
   position: relative;
@@ -956,10 +957,6 @@ button.cma-comment-input:active {
   pointer-events: none;
 }
 
-/* PROFILE PICTURE
-   The border matches the page background, so it only
-   cuts the avatar out of the cover (no visible ring). */
-
 .cma-profile-avatar {
   position: absolute;
   left: 17px;
@@ -974,7 +971,7 @@ button.cma-comment-input:active {
   border-radius: 50%;
   box-shadow: none;
 
-  background: var(--cma-card, #11414D);
+  background: #11414D;
 
   display: flex;
   align-items: center;
@@ -995,8 +992,6 @@ button.cma-comment-input:active {
   border-radius: 50%;
   pointer-events: none;
 }
-
-/* MOBILE SAFETY */
 
 .cma-profile-hero,
 .cma-profile-cover,
