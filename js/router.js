@@ -370,7 +370,7 @@ async function renderCommunitySection(
     if (navigationRevision !== cmaNavigationRevision) return;
 
     // Friends, Creator Panel and Notifications: show header + navigation
-    if (["friends", "creator", "notifications"].includes(page)) {
+    if (["friends", "creator", "notifications", "search"].includes(page)) {
       cmaInsertTopBar(root, page);
     }
 
