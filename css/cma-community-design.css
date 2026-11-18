@@ -998,8 +998,4 @@ button.cma-comment-input:active {
 .cma-profile-avatar {
   box-sizing: border-box;
 }
-.floating-button,
-.fab,
-.call-btn {
-  display: none !important;
-}
+
