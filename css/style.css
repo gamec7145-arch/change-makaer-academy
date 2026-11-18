@@ -2123,8 +2123,3 @@ iframe{
     font-size: 23px;
   }
 }
-.floating-button,
-.fab,
-.call-btn {
-  display: none !important;
-}
