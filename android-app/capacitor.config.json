@@ -3,7 +3,7 @@
   "appName": "Change Maker Academy",
   "webDir": "www",
   "server": {
-    "url": "https://YOUR-SITE.vercel.app",
+    "url": "https://change-makaer-academy.vercel.app",
     "cleartext": false,
     "androidScheme": "https",
     "allowNavigation": ["*.vercel.app", "*.supabase.co", "youtube.com", "*.youtube.com"]
