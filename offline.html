@@ -1,0 +1,13 @@
+<!doctype html><html lang="bn"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Change Maker Academy</title>
+<style>body{font-family:system-ui,sans-serif;text-align:center;padding:60px 24px;color:#1C2236;background:#fff}
+.sp{width:42px;height:42px;border:4px solid #F6DEDD;border-top-color:#C92A44;border-radius:50%;margin:0 auto 20px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}button{margin-top:22px;border:0;border-radius:12px;padding:13px 28px;font-size:16px;font-weight:600;color:#fff;background:#C92A44}</style></head>
+<body><div class="sp"></div><h3>Internet connection slow</h3>
+<p>Abar connect korar chesta korchi...</p><button onclick="go()">Abar chesta korun</button>
+<script>
+var URL_="https://change-makaer-academy.vercel.app";
+function go(){location.href=URL_}
+setTimeout(go,3000);
+window.addEventListener("online",go);
+</script></body></html>
