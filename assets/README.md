@@ -1,1 +1,0 @@
-App icon files
