@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Guide Admin | Change Maker Academy</title>
+<style>
+:root{--c1:#ec5560;--c2:#c92a44;--ink:#1a2238;--mut:#6b7482;--line:#f3dcdf;--soft:#fff0f1}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hind Siliguri","Nunito Sans",system-ui,sans-serif;background:#fff7f8;color:var(--ink)}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 60px}
+h1{font-size:22px;margin:6px 0 2px} h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+label{display:block;font-weight:700;font-size:14px;margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=number],textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+input:focus,textarea:focus{outline:0;border-color:var(--c1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;font-size:15px;cursor:pointer;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;text-decoration:none}
+.btn.ghost{background:var(--soft);color:var(--c2)}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:10px}
+.btn.danger{background:#fff;color:#b3261e;box-shadow:inset 0 0 0 1.5px #f0b9b5}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:#fff}
+.item img,.item .ph{width:84px;height:54px;border-radius:9px;object-fit:cover;background:#f6e9eb;flex:none}
+.item .info{flex:1;min-width:0}
+.item b{display:block;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item small{color:var(--mut)}
+.item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{display:inline-block;font-size:12px;font-weight:800;padding:2px 8px;border-radius:99px;background:#e8f7ef;color:#12805c;margin-left:6px}
+.tag.off{background:#eee;color:#777}
+.prev{margin-top:8px;max-width:240px;border-radius:12px;display:block}
+.msg{padding:10px 14px;border-radius:12px;margin:0 0 12px;font-weight:700;font-size:14px}
+.msg.err{background:#fdecea;color:#b3261e}.msg.ok{background:#e8f7ef;color:#12805c}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-weight:700}
+.chk input{width:20px;height:20px}
+.empty{padding:24px;text-align:center;color:var(--mut)}
+.hide{display:none!important}
+.fileok{font-size:13px;color:#12805c;margin-top:4px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><div><h1>Guide Admin</h1><p class="sub" id="who">Change Maker Academy</p></div><button class="btn ghost sm hide" id="logout">Logout</button></div>
+ <div id="msg"></div>
+
+ <!-- LOGIN -->
+ <div class="box hide" id="loginBox">
+  <h2>Admin Login</h2>
+  <label>Email</label><input type="email" id="em" autocomplete="username">
+  <label>Password</label><input type="password" id="pw" autocomplete="current-password">
+  <p style="margin:14px 0 0"><button class="btn" id="loginBtn">Login</button></p>
+ </div>
+
+ <!-- POSTS LIST -->
+ <div id="postsView" class="hide">
+  <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">সব পোস্ট</h2><button class="btn sm" id="newPost">+ নতুন পোস্ট</button></div>
+  <div id="postsList"></div>
+ </div>
+
+ <!-- POST FORM -->
+ <div id="postForm" class="box hide"></div>
+
+ <!-- ITEMS VIEW -->
+ <div id="itemsView" class="hide">
+  <button class="btn ghost sm" id="backPosts">← সব পোস্ট</button>
+  <div class="row" style="justify-content:space-between;margin:14px 0 12px"><h2 style="margin:0" id="itemsTitle"></h2><button class="btn sm" id="newItem">+ নতুন আইটেম</button></div>
+  <div id="itemsList"></div>
+ </div>
+
+ <!-- ITEM FORM -->
+ <div id="itemForm" class="box hide"></div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="js/supabase-config.js"></script>
+<script defer>
+(function(){
+"use strict";
+const BUCKET="guide-files";
+const $=id=>document.getElementById(id);
+let db=null, curPost=null;
+
+function el(t,c,x){const n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+function msg(text,type){const m=$("msg");m.innerHTML="";if(!text)return;const d=el("div","msg "+(type||"ok"),text);m.append(d);if(type!=="err")setTimeout(()=>{if(m.contains(d))d.remove()},3500);window.scrollTo(0,0)}
+function show(...ids){["loginBox","postsView","postForm","itemsView","itemForm"].forEach(i=>$(i).classList.toggle("hide",!ids.includes(i)));window.scrollTo(0,0)}
+const okUrl=u=>/^https?:\/\//i.test(u||"");
+
+// ---------- auth ----------
+async function init(){
+  db=window.cmaSupabase;
+  if(!db){msg("Supabase connect hoy nai. Internet check koro.","err");return}
+  const {data}=await db.auth.getSession();
+  if(!data||!data.session){show("loginBox");return}
+  await enter(data.session.user);
+}
+async function enter(user){
+  const {data,error}=await db.from("community_creator_roles").select("role").eq("user_id",user.id).maybeSingle();
+  if(error||!data||!["admin","developer"].includes(data.role)){
+    msg("এই অ্যাকাউন্টে admin অনুমতি নেই।","err");$("logout").classList.remove("hide");$("who").textContent=user.email||"";show();return;
+  }
+  $("who").textContent=(user.email||"")+" ("+data.role+")";$("logout").classList.remove("hide");
+  loadPosts();
+}
+$("loginBtn").onclick=async()=>{
+  const b=$("loginBtn");b.disabled=true;msg("");
+  const {data,error}=await db.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});
+  b.disabled=false;
+  if(error){msg("Login hoy nai: "+error.message,"err");return}
+  await enter(data.user);
+};
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
+$("logout").onclick=async()=>{await db.auth.signOut();location.reload()};
+
+// ---------- storage ----------
+async function upload(file,folder){
+  const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const path=folder+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,8)+"."+ext;
+  const {error}=await db.storage.from(BUCKET).upload(path,file,{contentType:file.type||undefined,cacheControl:"3600",upsert:false});
+  if(error)throw error;
+  return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}
+function removeFile(url){
+  const k="/"+BUCKET+"/";const i=(url||"").indexOf(k);
+  if(i<0)return Promise.resolve();
+  return db.storage.from(BUCKET).remove([decodeURIComponent(url.slice(i+k.length).split("?")[0])]).catch(()=>{});
+}
+
+// ---------- reusable form pieces ----------
+function field(form,label,node){form.append(el("label","",label),node);return node}
+function textInput(v){const i=el("input");i.type="text";i.value=v||"";return i}
+function fileField(form,label,accept,current,isImg){
+  const wrap=el("div");const f=el("input");f.type="file";f.accept=accept;
+  const info=el("div","fileok");
+  let prev=null;
+  if(isImg){prev=el("img","prev");if(okUrl(current))prev.src=current;else prev.classList.add("hide");wrap.append(f,prev)}else wrap.append(f);
+  wrap.append(info);
+  if(current)info.textContent="বর্তমান ফাইল আছে (নতুন বাছলে বদলাবে)";
+  f.onchange=()=>{if(f.files[0]){info.textContent="নির্বাচিত: "+f.files[0].name;if(prev){prev.src=URL.createObjectURL(f.files[0]);prev.classList.remove("hide")}}};
+  field(form,label,wrap);
+  return f;
+}
+function thumb(url){if(okUrl(url)){const i=el("img");i.src=url;i.alt="";return i}return el("div","ph")}
+
+// ---------- posts ----------
+async function loadPosts(){
+  show("postsView");const list=$("postsList");list.innerHTML="";list.append(el("div","empty","লোড হচ্ছে..."));
+  const {data,error}=await db.from("guide_posts").select("*").order("sort_order").order("id");
+  list.innerHTML="";
+  if(error){msg("Table পাওয়া যায়নি। আগে supabase/guide.sql run করো। ("+error.message+")","err");return}
+  if(!data.length){list.append(el("div","empty","এখনো কোনো পোস্ট নেই। '+ নতুন পোস্ট' চাপো।"));return}
+  data.forEach(p=>{
+    const it=el("div","item");it.append(thumb(p.image_url));
+    const info=el("div","info");const b=el("b","",p.title);b.append(el("span","tag"+(p.is_active?"":" off"),p.is_active?"চালু":"বন্ধ"));
+    info.append(b,el("small","","ক্রম: "+p.sort_order));
+    const acts=el("div","acts");
+    const o=el("button","btn sm","আইটেম");o.onclick=()=>openItems(p);
+    const e=el("button","btn ghost sm","এডিট");e.onclick=()=>postForm(p);
+    const d=el("button","btn danger sm","ডিলিট");d.onclick=()=>delPost(p);
+    acts.append(o,e,d);it.append(info,acts);list.append(it);
+  });
+}
+$("newPost").onclick=()=>postForm(null);
+function postForm(p){
+  const f=$("postForm");f.innerHTML="";f.append(el("h2","",p?"পোস্ট এডিট":"নতুন পোস্ট"));
+  const t=field(f,"ক্যাপশন (শিরোনাম)",textInput(p&&p.title));
+  const d=el("textarea");d.value=(p&&p.description)||"";field(f,"বর্ণনা",d);
+  const img=fileField(f,"ছবি","image/*",p&&p.image_url,true);
+  const so=el("input");so.type="number";so.value=p?p.sort_order:0;field(f,"ক্রম (ছোট সংখ্যা আগে দেখাবে)",so);
+  const ck=el("label","chk");const c=el("input");c.type="checkbox";c.checked=p?p.is_active:true;ck.append(c,document.createTextNode("স্টুডেন্টদের দেখাও"));f.append(ck);
+  const row=el("div","row");row.style.marginTop="16px";
+  const save=el("button","btn","সেভ করো"),cancel=el("button","btn ghost","বাতিল");row.append(save,cancel);f.append(row);
+  cancel.onclick=loadPosts;
+  save.onclick=async()=>{
+    if(!t.value.trim()){msg("ক্যাপশন লিখতে হবে।","err");return}
+    save.disabled=true;msg("");
+    try{
+      let url=p?p.image_url:"";
+      if(img.files[0]){const nu=await upload(img.files[0],"images");if(p&&p.image_url)removeFile(p.image_url);url=nu}
+      const row={title:t.value.trim(),description:d.value.trim(),image_url:url,sort_order:parseInt(so.value)||0,is_active:c.checked};
+      const r=p?await db.from("guide_posts").update(row).eq("id",p.id):await db.from("guide_posts").insert(row);
+      if(r.error)throw r.error;
+      msg("সেভ হয়েছে।");loadPosts();
+    }catch(e){msg("সেভ হয়নি: "+e.message,"err");save.disabled=false}
+  };
+  show("postForm");
+}
+async function delPost(p){
+  if(!confirm("\""+p.title+"\" পোস্ট ও এর ভেতরের সব আইটেম ডিলিট হবে। নিশ্চিত?"))return;
+  const {data:its}=await db.from("guide_items").select("image_url,pdf_url").eq("post_id",p.id);
+  const {error}=await db.from("guide_posts").delete().eq("id",p.id);
+  if(error){msg("ডিলিট হয়নি: "+error.message,"err");return}
+  removeFile(p.image_url);(its||[]).forEach(i=>{removeFile(i.image_url);removeFile(i.pdf_url)});
+  msg("ডিলিট হয়েছে।");loadPosts();
+}
+
+// ---------- items ----------
+async function openItems(p){
+  curPost=p;$("itemsTitle").textContent=p.title;show("itemsView");
+  const list=$("itemsList");list.innerHTML="";list.append(el("div","empty","লোড হচ্ছে..."));
+  const {data,error}=await db.from("guide_items").select("*").eq("post_id",p.id).order("sort_order").order("id");
+  list.innerHTML="";
+  if(error){msg(error.message,"err");return}
+  if(!data.length){list.append(el("div","empty","এখনো কোনো আইটেম নেই।"));return}
+  data.forEach(i=>{
+    const it=el("div","item");it.append(thumb(i.image_url));
+    const info=el("div","info");const b=el("b","",i.title);b.append(el("span","tag"+(i.is_active?"":" off"),i.is_active?"চালু":"বন্ধ"));
+    info.append(b,el("small","",(i.pdf_url?"PDF আছে":"PDF নেই")+" • ক্রম: "+i.sort_order));
+    const acts=el("div","acts");
+    const e=el("button","btn ghost sm","এডিট");e.onclick=()=>itemForm(i);
+    const d=el("button","btn danger sm","ডিলিট");d.onclick=()=>delItem(i);
+    acts.append(e,d);it.append(info,acts);list.append(it);
+  });
+}
+$("backPosts").onclick=loadPosts;
+$("newItem").onclick=()=>itemForm(null);
+function itemForm(i){
+  const f=$("itemForm");f.innerHTML="";f.append(el("h2","",i?"আইটেম এডিট":"নতুন আইটেম"));
+  const t=field(f,"ক্যাপশন (শিরোনাম)",textInput(i&&i.title));
+  const d=el("textarea");d.value=(i&&i.description)||"";field(f,"বর্ণনা",d);
+  const img=fileField(f,"ছবি","image/*",i&&i.image_url,true);
+  const pdf=fileField(f,"PDF ফাইল","application/pdf",i&&i.pdf_url,false);
+  const so=el("input");so.type="number";so.value=i?i.sort_order:0;field(f,"ক্রম",so);
+  const ck=el("label","chk");const c=el("input");c.type="checkbox";c.checked=i?i.is_active:true;ck.append(c,document.createTextNode("স্টুডেন্টদের দেখাও"));f.append(ck);
+  const row=el("div","row");row.style.marginTop="16px";
+  const save=el("button","btn","সেভ করো"),cancel=el("button","btn ghost","বাতিল");row.append(save,cancel);f.append(row);
+  cancel.onclick=()=>openItems(curPost);
+  save.onclick=async()=>{
+    if(!t.value.trim()){msg("ক্যাপশন লিখতে হবে।","err");return}
+    save.disabled=true;msg("");
+    try{
+      let iu=i?i.image_url:"",pu=i?i.pdf_url:"";
+      if(img.files[0]){const nu=await upload(img.files[0],"images");if(i&&i.image_url)removeFile(i.image_url);iu=nu}
+      if(pdf.files[0]){const nu=await upload(pdf.files[0],"pdf");if(i&&i.pdf_url)removeFile(i.pdf_url);pu=nu}
+      const row={post_id:curPost.id,title:t.value.trim(),description:d.value.trim(),image_url:iu,pdf_url:pu,sort_order:parseInt(so.value)||0,is_active:c.checked};
+      const r=i?await db.from("guide_items").update(row).eq("id",i.id):await db.from("guide_items").insert(row);
+      if(r.error)throw r.error;
+      msg("সেভ হয়েছে।");openItems(curPost);
+    }catch(e){msg("সেভ হয়নি: "+e.message,"err");save.disabled=false}
+  };
+  show("itemForm");
+}
+async function delItem(i){
+  if(!confirm("\""+i.title+"\" ডিলিট করবে?"))return;
+  const {error}=await db.from("guide_items").delete().eq("id",i.id);
+  if(error){msg("ডিলিট হয়নি: "+error.message,"err");return}
+  removeFile(i.image_url);removeFile(i.pdf_url);msg("ডিলিট হয়েছে।");openItems(curPost);
+}
+
+window.addEventListener("load",init);
+})();
+</script>
+</body>
+</html>
