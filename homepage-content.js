@@ -1,0 +1,149 @@
+/* =========================================================
+   CHANGE MAKER ACADEMY — HOMEPAGE DYNAMIC CONTENT
+   - Free Class cards: public active rows from free_videos
+   - Student stories: public active rows from student_stories
+   - Story videos open in an accessible modal player
+========================================================= */
+(function () {
+  "use strict";
+
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const esc = value => String(value == null ? "" : value).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+
+  function dbReady() {
+    return new Promise(async resolve => {
+      for (let i = 0; i < 50; i++) {
+        const db = window.cmaSupabase;
+        if (db && typeof db.from === "function") return resolve(db);
+        await wait(150);
+      }
+      resolve(null);
+    });
+  }
+
+  function freeImage(row) {
+    const explicit = String(row.thumbnail_url || row.home_thumbnail_url || "").trim();
+    if (/^https?:\/\//i.test(explicit)) return explicit;
+    const video = window.CMAVideo.parse(row.youtube_url);
+    return video ? video.thumb : "";
+  }
+
+  let freeAll = [], freeHome = [], freeTab = "ssc";
+  const isHsc = row => String(row.batch || "").toLowerCase() === "hsc";
+
+  function renderFreeVideos(rows) {
+    const host = document.querySelector(".cma-free-classes .cma-videos");
+    if (!host) return;
+    if (!rows.length) {
+      host.innerHTML = '<p style="text-align:center;color:#6b7482;font-weight:700;padding:26px 0">এই ব্যাচের ক্লাস শীঘ্রই আসছে</p>';
+      return;
+    }
+    host.innerHTML = rows.map(row => {
+      const image = freeImage(row);
+      const batch = isHsc(row) ? "HSC" : "SSC";
+      return '<a href="?page=free-video-' + encodeURIComponent(row.id) + '" data-cma-home-class="1">' +
+        '<span>' + (image ? '<img src="' + esc(image) + '" alt="" loading="lazy">' : '<b aria-hidden="true">▶</b>') + '</span>' +
+        '<b class="cma-free-title">' + batch + '-' + esc(row.title || "ফ্রি ক্লাস") + '</b></a>';
+    }).join("");
+    document.dispatchEvent(new CustomEvent("cma:homepage-content-updated", { detail: { section: "free-classes", count: rows.length } }));
+  }
+
+  function showFreeTab(tab) {
+    freeTab = tab;
+    document.querySelectorAll(".cma-free-classes .cma-tabs a").forEach(a => {
+      a.classList.toggle("is-on", /hsc/i.test(a.textContent) === (tab === "hsc"));
+    });
+    // SSC = recommended (homepage) classes, HSC = all active HSC free classes
+    renderFreeVideos(tab === "hsc" ? freeAll.filter(isHsc) : freeHome.filter(r => !isHsc(r)));
+  }
+
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest(".cma-free-classes .cma-tabs a");
+    if (!a) return;
+    e.preventDefault(); e.stopPropagation();
+    showFreeTab(/hsc/i.test(a.textContent) ? "hsc" : "ssc");
+  }, true);
+
+  // Story video popup (.rv-modal style index.html e ache)
+  let modal = null;
+  function closeStory() {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.querySelector(".rv-frame").replaceChildren();
+  }
+  function openStory(row) {
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.className = "rv-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.innerHTML = '<div class="rv-wrap" style="position:relative;width:100%;max-width:720px">' +
+        '<div class="rv-box"><div class="rv-frame"></div></div></div>';
+      document.body.appendChild(modal);
+      modal.addEventListener("click", e => { if (!e.target.closest(".rv-box")) closeStory(); });
+      document.addEventListener("keydown", e => { if (e.key === "Escape") closeStory(); });
+      window.addEventListener("popstate", closeStory);
+    }
+    const video = window.CMAVideo.parse(row.video_url);
+    const frame = modal.querySelector(".rv-frame");
+    const raw = String(row.video_url || "").trim();
+    if (video) {
+      frame.replaceChildren(window.CMAVideo.player(video, row.title, true));
+    } else {
+      const note = document.createElement("p");
+      note.textContent = "এই ভিডিওর লিংকটি এখানে চালানো যাচ্ছে না।";
+      note.style.cssText = "color:#fff;text-align:center;padding:40px 16px;margin:0";
+      frame.replaceChildren(note);
+    }
+    modal.classList.add("open");
+  }
+
+  function renderStories(rows) {
+    const host = document.getElementById("cmaReviewCarousel");
+    if (!host || !rows.length) return;
+    host.innerHTML = rows.map((row, index) => {
+      const video = window.CMAVideo.parse(row.video_url);
+      const thumb = String(row.thumbnail_url || "").trim() || (video ? video.thumb : "");
+      const title = row.title || row.student_name || "শিক্ষার্থীর অভিজ্ঞতা";
+      const sub = [row.student_name, row.class_label].filter(Boolean).join(" • ") || "শিক্ষার্থীর অভিজ্ঞতা";
+      return '<a class="cma-review-card" href="#" data-cma-story-index="' + index + '">' +
+        '<span class="rv-media"' + (thumb ? ' style="background-image:url(&quot;' + esc(thumb) + '&quot;);background-size:cover;background-position:center"' : '') + '>' +
+        '<em class="rv-chip">ভিডিও</em><i class="rv-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 001.5.86l11-6.5a1 1 0 000-1.72l-11-6.5A1 1 0 008 5.5z"/></svg></i></span>' +
+        '<span class="rv-info"><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></span></a>';
+    }).join("");
+    host.querySelectorAll("[data-cma-story-index]").forEach(card => {
+      card.addEventListener("click", event => {
+        event.preventDefault();
+        const row = rows[Number(card.getAttribute("data-cma-story-index"))];
+        if (row) openStory(row);
+      });
+    });
+    document.dispatchEvent(new CustomEvent("cma:homepage-content-updated", { detail: { section: "student-stories", count: rows.length } }));
+  }
+
+  async function fetchRows(db, table) {
+    const result = await db.from(table).select("*").eq("is_active", true).order("sort_order", { ascending: true });
+    if (result.error) throw result.error;
+    return Array.isArray(result.data) ? result.data : [];
+  }
+
+  async function init() {
+    const db = await dbReady();
+    if (!db) { console.warn("Homepage dynamic content: Supabase client not ready"); return; }
+    try {
+      const rows = await fetchRows(db, "free_videos");
+      freeAll = rows;
+      freeHome = rows.filter(row => row.is_homepage === true || row.is_homepage === "true");
+      showFreeTab(freeTab);
+    } catch (error) { console.error("Homepage Free Classes could not load:", error); }
+    try {
+      const stories = await fetchRows(db, "student_stories");
+      renderStories(stories);
+    } catch (error) { console.error("Homepage Student Stories could not load:", error); }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
