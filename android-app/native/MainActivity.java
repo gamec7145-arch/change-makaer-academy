@@ -9,7 +9,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(ScreenGuardPlugin.class);
         registerPlugin(AppUpdatePlugin.class);
-        registerPlugin(NotificationSettingsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
