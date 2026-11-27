@@ -1,0 +1,300 @@
+/* =========================================================
+   CMA THEME: Day (white+red, default) / Night (dark blue)
+   Night mode = html[data-theme="dark"]
+   Community page-er dark blue palette-er moto
+   ========================================================= */
+
+/* ---- Toggle button (both themes) ---- */
+html body .cma-actions .theme-btn{font-size:20px !important;line-height:1 !important}
+.theme-btn .ic-moon{display:none}
+html[data-theme="dark"]:not(#_) .theme-btn .ic-sun{display:none}
+html[data-theme="dark"]:not(#_) .theme-btn .ic-moon{display:inline}
+.theme-btn svg{width:22px;height:22px}
+
+/* ---- Variables ---- */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --c1:#4c93ff; --c2:#2563eb; --c3:#1d4fbf; --gold:#7db1ff;
+  --ink:#ffffff; --mut:#9fb0d0; --soft:#12234a; --line:#1f3263;
+  --sh-red:0 14px 30px -10px rgba(37,99,235,.6);
+  --sh-card:0 18px 40px -24px rgba(0,0,0,.7);
+  --bg:#070d1f; --deep:#050a18; --panel:#0f1d3f; --card:#0e1a36; --border:#1f3263;
+  --green:#3b82f6; --mint:#7db1ff; --white:#ffffff; --muted:#9fb0d0;
+  --grad:linear-gradient(135deg,#4c93ff,#2563eb);
+}
+html[data-theme="dark"]:not(#_) meta{color-scheme:dark}
+
+/* ---- Page background ---- */
+html[data-theme="dark"]:not(#_) body{
+  background:radial-gradient(70% 38% at 50% 0%,rgba(59,130,246,.16),transparent 70%),
+             radial-gradient(60% 30% at 100% 45%,rgba(59,130,246,.07),transparent 70%),#070d1f !important;
+  color:#fff !important;
+}
+
+/* ---- Header ---- */
+html[data-theme="dark"]:not(#_) body .cma-acs-header{
+  background:rgba(7,13,31,.88) !important;
+  border-bottom:1px solid #1f3263 !important;
+  box-shadow:0 8px 26px -20px rgba(0,0,0,.9) !important}
+html[data-theme="dark"]:not(#_) body .cma-actions button,
+html[data-theme="dark"]:not(#_) body .cma-actions .guide-btn{
+  background:#0f1d3f !important;color:#7db1ff !important;
+  box-shadow:inset 0 0 0 1px #1f3263 !important}
+html[data-theme="dark"]:not(#_) body .cma-actions .menu-btn{
+  background:linear-gradient(135deg,#4c93ff,#2563eb) !important;color:#fff !important;
+  box-shadow:var(--sh-red) !important}
+html[data-theme="dark"]:not(#_) body .cma-search input{
+  background:#0e1a36 !important;border-color:#1f3263 !important;color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-search input::placeholder{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .cma-search button{
+  background:linear-gradient(135deg,#4c93ff,#2563eb) !important;color:#fff !important}
+html[data-theme="dark"]:not(#_) body .mobile-menu{
+  background:#0e1a36 !important;border-color:#1f3263 !important;
+  box-shadow:0 24px 50px -18px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .mobile-menu a{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .mobile-menu a:active,
+html[data-theme="dark"]:not(#_) body .mobile-menu a:hover{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-acs-header .desktop-nav a{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-acs-header .desktop-nav a:hover{background:#12234a !important;color:#7db1ff !important}
+
+/* ---- Hero / banner ---- */
+html[data-theme="dark"]:not(#_) body .cma-hero .banner{
+  background:linear-gradient(150deg,#050a18,#1d4fbf) !important;
+  box-shadow:0 24px 44px -26px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .cma-hero .cma-banner-art{
+  background:radial-gradient(60% 45% at 85% 8%,rgba(125,177,255,.35),transparent 70%),
+             radial-gradient(70% 55% at 0% 100%,rgba(59,130,246,.5),transparent 70%),
+             linear-gradient(150deg,#050a18 0%,#12234a 48%,#2563eb 100%) !important}
+html[data-theme="dark"]:not(#_) body .cma-hero .cma-banner-art p{background:#0f1d3f !important;color:#7db1ff !important}
+
+/* ---- Intro card ---- */
+html[data-theme="dark"]:not(#_) body .cma-intro-inner{
+  background:#0e1a36 !important;border-color:#1f3263 !important;
+  box-shadow:0 26px 50px -26px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .intro-chip{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .intro-chip i{background:#3b82f6 !important}
+html[data-theme="dark"]:not(#_) body .cma-intro h1{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-intro h1 em,
+html[data-theme="dark"]:not(#_) body .cma-section header h2 em,
+html[data-theme="dark"]:not(#_) body .cma-course-band header h2 em,
+html[data-theme="dark"]:not(#_) body .cma-testimonials header h2 em{
+  background:linear-gradient(135deg,#4c93ff,#7db1ff) !important;
+  -webkit-background-clip:text !important;background-clip:text !important;color:transparent !important}
+html[data-theme="dark"]:not(#_) body .cma-intro p{color:#9fb0d0 !important}
+
+/* ---- Buttons ---- */
+html[data-theme="dark"]:not(#_) body .cma-primary{
+  background:linear-gradient(135deg,#3b82f6,#2563eb) !important;color:#fff !important;
+  box-shadow:var(--sh-red),inset 0 1px 0 rgba(255,255,255,.25) !important}
+html[data-theme="dark"]:not(#_) body .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-outline{
+  background:#0f1d3f !important;color:#7db1ff !important;border-color:#1f3263 !important;
+  box-shadow:0 10px 22px -16px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .cma-secondary .btn-ic,
+html[data-theme="dark"]:not(#_) body .cma-outline .btn-ic{background:#12234a !important}
+html[data-theme="dark"]:not(#_) body .ripple{background:rgba(59,130,246,.3) !important}
+
+/* ---- Feature cards ---- */
+html[data-theme="dark"]:not(#_) body .cma-features a,
+html[data-theme="dark"]:not(#_) body .cma-class-grid a,
+html[data-theme="dark"]:not(#_) body .step,
+html[data-theme="dark"]:not(#_) body .cma-cards>a,
+html[data-theme="dark"]:not(#_) body .cma-teacher-card,
+html[data-theme="dark"]:not(#_) body .cma-review-card,
+html[data-theme="dark"]:not(#_) body .cma-free-classes .cma-videos>a,
+html[data-theme="dark"]:not(#_) body .faq{
+  background:#0e1a36 !important;border-color:#1f3263 !important;color:#fff !important;
+  box-shadow:0 18px 40px -24px rgba(0,0,0,.75) !important}
+html[data-theme="dark"]:not(#_) body .cma-features a{background:linear-gradient(180deg,#0f1d3f,#0e1a36) !important}
+html[data-theme="dark"]:not(#_) body .cma-features .feature-icon,
+html[data-theme="dark"]:not(#_) body .cma-class-grid b,
+html[data-theme="dark"]:not(#_) body .step .n{
+  background:linear-gradient(145deg,#4c93ff,#2563eb) !important;color:#fff !important;
+  box-shadow:0 10px 18px -8px rgba(37,99,235,.75) !important}
+html[data-theme="dark"]:not(#_) body .cma-class-grid .go,
+html[data-theme="dark"]:not(#_) body .cma-features .go{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-class-grid .disabled b{background:#1a2a52 !important;color:#6c7fa6 !important}
+
+/* ---- Section headings / text ---- */
+html[data-theme="dark"]:not(#_) body .cma-section>header small,
+html[data-theme="dark"]:not(#_) body .cma-course-band header small,
+html[data-theme="dark"]:not(#_) body .cma-testimonials header small{
+  background:#12234a !important;color:#7db1ff !important;box-shadow:none !important}
+html[data-theme="dark"]:not(#_) body .cma-section header h2,
+html[data-theme="dark"]:not(#_) body .cma-course-band header h2,
+html[data-theme="dark"]:not(#_) body .cma-testimonials header h2,
+html[data-theme="dark"]:not(#_) body .step h3,
+html[data-theme="dark"]:not(#_) body .cma-cards .course-card-copy h3,
+html[data-theme="dark"]:not(#_) body .teacher-caption b,
+html[data-theme="dark"]:not(#_) body .cma-app h2,
+html[data-theme="dark"]:not(#_) body .cma-app h3{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-section header p,
+html[data-theme="dark"]:not(#_) body .cma-course-band header p,
+html[data-theme="dark"]:not(#_) body .cma-testimonials header p,
+html[data-theme="dark"]:not(#_) body .step p,
+html[data-theme="dark"]:not(#_) body .faq p,
+html[data-theme="dark"]:not(#_) body .teacher-caption small,
+html[data-theme="dark"]:not(#_) body .cma-app p,
+html[data-theme="dark"]:not(#_) body .cma-brand p{color:#9fb0d0 !important}
+
+/* ---- Course band / testimonials sections ---- */
+html[data-theme="dark"]:not(#_) body .cma-course-band{background:linear-gradient(180deg,#0a1530,#070d1f) !important}
+html[data-theme="dark"]:not(#_) body .cma-testimonials{background:linear-gradient(180deg,#070d1f,#0a1530) !important}
+html[data-theme="dark"]:not(#_) body .cma-course-band header small{background:#0f1d3f !important}
+html[data-theme="dark"]:not(#_) body .cma-tabs a{background:#0f1d3f !important;color:#fff !important;border-color:#1f3263 !important;box-shadow:none !important}
+html[data-theme="dark"]:not(#_) body .cma-tabs a:first-child{
+  background:linear-gradient(135deg,#3b82f6,#2563eb) !important;border-color:transparent !important;box-shadow:var(--sh-red) !important}
+html[data-theme="dark"]:not(#_) body .cma-cards .course-card-copy small,
+html[data-theme="dark"]:not(#_) body .cma-cards .course-card-copy span{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .teacher-photo{background:linear-gradient(160deg,#12234a,#0e1a36) !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .teacher-caption{background:#0e1a36 !important;color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-carousel-controls button{background:#0f1d3f !important;color:#7db1ff !important;box-shadow:none !important}
+
+/* ---- Marquee ---- */
+html[data-theme="dark"]:not(#_) body .cma-marquee{background:linear-gradient(90deg,#1d4fbf,#2563eb,#4c93ff) !important;box-shadow:0 14px 30px -16px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .mq-grp i{color:#cfe1ff !important}
+
+/* ---- FAQ ---- */
+html[data-theme="dark"]:not(#_) body .faq[open]{border-color:#3b82f6 !important}
+html[data-theme="dark"]:not(#_) body .faq summary{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .faq summary::after{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .faq[open] summary::after{background:#2563eb !important;color:#fff !important}
+
+/* ---- AI / app / join blocks ---- */
+html[data-theme="dark"]:not(#_) body .cma-ai{
+  background:radial-gradient(70% 90% at 90% 0%,rgba(59,130,246,.4),transparent 60%),
+             radial-gradient(60% 80% at 0% 100%,rgba(37,99,235,.3),transparent 60%),
+             linear-gradient(160deg,#050a18,#0f1d3f) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai-copy h2 em{background:linear-gradient(135deg,#7db1ff,#4c93ff) !important;-webkit-background-clip:text !important;background-clip:text !important}
+html[data-theme="dark"]:not(#_) body .cma-ai-copy small{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .ai-orbit{background:linear-gradient(135deg,#7db1ff,#2563eb) !important;box-shadow:0 10px 20px -8px rgba(37,99,235,.8) !important}
+html[data-theme="dark"]:not(#_) body .ai-robot{filter:drop-shadow(0 14px 24px rgba(59,130,246,.55)) !important}
+html[data-theme="dark"]:not(#_) body .cma-home .container.cma-app{
+  background:linear-gradient(130deg,#0f1d3f,#0e1a36) !important;border-color:#1f3263 !important}
+html[data-theme="dark"]:not(#_) body .cma-app-copy>small{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-app-device{border-color:#1f3263 !important;background:#050a18 !important}
+html[data-theme="dark"]:not(#_) body .app-device-screen{background:linear-gradient(160deg,#0f1d3f,#12234a) !important}
+html[data-theme="dark"]:not(#_) body .app-device-screen b{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .app-device-screen span{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .cma-app-button{background:linear-gradient(135deg,#3b82f6,#2563eb) !important;box-shadow:0 10px 18px -8px rgba(37,99,235,.7) !important}
+html[data-theme="dark"]:not(#_) body .cma-home .container.cma-join{
+  background:radial-gradient(80% 100% at 100% 0%,rgba(59,130,246,.45),transparent 60%),linear-gradient(150deg,#050a18,#0f1d3f) !important}
+html[data-theme="dark"]:not(#_) body .cma-join a:first-of-type{background:linear-gradient(135deg,#3b82f6,#2563eb) !important;box-shadow:var(--sh-red) !important}
+
+/* ---- Footer ---- */
+html[data-theme="dark"]:not(#_) body .footer{background:linear-gradient(160deg,#050a18,#0a1530) !important;border-top:1px solid #1f3263 !important}
+
+/* ---- Bottom nav ---- */
+html[data-theme="dark"]:not(#_) body .cma-bottom-nav{
+  background:rgba(14,26,54,.92) !important;border-color:#1f3263 !important;
+  box-shadow:0 18px 40px -12px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .cma-bottom-nav a{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .cma-bottom-nav a.active{
+  color:#fff !important;background:linear-gradient(135deg,#3b82f6,#2563eb) !important;
+  box-shadow:0 14px 30px -10px rgba(37,99,235,.6) !important}
+
+/* ---- Splash intro ---- */
+html[data-theme="dark"]:not(#_) #cmaIntro .half{background:radial-gradient(90% 70% at 50% 40%,#12234a,#0a1530 70%,#070d1f) !important}
+html[data-theme="dark"]:not(#_) #cmaIntro .ttl{color:#fff !important}
+html[data-theme="dark"]:not(#_) #cmaIntro .ttl .l2{color:#4c93ff !important}
+html[data-theme="dark"]:not(#_) #cmaIntro .tg{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) #cmaIntro .lb img{background:#fff;border-radius:22px}
+
+/* smooth switch */
+html.theme-anim body, html.theme-anim body *{transition:background-color .25s,color .25s,border-color .25s !important}
+
+
+/* =========================================================
+   V2: logo, all-blue buttons, Game Changer, Reviews, About
+   ========================================================= */
+/* logo: transparent, dark-mode-er jonno shada version */
+html[data-theme="dark"]:not(#_) body .cma-acs-header .brand img{content:url("header-logo-dark.png");background:none !important;padding:0 !important;border-radius:0 !important}
+
+/* ---- ALL buttons = blue ---- */
+html[data-theme="dark"]:not(#_) body .cma-primary,
+html[data-theme="dark"]:not(#_) body .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-outline,
+html[data-theme="dark"]:not(#_) body #homePage .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-intro .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-intro .cma-intro-actions .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-st-cta,
+html[data-theme="dark"]:not(#_) body .cma-app-button,
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-btn,
+html[data-theme="dark"]:not(#_) body .rv-x,
+html[data-theme="dark"]:not(#_) #cinTop{
+  background:linear-gradient(135deg,#3b82f6,#2563eb) !important;color:#fff !important;
+  border:1px solid #4c93ff !important;
+  box-shadow:0 14px 30px -10px rgba(37,99,235,.6) !important}
+html[data-theme="dark"]:not(#_) body .cma-intro .cma-secondary:hover{border-color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-secondary .btn-ic,
+html[data-theme="dark"]:not(#_) body .cma-outline .btn-ic,
+html[data-theme="dark"]:not(#_) body .cma-primary .btn-ic{background:rgba(255,255,255,.22) !important;color:#fff !important}
+html[data-theme="dark"]:not(#_) body .cma-class-grid .go,
+html[data-theme="dark"]:not(#_) body #homePage .cma-features .go,
+html[data-theme="dark"]:not(#_) body .cc-go{background:#2563eb !important;color:#fff !important}
+html[data-theme="dark"]:not(#_) #cinRibbon{background:linear-gradient(180deg,#4c93ff,#1d4fbf) !important}
+html[data-theme="dark"]:not(#_) body .cma-testimonials .cma-st-cta small{color:#dbe8ff !important}
+
+/* ---- Game Changer 2.0 ---- */
+html[data-theme="dark"]:not(#_) body #cma-courses{
+  background:radial-gradient(90% 55% at 50% 0%,rgba(59,130,246,.20) 0%,rgba(7,13,31,0) 70%),#070d1f !important}
+html[data-theme="dark"]:not(#_) #cma-courses .gc-eyebrow{color:#7db1ff}
+html[data-theme="dark"]:not(#_) #cma-courses .gc-eyebrow::before,
+html[data-theme="dark"]:not(#_) #cma-courses .gc-eyebrow::after{background:linear-gradient(90deg,transparent,#3b82f6)}
+html[data-theme="dark"]:not(#_) #cma-courses .gc-h{color:#fff}
+html[data-theme="dark"]:not(#_) #cma-courses .gc-h b{background:linear-gradient(135deg,#4c93ff,#2563eb);box-shadow:0 10px 20px -8px rgba(37,99,235,.7)}
+html[data-theme="dark"]:not(#_) #cma-courses .gc-head p{color:#9fb0d0}
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-red{background:linear-gradient(140deg,#1d4fbf,#3b82f6 62%,#7db1ff) !important}
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-wine{background:linear-gradient(140deg,#0b1f55,#1d4fbf 62%,#4c93ff) !important}
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-rose{background:linear-gradient(140deg,#1e3a8a,#3b6fd8 62%,#93bbff) !important}
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-plum{background:linear-gradient(140deg,#14245e,#2f4fc4 58%,#6a9bff) !important}
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-card{box-shadow:0 22px 40px -22px rgba(0,0,0,.8) !important}
+
+/* ---- Student reviews ---- */
+html[data-theme="dark"]:not(#_) body .cma-review-card,
+html[data-theme="dark"]:not(#_) body #homePage .cma-review-card,
+html[data-theme="dark"]:not(#_) body .cma-testimonials .cma-review-card,
+html[data-theme="dark"]:not(#_) body #homePage .cma-testimonials .cma-review-card{
+  background:#0e1a36 !important;border:1px solid #1f3263 !important;border-top:4px solid #3b82f6 !important;
+  box-shadow:0 22px 38px -22px rgba(0,0,0,.85) !important}
+html[data-theme="dark"]:not(#_) body .rv-info b{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .rv-info small{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .cma-testimonials .rv-play{background:linear-gradient(135deg,#4c93ff,#2563eb) !important;box-shadow:0 12px 24px -8px rgba(37,99,235,.85) !important}
+html[data-theme="dark"]:not(#_) body .rv-demo .rv-media{background:radial-gradient(85% 75% at 28% 18%,#1d4fbf 0%,#0f1d3f 55%,#070d1f 100%) !important}
+html[data-theme="dark"]:not(#_) body #homePage .cma-course-band,
+html[data-theme="dark"]:not(#_) body #homePage .cma-testimonials,
+html[data-theme="dark"]:not(#_) body .cma-testimonials,
+html[data-theme="dark"]:not(#_) body .cma-course-band{background:linear-gradient(180deg,#0a1530,#070d1f) !important}
+html[data-theme="dark"]:not(#_) body #homePage .cma-testimonials header small,
+html[data-theme="dark"]:not(#_) body .cma-testimonials header small{background:#12234a !important;color:#7db1ff !important}
+
+/* ---- section decorations: red -> blue ---- */
+html[data-theme="dark"]:not(#_) body .cma-section::before,
+html[data-theme="dark"]:not(#_) body .cma-course-band::before,
+html[data-theme="dark"]:not(#_) body .cma-testimonials .container::before{background:linear-gradient(90deg,#7db1ff,#3b82f6,#1d4fbf) !important}
+html[data-theme="dark"]:not(#_) body .cma-home h2 em::after{border-bottom-color:#3b82f6 !important;filter:drop-shadow(0 2px 0 rgba(125,177,255,.5)) !important}
+html[data-theme="dark"]:not(#_) body #homePage .intro-chip{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body #homePage .feature-icon,
+html[data-theme="dark"]:not(#_) body .cma-class-grid b{background:linear-gradient(145deg,#4c93ff,#2563eb) !important}
+
+/* ---- free classes + course card art ---- */
+html[data-theme="dark"]:not(#_) body .cma-free-classes .cma-videos>a:nth-child(3n+2)>span{background:radial-gradient(70% 70% at 100% 0%,rgba(255,255,255,.22),transparent 60%),linear-gradient(135deg,#1d4fbf,#4c93ff) !important}
+html[data-theme="dark"]:not(#_) body .cma-free-classes .cma-videos>a:nth-child(3n)>span{background:radial-gradient(70% 70% at 100% 0%,rgba(255,255,255,.22),transparent 60%),linear-gradient(135deg,#0f1d3f,#3b6fd8) !important}
+html[data-theme="dark"]:not(#_) body .art.red{background:linear-gradient(130deg,#1d4fbf,#4c93ff) !important}
+html[data-theme="dark"]:not(#_) body .art.pink{background:linear-gradient(130deg,#1e3a8a,#6a9bff) !important}
+html[data-theme="dark"]:not(#_) body .art.blue{background:linear-gradient(130deg,#0f1d3f,#3b6fd8) !important}
+html[data-theme="dark"]:not(#_) body .cma-cards span{color:#7db1ff}
+
+/* ---- Contact rows + About card ---- */
+html[data-theme="dark"]:not(#_) body .cc-row{background:#0e1a36 !important;border-color:#1f3263 !important;color:#fff !important;box-shadow:0 10px 24px -18px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .cc-txt small{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .cc-ico,
+html[data-theme="dark"]:not(#_) body .cc-yt .cc-ico,
+html[data-theme="dark"]:not(#_) body .cc-fb .cc-ico,
+html[data-theme="dark"]:not(#_) body .cc-ig .cc-ico{background:linear-gradient(145deg,#4c93ff,#2563eb) !important}
+html[data-theme="dark"]:not(#_) body .ca-card{background:linear-gradient(180deg,#0f1d3f,#0e1a36) !important;border-color:#1f3263 !important;box-shadow:0 14px 30px -22px rgba(0,0,0,.8) !important}
+html[data-theme="dark"]:not(#_) body .ca-card h3{color:#fff !important}
+html[data-theme="dark"]:not(#_) body .ca-card p{color:#9fb0d0 !important}
+html[data-theme="dark"]:not(#_) body .ca-chips span{background:#12234a !important;color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .ce-contact li>span{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-quotes article{background:#0e1a36 !important;color:#fff !important}
