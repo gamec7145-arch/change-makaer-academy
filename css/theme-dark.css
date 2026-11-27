@@ -198,7 +198,6 @@ html[data-theme="dark"]:not(#_) #cmaIntro .half{background:radial-gradient(90% 7
 html[data-theme="dark"]:not(#_) #cmaIntro .ttl{color:#fff !important}
 html[data-theme="dark"]:not(#_) #cmaIntro .ttl .l2{color:#4c93ff !important}
 html[data-theme="dark"]:not(#_) #cmaIntro .tg{color:#7db1ff !important}
-html[data-theme="dark"]:not(#_) #cmaIntro .lb img{background:#fff;border-radius:22px}
 
 /* smooth switch */
 html.theme-anim body, html.theme-anim body *{transition:background-color .25s,color .25s,border-color .25s !important}
@@ -208,7 +207,7 @@ html.theme-anim body, html.theme-anim body *{transition:background-color .25s,co
    V2: logo, all-blue buttons, Game Changer, Reviews, About
    ========================================================= */
 /* logo: transparent, dark-mode-er jonno shada version */
-html[data-theme="dark"]:not(#_) body .cma-acs-header .brand img{content:url("header-logo-dark.png");background:none !important;padding:0 !important;border-radius:0 !important}
+html[data-theme="dark"]:not(#_) body .cma-acs-header .brand img{content:url("../header-logo-dark.png");background:none !important;padding:0 !important;border-radius:0 !important}
 
 /* ---- ALL buttons = blue ---- */
 html[data-theme="dark"]:not(#_) body .cma-primary,
@@ -244,11 +243,6 @@ html[data-theme="dark"]:not(#_) #cma-courses .gc-eyebrow::after{background:linea
 html[data-theme="dark"]:not(#_) #cma-courses .gc-h{color:#fff}
 html[data-theme="dark"]:not(#_) #cma-courses .gc-h b{background:linear-gradient(135deg,#4c93ff,#2563eb);box-shadow:0 10px 20px -8px rgba(37,99,235,.7)}
 html[data-theme="dark"]:not(#_) #cma-courses .gc-head p{color:#9fb0d0}
-html[data-theme="dark"]:not(#_) body #cma-courses .gc-red{background:linear-gradient(140deg,#1d4fbf,#3b82f6 62%,#7db1ff) !important}
-html[data-theme="dark"]:not(#_) body #cma-courses .gc-wine{background:linear-gradient(140deg,#0b1f55,#1d4fbf 62%,#4c93ff) !important}
-html[data-theme="dark"]:not(#_) body #cma-courses .gc-rose{background:linear-gradient(140deg,#1e3a8a,#3b6fd8 62%,#93bbff) !important}
-html[data-theme="dark"]:not(#_) body #cma-courses .gc-plum{background:linear-gradient(140deg,#14245e,#2f4fc4 58%,#6a9bff) !important}
-html[data-theme="dark"]:not(#_) body #cma-courses .gc-card{box-shadow:0 22px 40px -22px rgba(0,0,0,.8) !important}
 
 /* ---- Student reviews ---- */
 html[data-theme="dark"]:not(#_) body .cma-review-card,
@@ -298,3 +292,95 @@ html[data-theme="dark"]:not(#_) body .ca-card p{color:#9fb0d0 !important}
 html[data-theme="dark"]:not(#_) body .ca-chips span{background:#12234a !important;color:#7db1ff !important}
 html[data-theme="dark"]:not(#_) body .ce-contact li>span{color:#7db1ff !important}
 html[data-theme="dark"]:not(#_) body .cma-quotes article{background:#0e1a36 !important;color:#fff !important}
+
+
+/* =========================================================
+   V3: logo fix, black strokes, remove leftover red/orange/purple
+   ========================================================= */
+html[data-theme="dark"]:not(#_) #cmaIntro .lb img{content:url("../header-logo-dark.png");background:none !important;border-radius:0 !important}
+html[data-theme="dark"]:not(#_) body .ce-logo img{content:url("../header-logo-dark.png")}
+
+/* ---- black strokes ---- */
+html[data-theme="dark"]:not(#_) body .cma-acs-header{border-bottom-color:#000 !important}
+html[data-theme="dark"]:not(#_) body .cma-search input,
+html[data-theme="dark"]:not(#_) body .cma-actions button,
+html[data-theme="dark"]:not(#_) body .cma-actions .guide-btn,
+html[data-theme="dark"]:not(#_) body .mobile-menu,
+html[data-theme="dark"]:not(#_) body .intro-chip,
+html[data-theme="dark"]:not(#_) body #homePage .intro-chip,
+html[data-theme="dark"]:not(#_) body .cma-intro-inner,
+html[data-theme="dark"]:not(#_) body .cma-features a,
+html[data-theme="dark"]:not(#_) body .cma-features .feature-icon,
+html[data-theme="dark"]:not(#_) body #homePage .feature-icon,
+html[data-theme="dark"]:not(#_) body .cma-class-grid a,
+html[data-theme="dark"]:not(#_) body .cma-class-grid b,
+html[data-theme="dark"]:not(#_) body .step,
+html[data-theme="dark"]:not(#_) body .step .n,
+html[data-theme="dark"]:not(#_) body .cma-cards>a,
+html[data-theme="dark"]:not(#_) body #homePage .cma-cards>a,
+html[data-theme="dark"]:not(#_) body .cma-teacher-card,
+html[data-theme="dark"]:not(#_) body .cma-free-classes .cma-videos>a,
+html[data-theme="dark"]:not(#_) body #homePage .cma-videos a,
+html[data-theme="dark"]:not(#_) body .faq,
+html[data-theme="dark"]:not(#_) body .cma-tabs a,
+html[data-theme="dark"]:not(#_) body .cma-carousel-controls button,
+html[data-theme="dark"]:not(#_) body .cma-bottom-nav,
+html[data-theme="dark"]:not(#_) body .cc-row,
+html[data-theme="dark"]:not(#_) body .ca-card,
+html[data-theme="dark"]:not(#_) body .ce-links a,
+html[data-theme="dark"]:not(#_) body .ce-social a,
+html[data-theme="dark"]:not(#_) body .cma-home .container.cma-app,
+html[data-theme="dark"]:not(#_) body .cma-app-device,
+html[data-theme="dark"]:not(#_) body .cma-ai-visual,
+html[data-theme="dark"]:not(#_) body .cma-ai .cma-ai-copy>small,
+html[data-theme="dark"]:not(#_) body .cma-primary,
+html[data-theme="dark"]:not(#_) body .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-outline,
+html[data-theme="dark"]:not(#_) body #homePage .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-intro .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-intro .cma-intro-actions .cma-secondary,
+html[data-theme="dark"]:not(#_) body .cma-st-cta,
+html[data-theme="dark"]:not(#_) body #cma-courses .gc-btn,
+html[data-theme="dark"]:not(#_) body .cma-join a{border-color:#000 !important}
+html[data-theme="dark"]:not(#_) body .cma-review-card,
+html[data-theme="dark"]:not(#_) body #homePage .cma-review-card,
+html[data-theme="dark"]:not(#_) body .cma-testimonials .cma-review-card,
+html[data-theme="dark"]:not(#_) body #homePage .cma-testimonials .cma-review-card{border-color:#000 !important;border-top:4px solid #3b82f6 !important}
+html[data-theme="dark"]:not(#_) body .faq[open]{border-color:#000 !important}
+html[data-theme="dark"]:not(#_) body #homePage .cma-cards>a:hover,
+html[data-theme="dark"]:not(#_) body #homePage .cma-videos a:hover,
+html[data-theme="dark"]:not(#_) body #homePage .cma-review-card:hover{border-color:#000 !important}
+html[data-theme="dark"]:not(#_) body .footer-bottom{border-top-color:#000 !important}
+
+/* ---- free class title (was dark on dark) ---- */
+html[data-theme="dark"]:not(#_) body .cma-free-title,
+html[data-theme="dark"]:not(#_) body .cma-free-classes .cma-videos>a>b{color:#fff !important}
+
+/* ---- Nexa AI section: red/orange/purple -> blue ---- */
+html[data-theme="dark"]:not(#_) body #homePage .cma-ai,
+html[data-theme="dark"]:not(#_) body .cma-ai{
+  background:radial-gradient(circle at 20% 12%,rgba(59,130,246,.38),transparent 42%),
+             radial-gradient(circle at 88% 92%,rgba(37,99,235,.30),transparent 45%),
+             linear-gradient(160deg,#050a18,#0f1d3f) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai::before{background:conic-gradient(from 0deg at 50% 50%,rgba(59,130,246,.18),transparent 25%,rgba(125,177,255,.14) 50%,transparent 75%,rgba(59,130,246,.18)) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .ai-robot::before{background:conic-gradient(from 0deg,#2563eb,#7db1ff,#38bdf8,#2563eb) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .ai-robot::after{background:radial-gradient(circle,rgba(59,130,246,.55),rgba(37,99,235,.25) 55%,transparent 72%) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .aic-q{background:linear-gradient(135deg,#3b82f6,#2563eb) !important;box-shadow:0 10px 20px -10px rgba(37,99,235,.8) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .ai-orbit{color:#cfe1ff !important;filter:drop-shadow(0 0 8px #7db1ff) !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .cma-ai-copy h2 em{background:linear-gradient(90deg,#7db1ff,#4c93ff 50%,#a8c8ff) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important}
+html[data-theme="dark"]:not(#_) body .cma-ai .cma-ai-copy>small{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .cma-app .app-device-screen img{box-shadow:0 8px 18px -6px rgba(59,130,246,.8) !important}
+html[data-theme="dark"]:not(#_) body .cma-app .app-device-screen .cma-app-button{background:linear-gradient(135deg,#3b82f6,#2563eb) !important;box-shadow:0 8px 18px -6px rgba(37,99,235,.85) !important}
+
+/* ---- footer / about: purple + pink -> dark blue ---- */
+html[data-theme="dark"]:not(#_) body .cma-end{background:linear-gradient(170deg,#050a18,#0a1530 70%,#0f1d3f) !important;color:#e7ecfa !important}
+html[data-theme="dark"]:not(#_) body .cma-end::before{background:linear-gradient(90deg,#4c93ff,#2563eb) !important}
+html[data-theme="dark"]:not(#_) body .cma-end h4{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .ce-links a{background:#0e1a36 !important}
+html[data-theme="dark"]:not(#_) body .ce-contact li>span,
+html[data-theme="dark"]:not(#_) body .ce-social a{background:#0e1a36 !important;color:#7db1ff !important}
+
+/* ---- misc leftover warm text ---- */
+html[data-theme="dark"]:not(#_) body .course-card-copy small,
+html[data-theme="dark"]:not(#_) body .cma-cards>a>small{color:#7db1ff !important}
+html[data-theme="dark"]:not(#_) body .course-card-copy span{background:#12234a !important;color:#7db1ff !important}
