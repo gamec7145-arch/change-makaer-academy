@@ -38,7 +38,8 @@
     close: ico('<path d="M6 6l12 12M18 6L6 18"/>', 18, 2.6),
     trash: ico('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>', 19),
     pen: ico('<path d="M4 20h4L19 9l-4-4L4 16z"/>', 26),
-    back: ico('<path d="M15 5l-7 7 7 7"/>')
+    back: ico('<path d="M15 5l-7 7 7 7"/>'),
+    home: ico('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>')
   };
 
   var state = { chats: [], id: null, busy: false, pending: null, ctrl: null };
@@ -478,6 +479,18 @@
     });
   }
 
+  // ---------- Home e fire jao ----------
+  // Nexa page-e site-er header/bottom-nav/back link lukano thake, tai ekhane nijer Home button.
+  function goHome() {
+    stop();
+    openDrawer(false);
+    document.body.classList.remove("nexa-active");
+    try { history.pushState({}, "", "?"); } catch (e) {}
+    if (typeof window.renderRoute === "function") window.renderRoute();
+    else window.location.href = "?";
+    window.scrollTo(0, 0);
+  }
+
   // ---------- page ----------
   window.renderNexaPage = function () {
     var content = document.getElementById("pageContent");
@@ -494,6 +507,7 @@
     content.innerHTML =
       '<div class="nx">' +
       '<div class="nx-head">' +
+      '<button type="button" class="nx-ib" id="nxHome" aria-label="হোমে ফিরে যাও" title="Home">' + I.home + "</button>" +
       '<button type="button" class="nx-ib" id="nxMenu" aria-label="চ্যাট হিস্ট্রি">' + I.menu + "</button>" +
       '<div class="nx-title"><h1>Nexa <em>AI</em></h1></div>' +
       '<button type="button" class="nx-ib" id="nxNew" aria-label="নতুন চ্যাট">' + I.plus + "</button>" +
@@ -537,6 +551,7 @@
     $("nxCam").addEventListener("click", pickPhoto);
     els.file.addEventListener("change", onFile);
     $("nxPrevX").addEventListener("click", clearPending);
+    $("nxHome").addEventListener("click", goHome);
     $("nxMenu").addEventListener("click", function () { openDrawer(true); });
     $("nxDClose").addEventListener("click", function () { openDrawer(false); });
     els.backdrop.addEventListener("click", function () { openDrawer(false); });
