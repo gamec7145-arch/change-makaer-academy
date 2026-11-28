@@ -1,6 +1,6 @@
 /* CMA Service Worker: network-first with timeout, cache fallback.
    Slow/unstable net e-o app khulbe; notun deploy hole auto update hobe. */
-const VERSION = "cma-v21";
+const VERSION = "cma-v22";
 const CACHE = "cma-cache-" + VERSION;
 const CORE = [
   "./", "index.html", "css/style.css", "css/cma-community-design.css?v=2", "css/theme-dark.css?v=7", "js/theme.js", "js/nexa-ai.js", "header-logo-dark.png",
